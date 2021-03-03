@@ -2,7 +2,6 @@ package api
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -14,21 +13,41 @@ type User struct {
 }
 
 type App struct {
-	Router *mux.Router
+	addr   string
+	router *mux.Router
 	Users  []User
 }
 
-func (a *App) Run(addr string) {
+func (a *App) Start() error {
 	fmt.Println("server start")
-	log.Fatal(http.ListenAndServe(addr, a.Router))
+	err := http.ListenAndServe(a.addr, a.router)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func (a *App) InitializeRoutes() {
-	a.Router.HandleFunc("/login", a.SignIn).Methods("POST")
-	a.Router.HandleFunc("/users", a.SignUp).Methods("POST")
-	a.Router.HandleFunc("/users/{id:[0-9]+}", a.ChangeUserInfo).Methods("POST")
-	a.Router.HandleFunc("/users/{id:[0-9]+}", a.GetUserInfo).Methods("GET")
-	a.Router.HandleFunc("/users/{id:[0-9]+}/photos", a.UploadPhoto).Methods("POST")
-	a.Router.HandleFunc("/users/{id:[0-9]+}/photos/{id:[0-9]+}", a.DownloadPhoto).Methods("GET")
-	a.Router.HandleFunc("/users/{id:[0-9]+}/photos/{id:[0-9]+}", a.DeletePhoto).Methods("DELETE")
+type Config struct {
+	addr   string
+	router *mux.Router
+}
+
+func NewConfig() Config {
+	newConfig := Config{}
+	newConfig.addr = ":8000"
+	newConfig.router = mux.NewRouter()
+	return newConfig
+}
+
+func (a *App) InitializeRoutes(currConfig Config) {
+	a.addr = currConfig.addr
+	a.router = currConfig.router
+	a.router.HandleFunc("/login", a.SignIn).Methods("POST")
+	a.router.HandleFunc("/users", a.SignUp).Methods("POST")
+	a.router.HandleFunc("/users/{id:[0-9]+}", a.ChangeUserInfo).Methods("POST")
+	a.router.HandleFunc("/users/{id:[0-9]+}", a.GetUserInfo).Methods("GET")
+	a.router.HandleFunc("/users/{id:[0-9]+}/photos", a.UploadPhoto).Methods("POST")
+	a.router.HandleFunc("/users/{id:[0-9]+}/photos/{id:[0-9]+}", a.DownloadPhoto).Methods("GET")
+	a.router.HandleFunc("/users/{id:[0-9]+}/photos/{id:[0-9]+}", a.DeletePhoto).Methods("DELETE")
 }
