@@ -1,14 +1,16 @@
 package main
 
 import (
+	"os"
 	"server/api"
-
-	"github.com/gorilla/mux"
 )
 
 func main() {
 	a := api.App{}
-	a.Router = mux.NewRouter()
-	a.InitializeRoutes()
-	a.Run(":8000")
+	config := api.NewConfig()
+	a.InitializeRoutes(config)
+	err := a.Start()
+	if err != nil {
+		os.Exit(1)
+	}
 }
