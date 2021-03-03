@@ -45,7 +45,7 @@ func (a *App) InitializeRoutes(currConfig Config) {
 	a.router = currConfig.router
 	a.router.HandleFunc("/login", a.SignIn).Methods("POST")
 	a.router.HandleFunc("/users", a.SignUp).Methods("POST")
-	a.router.HandleFunc("/users/{id:[0-9]+}", a.ChangeUserInfo).Methods("POST")
+	a.router.HandleFunc("/users/{id:[0-9]+}", a.ChangeUserInfo).Methods("PATCH")
 	a.router.HandleFunc("/users/{id:[0-9]+}", a.GetUserInfo).Methods("GET")
 	a.router.HandleFunc("/users/{id:[0-9]+}/photos", a.UploadPhoto).Methods("POST")
 	a.router.HandleFunc("/users/{id:[0-9]+}/photos/{id:[0-9]+}", a.DownloadPhoto).Methods("GET")
