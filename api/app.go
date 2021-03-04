@@ -3,19 +3,35 @@ package api
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/mux"
 )
 
 type User struct {
-	Email    string
-	Password string
+	Id             int
+	Email          string
+	Password       string
+	Name           string
+	Birthday       time.Time
+	Description    string
+	City           string
+	avatar         string
+	Instagram      string
+	Sex            string
+	DatePreference []string
+}
+
+type Session struct {
+	Id  int
+	Key [40]rune
 }
 
 type App struct {
-	addr   string
-	router *mux.Router
-	Users  []User
+	addr     string
+	router   *mux.Router
+	Users    []User
+	Sessions []Session
 }
 
 func (a *App) Start() error {
@@ -50,4 +66,6 @@ func (a *App) InitializeRoutes(currConfig Config) {
 	a.router.HandleFunc("/users/{id:[0-9]+}/photos", a.UploadPhoto).Methods("POST")
 	a.router.HandleFunc("/users/{id:[0-9]+}/photos/{id:[0-9]+}", a.DownloadPhoto).Methods("GET")
 	a.router.HandleFunc("/users/{id:[0-9]+}/photos/{id:[0-9]+}", a.DeletePhoto).Methods("DELETE")
+	a.router.HandleFunc("/users/{id:[0-9]+}", a.DeleteUser).Methods("DELETE")
+	a.router.HandleFunc("/login", a.LogOut).Methods("DELETE")
 }
