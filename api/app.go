@@ -16,7 +16,7 @@ type User struct {
 	Birthday       time.Time
 	Description    string
 	City           string
-	avatar         string
+	AvatarAddr     string
 	Instagram      string
 	Sex            string
 	DatePreference []string
