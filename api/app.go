@@ -2,11 +2,24 @@ package api
 
 import (
 	"fmt"
+	"math/rand"
 	"net/http"
 	"time"
 
 	"github.com/gorilla/mux"
 )
+
+const charSet = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM0123456789"
+
+func KeyGen() string {
+	rand.Seed(time.Now().UnixNano())
+	b := make([]byte, 40)
+	for i := range b {
+		b[i] = charSet[rand.Intn(len(charSet))]
+	}
+
+	return string(b)
+}
 
 type User struct {
 	Id             int
@@ -31,6 +44,7 @@ type App struct {
 	addr     string
 	router   *mux.Router
 	Users    []User
+	UserIds  int
 	Sessions []Session
 }
 
@@ -45,13 +59,15 @@ func (a *App) Start() error {
 }
 
 type Config struct {
-	addr   string
-	router *mux.Router
+	addr    string
+	userIds int
+	router  *mux.Router
 }
 
 func NewConfig() Config {
 	newConfig := Config{}
 	newConfig.addr = ":8000"
+	newConfig.userIds = 0
 	newConfig.router = mux.NewRouter()
 	return newConfig
 }
@@ -59,6 +75,7 @@ func NewConfig() Config {
 func (a *App) InitializeRoutes(currConfig Config) {
 	a.addr = currConfig.addr
 	a.router = currConfig.router
+	a.UserIds = currConfig.userIds
 	a.router.HandleFunc("/login", a.SignIn).Methods("POST")
 	a.router.HandleFunc("/users", a.SignUp).Methods("POST")
 	a.router.HandleFunc("/users/{id:[0-9]+}", a.ChangeUserInfo).Methods("PATCH")
