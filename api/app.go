@@ -24,8 +24,8 @@ func KeyGen() string {
 type User struct {
 	Id             int
 	Email          string `json:"mail"`
-	Password       string `json:"pass_1"`
-	SecondPassword string `json:"pass_2"`
+	Password       string `json:"pass"`
+	SecondPassword string `json:"passRepeat"`
 	PasswordHash   []byte
 	Name           string
 	Birthday       time.Time `json:"birthday"`
@@ -37,10 +37,9 @@ type User struct {
 	DatePreference []string
 }
 
-type Session struct {
-	Id           int
-	Key          string
-	creationDate time.Time
+type session struct {
+	key            string
+	expirationDate time.Time
 }
 
 type App struct {
@@ -48,7 +47,12 @@ type App struct {
 	router   *mux.Router
 	Users    []User
 	UserIds  int
-	Sessions []Session
+	Sessions map[int][]session
+}
+
+type errorResponse struct {
+	Description map[string]string
+	Err         string
 }
 
 func (a *App) Start() error {
@@ -69,7 +73,7 @@ type Config struct {
 
 func NewConfig() Config {
 	newConfig := Config{}
-	newConfig.addr = ":8000"
+	newConfig.addr = ":8001"
 	newConfig.userIds = 0
 	newConfig.router = mux.NewRouter()
 	return newConfig
@@ -79,6 +83,7 @@ func (a *App) InitializeRoutes(currConfig Config) {
 	a.addr = currConfig.addr
 	a.router = currConfig.router
 	a.UserIds = currConfig.userIds
+	a.Sessions = make(map[int][]session)
 	a.router.HandleFunc("/login", a.SignIn).Methods("POST")
 	a.router.HandleFunc("/users", a.SignUp).Methods("POST")
 	a.router.HandleFunc("/users/{id:[0-9]+}", a.ChangeUserInfo).Methods("PATCH")

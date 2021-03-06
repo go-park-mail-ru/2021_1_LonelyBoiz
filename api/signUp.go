@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"math"
 	"net/http"
 	"time"
@@ -10,20 +11,19 @@ import (
 	"golang.org/x/crypto/sha3"
 )
 
-type errorResponse struct {
-	Description map[string]string
-	Err         string
-}
-
 func validateSignUpData(newUser User) (bool, errorResponse) {
-	response := errorResponse{map[string]string{}, "Не удалось зарегестрироваться"}
+	response := errorResponse{map[string]string{}, "Неверный формат входных данных"}
 	switch {
 	case newUser.Email == "":
 		response.Description["Email"] = "Введите почту"
 	case newUser.Name == "":
 		response.Description["Name"] = "Введите имя"
+	case newUser.Password == "":
+		response.Description["Password"] = "Введите пароль"
+	case newUser.SecondPassword == "":
+		response.Description["Password"] = "Введите повторный пароль"
 	case newUser.Password != newUser.SecondPassword:
-		response.Description["Password"] = "Неверный повторный пароль"
+		response.Description["Password"] = "Пароли не совпадают"
 	case math.Floor(time.Now().Sub(newUser.Birthday).Hours()/24/365) < 18:
 		response.Description["Birthday"] = "Вам должно быть 18"
 	}
@@ -51,22 +51,19 @@ func hashPassword(pass string) ([]byte, error) {
 	return secondHash, err
 }
 
-func (a *App) addNewUser(newUser User) (string, error) {
+func (a *App) addNewUser(newUser User) error {
 	var err error
 	newUser.Id = a.UserIds
 	a.UserIds++
 	newUser.PasswordHash, err = hashPassword(newUser.Password)
 	if err != nil {
-		return "", err
+		return err
 	}
 	newUser.Password = ""
 	newUser.SecondPassword = ""
 	a.Users = append(a.Users, newUser)
 
-	key := KeyGen()
-	a.Sessions = append(a.Sessions, Session{newUser.Id, key, time.Now()})
-
-	return key, nil
+	return nil
 }
 
 func (a *App) SignUp(w http.ResponseWriter, r *http.Request) {
@@ -94,21 +91,24 @@ func (a *App) SignUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	key, err := a.addNewUser(newUser)
+	err = a.addNewUser(newUser)
 	if err != nil {
 		w.WriteHeader(500)
 		return
 	}
 
 	w.WriteHeader(200)
+	key := KeyGen()
 	expiration := time.Now().Add(24 * time.Hour)
+	a.Sessions[newUser.Id] = append(a.Sessions[newUser.Id], session{key, expiration})
 	cookie := http.Cookie{Name: "token", Value: key, Expires: expiration}
 	http.SetCookie(w, &cookie)
+	fmt.Println("successful resistration\n", a.Users)
 }
 
 /*
 curl --header "Content-Type: application/json" \
   --request POST \
-  --data '{"Email":"xyz","pass_1":"xyz","pass_2":"xyz","Birthday":"2021-03-06 20:27:42.502497477 +0300 MSK m=+16.623219324"}' \
+  --data '{"mail":"xyz","pass":"xyz","passRepeat":"xyz","name":"vasya"|тут должна быть дата рождения но я в душе не чаю как в курле ее ввести|}' \
   http://localhost:8000/users
 */

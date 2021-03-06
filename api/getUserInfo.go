@@ -8,5 +8,6 @@ import (
 
 func (a *App) GetUserInfo(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(r)
-	io.WriteString(w, "get users info")
+	w.WriteHeader(200)
+	io.WriteString(w, "\nget users info")
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"server/api"
 )
@@ -11,6 +12,7 @@ func main() {
 	a.InitializeRoutes(config)
 	err := a.Start()
 	if err != nil {
+		fmt.Println(err)
 		os.Exit(1)
 	}
 }
