@@ -23,21 +23,24 @@ func KeyGen() string {
 
 type User struct {
 	Id             int
-	Email          string
-	Password       string
+	Email          string `json:"mail"`
+	Password       string `json:"pass_1"`
+	SecondPassword string `json:"pass_2"`
+	PasswordHash   []byte
 	Name           string
-	Birthday       time.Time
+	Birthday       time.Time `json:"birthday"`
 	Description    string
 	City           string
-	avatar         string
+	AvatarAddr     string
 	Instagram      string
 	Sex            string
 	DatePreference []string
 }
 
 type Session struct {
-	Id  int
-	Key [40]rune
+	Id           int
+	Key          string
+	creationDate time.Time
 }
 
 type App struct {
