@@ -11,7 +11,7 @@ import (
 )
 
 type inputJson struct {
-	addr string
+	Addr string `json:"addr"`
 }
 
 func (a *App) uploadPhoto(userId int, photoId string) (User, error) {
@@ -26,6 +26,7 @@ func (a *App) uploadPhoto(userId int, photoId string) (User, error) {
 	}
 
 	user.AvatarAddr = append(user.AvatarAddr, photoId)
+	a.Users[userId] = user
 	return user, nil
 }
 
@@ -37,6 +38,7 @@ func (a *App) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 		responseWithJson(w, 400, err)
 		return
 	}
+	fmt.Println(photoAddr)
 
 	token, err := r.Cookie("token")
 	if err != nil {
@@ -58,7 +60,7 @@ func (a *App) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, response := a.uploadPhoto(userId, photoAddr.addr)
+	user, response := a.uploadPhoto(userId, photoAddr.Addr)
 	if response != nil {
 		responseWithJson(w, 400, response)
 		return
@@ -71,9 +73,9 @@ func (a *App) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 }
 
 /*
-	curl -b 'token=oaIXOFJLHaSXzQob5gYPG6b1GOQzzlEE13Oz5bD9' \
+	curl -b 'token=4PmZNbRkhQdftce2BiBZ8cyL3huAZGUbShdgY5FN' \
 	--header "Content-Type: application/json" \
   --request POST \
-  --data '{"mail":"xyz","pass":"1234567Qq","passRepeat":"1234567Qq","name":"vasya","birthday":1016048654}' \
-  http://localhost:8003/users/0/photos/dir.png
+  --data '{"addr":"chetiotr"}' \
+  http://localhost:8003/users/0/photos
 */

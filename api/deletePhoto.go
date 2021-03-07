@@ -74,7 +74,7 @@ func (a *App) DeletePhoto(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, response := a.deletePhoto(userId, photoAddr.addr)
+	user, response := a.deletePhoto(userId, photoAddr.Addr)
 	if response != nil {
 		responseWithJson(w, 400, response)
 		return
@@ -87,9 +87,9 @@ func (a *App) DeletePhoto(w http.ResponseWriter, r *http.Request) {
 }
 
 /*
-curl -b 'token=M3S7xRA8wv0EuDXTk1b0y7OPwQJ5ciqUBi28qiLE' \
+curl -b 'token=4PmZNbRkhQdftce2BiBZ8cyL3huAZGUbShdgY5FN' \
 	 --header "Content-Type: application/json" \
-  	 --request PATCH \
-  	 --data '{"mail":"xyz","pass":"xyz","passRepeat":"xyz","oldPass":"xyz1","name":"Kolyan","sex":"female"}' \
-  	 http://localhost:8003/users/0/photos/0
+  	 --request DELETE \
+  	 --data '{"addr":"chet123iotr"}' \
+  	 http://localhost:8003/users/0/photos
 */

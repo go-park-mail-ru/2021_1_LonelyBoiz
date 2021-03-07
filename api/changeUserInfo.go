@@ -62,8 +62,6 @@ func validateDatePreferensces(pref string) bool {
 }
 
 func (a *App) changeUserProperties(newUser User) error {
-	response := errorResponse{Description: map[string]string{}, Err: "Не удалось поменять данные"}
-
 	var mutex = &sync.Mutex{}
 	mutex.Lock()
 	defer mutex.Unlock()
@@ -93,6 +91,7 @@ func (a *App) changeUserProperties(newUser User) error {
 		bufUser.Instagram = newUser.Instagram
 	}
 
+	response := errorResponse{Description: map[string]string{}, Err: "Не удалось поменять данные"}
 	if newUser.Sex != "" {
 		if !validateSex(newUser.Sex) {
 			response.Description["sex"] = "Неверно введен пол"
@@ -111,13 +110,13 @@ func (a *App) changeUserProperties(newUser User) error {
 
 	a.Users[newUser.Id] = bufUser
 
-	return response
+	return nil
 }
 
 func (a *App) ChangeUserPassword(newUser User) error {
 	err := validatePass(newUser.Password)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	response := errorResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
@@ -150,7 +149,7 @@ func (a *App) ChangeUserPassword(newUser User) error {
 	bufUser.PasswordHash = newPassHash
 	a.Users[newUser.Id] = bufUser
 
-	return errorResponse{}
+	return nil
 }
 
 func (a *App) ChangeUserInfo(w http.ResponseWriter, r *http.Request) {
@@ -200,16 +199,16 @@ func (a *App) ChangeUserInfo(w http.ResponseWriter, r *http.Request) {
 	mutex.Unlock()
 
 	userInfo.PasswordHash = nil
-	responseWithJson(w, 200, err)
+	responseWithJson(w, 200, userInfo)
 
 	fmt.Println("successful change")
 	fmt.Println(userInfo)
 }
 
 /*
-curl -b 'token=M3S7xRA8wv0EuDXTk1b0y7OPwQJ5ciqUBi28qiLE' \
+curl -b 'token=hCHjWRWy09NPrA8f0c3PedGTUPPbrK7stm2MVNrm' \
 	 --header "Content-Type: application/json" \
   	 --request PATCH \
-  	 --data '{"mail":"xyz","pass":"xyz","passRepeat":"xyz","oldPass":"xyz1","name":"Kolyan","sex":"female"}' \
+  	 --data '{"mail":"xyz","pass":"1234567Qq","passRepeat":"1234567Qq","oldPass":"1234567Qq","name":"Kolyan","sex":"female"}' \
   	 http://localhost:8003/users/0
 */

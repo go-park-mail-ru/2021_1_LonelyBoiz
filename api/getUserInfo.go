@@ -64,5 +64,5 @@ func (a *App) GetUserInfo(w http.ResponseWriter, r *http.Request) {
 }
 
 /*
-curl -b 'token=abcdef' http://localhost:8001/users/1
+curl -b 'token=UbalFd4mtHQkvXsMsKKEvidTj1YmuUN2FWtEiVDp' http://localhost:8001/users/1
 */
