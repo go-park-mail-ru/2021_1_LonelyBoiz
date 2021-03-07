@@ -13,25 +13,46 @@ import (
 	"golang.org/x/crypto/sha3"
 )
 
-func validatePass(pass string) errorResponse {
-	response := errorResponse{map[string]string{}, "Неверный формат входных данных"}
+type errorResponse struct {
+	Description map[string]string `json:"description"`
+	Err         string            `json:"error"`
+}
+
+func (e errorResponse) Error() string {
+	ret, _ := json.Marshal(e)
+
+	return string(ret)
+}
+
+func responseWithJson(w http.ResponseWriter, code int, body interface{}) {
+	w.WriteHeader(code)
+	json.NewEncoder(w).Encode(body)
+}
+
+func validatePass(pass string) error {
+	response := errorResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
 	switch {
 	case len(pass) < 8:
 		response.Description["password"] = "Пароль должен содержать 8 символов"
+		return response
 	case pass == strings.ToLower(pass) || pass == strings.ToUpper(pass):
 		response.Description["password"] = "Пароль должен состоять из символов разного регистра"
+		return response
 	case !strings.ContainsAny(pass, "1234567890"):
 		response.Description["password"] = "Пароль должен содержать цифру"
-	}
-
-	return response
-}
-
-func validateSignUpData(newUser User) errorResponse {
-	response := validatePass(newUser.Password)
-	if len(response.Description) != 0 {
 		return response
 	}
+
+	return nil
+}
+
+func validateSignUpData(newUser User) error {
+	err := validatePass(newUser.Password)
+	if err != nil {
+		return err
+	}
+
+	response := errorResponse{Description: map[string]string{}, Err: "Не удалось зарегестрироваться"}
 
 	switch {
 	case newUser.Email == "":
@@ -40,27 +61,30 @@ func validateSignUpData(newUser User) errorResponse {
 		response.Description["name"] = "Введите имя"
 	case newUser.Password != newUser.SecondPassword:
 		response.Description["password"] = "Пароли не совпадают"
-	case math.Floor(time.Now().Sub(newUser.Birthday).Hours()/24/365) < 18:
+	case math.Floor(time.Now().Sub(time.Unix(newUser.Birthday, 0)).Hours()) < 18*24*365:
 		response.Description["Birthday"] = "Вам должно быть 18"
 	}
 
 	if len(response.Description) != 0 {
 		return response
 	}
-	return response
+
+	return nil
 }
 
-func (a *App) isAlreadySignedUp(newEmail string) bool {
+func (a *App) isAlreadySignedUp(newEmail string) (bool, error) {
 	var mutex = &sync.Mutex{}
 	mutex.Lock()
 	defer mutex.Unlock()
 	for _, v := range a.Users {
 		if v.Email == newEmail {
-			return true
+			response := errorResponse{Description: map[string]string{}, Err: "Не удалось зарегестрироваться"}
+			response.Description["mail"] = "Почта уже зарегестрирована"
+			return true, response
 		}
 	}
 
-	return false
+	return false, nil
 }
 
 func hashPassword(pass string) ([]byte, error) {
@@ -84,9 +108,23 @@ func (a *App) addNewUser(newUser User) error {
 	defer mutex.Unlock()
 	newUser.Id = a.UserIds
 	a.UserIds++
-	a.Users = append(a.Users, newUser)
+	a.Users[newUser.Id] = newUser
 
 	return nil
+}
+
+func (a *App) setSession(w http.ResponseWriter, id int) {
+	key := KeyGen()
+	expiration := time.Now().Add(24 * time.Hour)
+	cookie := http.Cookie{Name: "token", Value: key, Expires: expiration}
+	cookie.HttpOnly = true
+	http.SetCookie(w, &cookie)
+
+	var mutex = &sync.Mutex{}
+	mutex.Lock()
+	a.Sessions[id] = append(a.Sessions[id], cookie)
+	mutex.Unlock()
+
 }
 
 func (a *App) SignUp(w http.ResponseWriter, r *http.Request) {
@@ -94,39 +132,29 @@ func (a *App) SignUp(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&newUser)
 	if err != nil {
-		w.WriteHeader(400)
-		response := errorResponse{map[string]string{}, "Неверный запрос"}
-		json.NewEncoder(w).Encode(response)
+		responseWithJson(w, 400, err)
 		return
 	}
 
-	response := validateSignUpData(newUser)
-	if len(response.Description) != 0 {
-		w.WriteHeader(400)
-		json.NewEncoder(w).Encode(response)
+	if response := validateSignUpData(newUser); response != nil {
+		responseWithJson(w, 400, response)
 		return
 	}
 
-	if a.isAlreadySignedUp(newUser.Email) {
-		response := errorResponse{map[string]string{}, "Не удалось зарегестрироваться"}
-		response.Description["mail"] = "Почта уже зарегестрирована"
-		json.NewEncoder(w).Encode(response)
+	if isSignedUp, response := a.isAlreadySignedUp(newUser.Email); isSignedUp {
+		responseWithJson(w, 400, response)
 		return
 	}
 
 	err = a.addNewUser(newUser)
 	if err != nil {
-		w.WriteHeader(500)
+		responseWithJson(w, 500, err)
 		return
 	}
 
-	w.WriteHeader(200)
-	key := KeyGen()
-	expiration := time.Now().Add(24 * time.Hour)
-	cookie := http.Cookie{Name: "token", Value: key, Expires: expiration}
-	a.Sessions[newUser.Id] = append(a.Sessions[newUser.Id], cookie)
-	cookie.HttpOnly = true
-	http.SetCookie(w, &cookie)
+	a.setSession(w, newUser.Id)
+
+	responseWithJson(w, 200, newUser)
 
 	fmt.Println("successful resistration\n", a.Users)
 }
@@ -134,6 +162,6 @@ func (a *App) SignUp(w http.ResponseWriter, r *http.Request) {
 /*
 curl --header "Content-Type: application/json" \
   --request POST \
-  --data '{"mail":"xyz","pass":"xyz","passRepeat":"xyz","name":"vasya"}' \
+  --data '{"mail":"xyz","pass":"1234567Qq","passRepeat":"1234567Qq","name":"vasya","birthday":1016048654}' \
   http://localhost:8003/users
 */

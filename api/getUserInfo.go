@@ -1,12 +1,12 @@
 package api
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
 	"sync"
+
+	"github.com/gorilla/mux"
 )
 
 func (a *App) validateCookie(cookie string) bool {
@@ -28,32 +28,37 @@ func (a *App) validateCookie(cookie string) bool {
 func (a *App) GetUserInfo(w http.ResponseWriter, r *http.Request) {
 	token, err := r.Cookie("token")
 	if err != nil {
-		w.WriteHeader(401)
-		response := errorResponse{map[string]string{}, "Не залогинен"}
-		json.NewEncoder(w).Encode(response)
+		responseWithJson(w, 400, err)
 		return
 	}
 
 	if !a.validateCookie(token.Value) {
 		w.WriteHeader(401)
-		response := errorResponse{map[string]string{}, "Кука устарела"}
-		json.NewEncoder(w).Encode(response)
+		response := errorResponse{Description: map[string]string{}, Err: "Отказано в доступе, кука устарела"}
+		responseWithJson(w, 401, response)
 		return
 	}
 
-	userId, err := strconv.Atoi(strings.SplitAfter(r.URL.String(), "/")[2])
+	vars := mux.Vars(r)
+	userId, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		w.WriteHeader(500)
+		responseWithJson(w, 500, err)
+		return
 	}
 
 	var mutex = &sync.Mutex{}
 	mutex.Lock()
-	response := a.Users[userId]
-	mutex.Unlock()
+	defer mutex.Unlock()
+	userInfo, ok := a.Users[userId]
+	if !ok {
+		response := errorResponse{Description: map[string]string{}, Err: "Отказано в доступе, кука устарела"}
+		response.Description["id"] = "Пользователя с таким id не существует"
+		responseWithJson(w, 400, response)
+		return
+	}
 
-	response.PasswordHash = nil
-	w.WriteHeader(200)
-	json.NewEncoder(w).Encode(response)
+	userInfo.PasswordHash = nil
+	responseWithJson(w, 200, userInfo)
 
 	fmt.Println("successful get user")
 }

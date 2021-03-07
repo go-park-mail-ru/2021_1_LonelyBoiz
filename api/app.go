@@ -12,7 +12,6 @@ import (
 const charSet = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM0123456789"
 
 func KeyGen() string {
-	rand.Seed(time.Now().UnixNano())
 	b := make([]byte, 40)
 	for i := range b {
 		b[i] = charSet[rand.Intn(len(charSet))]
@@ -23,32 +22,27 @@ func KeyGen() string {
 
 type User struct {
 	Id             int
-	Email          string    `json:"mail"`
-	Password       string    `json:"pass,omitempty"`
-	SecondPassword string    `json:"passRepeat,omitempty"`
-	PasswordHash   []byte    `json:",omitempty"`
-	OldPassword    string    `json:"oldPass,omitempty"`
-	Name           string    `json:"name"`
-	Birthday       time.Time `json:"birthday"`
-	Description    string    `json:"description"`
-	City           string    `json:"city"`
-	AvatarAddr     string    `json:"avatar"`
-	Instagram      string    `json:"instagram"`
-	Sex            string    `json:"sex"`
-	DatePreference string    `json:"datePreference"`
+	Email          string   `json:"mail"`
+	Password       string   `json:"pass,omitempty"`
+	SecondPassword string   `json:"passRepeat,omitempty"`
+	PasswordHash   []byte   `json:",omitempty"`
+	OldPassword    string   `json:"oldPass,omitempty"`
+	Name           string   `json:"name"`
+	Birthday       int64    `json:"birthday"`
+	Description    string   `json:"description"`
+	City           string   `json:"city"`
+	AvatarAddr     []string `json:"avatar"`
+	Instagram      string   `json:"instagram"`
+	Sex            string   `json:"sex"`
+	DatePreference string   `json:"datePreference"`
 }
 
 type App struct {
 	addr     string
 	router   *mux.Router
-	Users    []User
+	Users    map[int]User
 	UserIds  int
 	Sessions map[int][]http.Cookie
-}
-
-type errorResponse struct {
-	Description map[string]string
-	Err         string
 }
 
 func (a *App) Start() error {
@@ -76,17 +70,21 @@ func NewConfig() Config {
 }
 
 func (a *App) InitializeRoutes(currConfig Config) {
+	rand.Seed(time.Now().UnixNano())
+
 	a.addr = currConfig.addr
 	a.router = currConfig.router
 	a.UserIds = currConfig.userIds
 	a.Sessions = make(map[int][]http.Cookie)
+	a.Users = make(map[int]User)
+
 	a.router.HandleFunc("/login", a.SignIn).Methods("POST")
 	a.router.HandleFunc("/users", a.SignUp).Methods("POST")
 	a.router.HandleFunc("/users/{id:[0-9]+}", a.ChangeUserInfo).Methods("PATCH")
 	a.router.HandleFunc("/users/{id:[0-9]+}", a.GetUserInfo).Methods("GET")
 	a.router.HandleFunc("/users/{id:[0-9]+}/photos", a.UploadPhoto).Methods("POST")
-	a.router.HandleFunc("/users/{id:[0-9]+}/photos/{id:[0-9]+}", a.DownloadPhoto).Methods("GET")
-	a.router.HandleFunc("/users/{id:[0-9]+}/photos/{id:[0-9]+}", a.DeletePhoto).Methods("DELETE")
+	a.router.HandleFunc("/users/{id:[0-9]+}/photos/{photo_addr}", a.DownloadPhoto).Methods("GET")
+	a.router.HandleFunc("/users/{id:[0-9]+}/photos/{photo_addr}", a.DeletePhoto).Methods("DELETE")
 	a.router.HandleFunc("/users/{id:[0-9]+}", a.DeleteUser).Methods("DELETE")
 	a.router.HandleFunc("/login", a.LogOut).Methods("DELETE")
 }

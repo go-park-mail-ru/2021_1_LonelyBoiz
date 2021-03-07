@@ -5,14 +5,13 @@ import (
 	"fmt"
 	"net/http"
 	"sync"
-	"time"
 
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/crypto/sha3"
 )
 
-func validateSignInData(newUser User) (bool, errorResponse) {
-	response := errorResponse{map[string]string{}, "Неверный формат входных данных"}
+func validateSignInData(newUser User) (bool, error) {
+	response := errorResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
 	switch {
 	case newUser.Email == "":
 		response.Description["mail"] = "Введите почту"
@@ -23,6 +22,7 @@ func validateSignInData(newUser User) (bool, errorResponse) {
 	if len(response.Description) > 0 {
 		return false, response
 	}
+
 	return true, response
 }
 
@@ -52,44 +52,31 @@ func (a *App) SignIn(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&newUser)
 	if err != nil {
-		w.WriteHeader(400)
-		response := errorResponse{map[string]string{}, "Неверный запрос"}
-		json.NewEncoder(w).Encode(response)
+		responseWithJson(w, 400, err)
 		return
 	}
 
 	isValid, response := validateSignInData(newUser)
 	if !isValid {
-		w.WriteHeader(400)
-		json.NewEncoder(w).Encode(response)
+		responseWithJson(w, 400, response)
 		return
 	}
 
-	var isCorrect bool
-	isCorrect = a.checkPassword(&newUser)
-
-	if !isCorrect {
+	if isCorrect := a.checkPassword(&newUser); !isCorrect {
 		w.WriteHeader(401)
-		response := errorResponse{map[string]string{}, "Авторизация не прошла"}
+		response := errorResponse{Description: map[string]string{}, Err: "Не удалось авторизоваться"}
 		response.Description["password"] = "Неверный пароль"
-		json.NewEncoder(w).Encode(response)
+		responseWithJson(w, 401, response)
 		return
 	}
 
-	w.WriteHeader(200)
-	expiration := time.Now().Add(24 * time.Hour)
-	key := KeyGen()
-	cookie := http.Cookie{Name: "token", Value: key, Expires: expiration}
-	http.SetCookie(w, &cookie)
 	newUser.PasswordHash = nil
-	json.NewEncoder(w).Encode(newUser)
 
-	var mutex = &sync.Mutex{}
-	mutex.Lock()
-	defer mutex.Unlock()
-	a.Sessions[newUser.Id] = append(a.Sessions[newUser.Id], cookie)
+	a.setSession(w, newUser.Id)
 
-	fmt.Println("------------", key, "------------")
+	responseWithJson(w, 200, newUser)
+
+	fmt.Println("------------", a.Sessions[newUser.Id], "------------")
 	fmt.Println("successful login\n", newUser)
 }
 

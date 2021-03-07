@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
 	"sync"
-	"time"
 
+	"github.com/gorilla/mux"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/crypto/sha3"
 )
@@ -62,39 +61,36 @@ func validateDatePreferensces(pref string) bool {
 	return true
 }
 
-func (a *App) changeUserProperties(newUser User) errorResponse {
-	response := errorResponse{map[string]string{}, "Не удалось поменять данные"}
+func (a *App) changeUserProperties(newUser User) error {
+	response := errorResponse{Description: map[string]string{}, Err: "Не удалось поменять данные"}
 
 	var mutex = &sync.Mutex{}
 	mutex.Lock()
 	defer mutex.Unlock()
+	bufUser := a.Users[newUser.Id]
 
 	if newUser.Email != "" {
-		a.Users[newUser.Id].Email = newUser.Email
+		bufUser.Email = newUser.Email
 	}
 
 	if newUser.Name != "" {
-		a.Users[newUser.Id].Name = newUser.Name
+		bufUser.Name = newUser.Name
 	}
 
-	if newUser.Birthday != (time.Time{}) {
-		a.Users[newUser.Id].Birthday = newUser.Birthday
+	if newUser.Birthday != 0 {
+		bufUser.Birthday = newUser.Birthday
 	}
 
 	if newUser.Description != "" {
-		a.Users[newUser.Id].Description = newUser.Description
+		bufUser.Description = newUser.Description
 	}
 
 	if newUser.City != "" {
-		a.Users[newUser.Id].City = newUser.City
-	}
-
-	if newUser.AvatarAddr != "" {
-		a.Users[newUser.Id].AvatarAddr = newUser.AvatarAddr
+		bufUser.City = newUser.City
 	}
 
 	if newUser.Instagram != "" {
-		a.Users[newUser.Id].Instagram = newUser.Instagram
+		bufUser.Instagram = newUser.Instagram
 	}
 
 	if newUser.Sex != "" {
@@ -102,7 +98,7 @@ func (a *App) changeUserProperties(newUser User) errorResponse {
 			response.Description["sex"] = "Неверно введен пол"
 			return response
 		}
-		a.Users[newUser.Id].Sex = newUser.Sex
+		bufUser.Sex = newUser.Sex
 	}
 
 	if newUser.DatePreference != "" {
@@ -110,25 +106,28 @@ func (a *App) changeUserProperties(newUser User) errorResponse {
 			response.Description["datePreferences"] = "Неверно введены предпочтения"
 			return response
 		}
-		a.Users[newUser.Id].DatePreference = newUser.DatePreference
+		bufUser.DatePreference = newUser.DatePreference
 	}
+
+	a.Users[newUser.Id] = bufUser
 
 	return response
 }
 
-func (a *App) ChangeUserPassword(newUser User) errorResponse {
-	response := validatePass(newUser.Password)
-	if len(response.Description) != 0 {
-		return response
+func (a *App) ChangeUserPassword(newUser User) error {
+	err := validatePass(newUser.Password)
+	if err != nil {
+		return nil
 	}
 
+	response := errorResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
 	if newUser.SecondPassword != newUser.Password {
 		response.Description["password"] = "Пароли не совпадают"
 		return response
 	}
 
 	if !a.checkPasswordForCHanging(newUser) {
-		response := errorResponse{map[string]string{}, "Отказано в доступе"}
+		response := errorResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
 		response.Description["password"] = "Неверный пароль"
 		return response
 	}
@@ -142,7 +141,14 @@ func (a *App) ChangeUserPassword(newUser User) errorResponse {
 	var mutex = &sync.Mutex{}
 	mutex.Lock()
 	defer mutex.Unlock()
-	a.Users[newUser.Id].PasswordHash = newPassHash
+	bufUser, ok := a.Users[newUser.Id]
+	if !ok {
+		response := errorResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
+		response.Description["id"] = "Пользователя с таким id не существует"
+		return response
+	}
+	bufUser.PasswordHash = newPassHash
+	a.Users[newUser.Id] = bufUser
 
 	return errorResponse{}
 }
@@ -150,24 +156,20 @@ func (a *App) ChangeUserPassword(newUser User) errorResponse {
 func (a *App) ChangeUserInfo(w http.ResponseWriter, r *http.Request) {
 	token, err := r.Cookie("token")
 	if err != nil {
-		w.WriteHeader(401)
-		response := errorResponse{map[string]string{}, "Не залогинен 1"}
-		json.NewEncoder(w).Encode(response)
+		responseWithJson(w, 400, err)
 		return
 	}
 
-	userId, err := strconv.Atoi(strings.SplitAfter(r.URL.String(), "/")[2])
+	vars := mux.Vars(r)
+	userId, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		w.WriteHeader(401)
-		response := errorResponse{map[string]string{}, "Неверный id пользователя"}
-		json.NewEncoder(w).Encode(response)
+		responseWithJson(w, 400, err)
 		return
 	}
 
 	if !a.validateCookieForChanging(token.Value, userId) {
-		w.WriteHeader(401)
-		response := errorResponse{map[string]string{}, "Кука устарела"}
-		json.NewEncoder(w).Encode(response)
+		response := errorResponse{Description: map[string]string{}, Err: "Отказано в доступе, кука устарела"}
+		responseWithJson(w, 401, response)
 		return
 	}
 
@@ -175,43 +177,39 @@ func (a *App) ChangeUserInfo(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	err = decoder.Decode(&newUser)
 	if err != nil {
-		w.WriteHeader(400)
-		response := errorResponse{map[string]string{}, "Неверный запрос"}
-		json.NewEncoder(w).Encode(response)
+		responseWithJson(w, 400, err)
 		return
 	}
 	newUser.Id = userId
 
 	response := a.changeUserProperties(newUser)
-	if len(response.Description) != 0 {
-		w.WriteHeader(400)
-		json.NewEncoder(w).Encode(response)
+	if response != nil {
+		responseWithJson(w, 400, response)
 		return
 	}
 
 	response = a.ChangeUserPassword(newUser)
-	if len(response.Description) != 0 {
-		w.WriteHeader(400)
-		json.NewEncoder(w).Encode(response)
+	if response != nil {
+		responseWithJson(w, 400, response)
 		return
 	}
 
 	var mutex = &sync.Mutex{}
 	mutex.Lock()
-	successfulResponse := a.Users[newUser.Id]
+	userInfo := a.Users[newUser.Id]
 	mutex.Unlock()
 
-	successfulResponse.PasswordHash = nil
-	w.WriteHeader(200)
-	json.NewEncoder(w).Encode(successfulResponse)
+	userInfo.PasswordHash = nil
+	responseWithJson(w, 200, err)
+
 	fmt.Println("successful change")
-	fmt.Println(successfulResponse)
+	fmt.Println(userInfo)
 }
 
 /*
-curl -b 'token=abcdef' \
+curl -b 'token=M3S7xRA8wv0EuDXTk1b0y7OPwQJ5ciqUBi28qiLE' \
 	 --header "Content-Type: application/json" \
   	 --request PATCH \
-  	 --data '{"mail":"xyz","pass":"xyz","passRepeat":"xyz","oldPass":"xyz1","name":"vasya"}' \
-  	 http://localhost:8002/users
+  	 --data '{"mail":"xyz","pass":"xyz","passRepeat":"xyz","oldPass":"xyz1","name":"Kolyan","sex":"female"}' \
+  	 http://localhost:8003/users/0
 */
