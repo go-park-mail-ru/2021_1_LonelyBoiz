@@ -23,23 +23,19 @@ func KeyGen() string {
 
 type User struct {
 	Id             int
-	Email          string `json:"mail"`
-	Password       string `json:"pass"`
-	SecondPassword string `json:"passRepeat"`
-	PasswordHash   []byte
-	Name           string
+	Email          string    `json:"mail"`
+	Password       string    `json:"pass,omitempty"`
+	SecondPassword string    `json:"passRepeat,omitempty"`
+	PasswordHash   []byte    `json:",omitempty"`
+	OldPass        string    `json:"oldPass,omitempty"`
+	Name           string    `json:"name"`
 	Birthday       time.Time `json:"birthday"`
-	Description    string
-	City           string
-	AvatarAddr     string
-	Instagram      string
-	Sex            string
-	DatePreference []string
-}
-
-type session struct {
-	key            string
-	expirationDate time.Time
+	Description    string    `json:"description"`
+	City           string    `json:"city"`
+	AvatarAddr     string    `json:"avatarAddr"`
+	Instagram      string    `json:"instagram"`
+	Sex            string    `json:"sex"`
+	DatePreference []string  `json:"datePreference"`
 }
 
 type App struct {
@@ -47,7 +43,7 @@ type App struct {
 	router   *mux.Router
 	Users    []User
 	UserIds  int
-	Sessions map[int][]session
+	Sessions map[int][]http.Cookie
 }
 
 type errorResponse struct {
@@ -73,7 +69,7 @@ type Config struct {
 
 func NewConfig() Config {
 	newConfig := Config{}
-	newConfig.addr = ":8001"
+	newConfig.addr = ":8003"
 	newConfig.userIds = 0
 	newConfig.router = mux.NewRouter()
 	return newConfig
@@ -83,7 +79,7 @@ func (a *App) InitializeRoutes(currConfig Config) {
 	a.addr = currConfig.addr
 	a.router = currConfig.router
 	a.UserIds = currConfig.userIds
-	a.Sessions = make(map[int][]session)
+	a.Sessions = make(map[int][]http.Cookie)
 	a.router.HandleFunc("/login", a.SignIn).Methods("POST")
 	a.router.HandleFunc("/users", a.SignUp).Methods("POST")
 	a.router.HandleFunc("/users/{id:[0-9]+}", a.ChangeUserInfo).Methods("PATCH")

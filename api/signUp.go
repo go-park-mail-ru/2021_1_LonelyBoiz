@@ -3,7 +3,6 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	"math"
 	"net/http"
 	"time"
 
@@ -24,8 +23,8 @@ func validateSignUpData(newUser User) (bool, errorResponse) {
 		response.Description["Password"] = "Введите повторный пароль"
 	case newUser.Password != newUser.SecondPassword:
 		response.Description["Password"] = "Пароли не совпадают"
-	case math.Floor(time.Now().Sub(newUser.Birthday).Hours()/24/365) < 18:
-		response.Description["Birthday"] = "Вам должно быть 18"
+		/*case math.Floor(time.Now().Sub(newUser.Birthday).Hours()/24/365) < 18:
+		response.Description["Birthday"] = "Вам должно быть 18"*/
 	}
 
 	if len(response.Description) > 0 {
@@ -100,9 +99,11 @@ func (a *App) SignUp(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(200)
 	key := KeyGen()
 	expiration := time.Now().Add(24 * time.Hour)
-	a.Sessions[newUser.Id] = append(a.Sessions[newUser.Id], session{key, expiration})
 	cookie := http.Cookie{Name: "token", Value: key, Expires: expiration}
+	a.Sessions[newUser.Id] = append(a.Sessions[newUser.Id], cookie)
+	cookie.HttpOnly = true
 	http.SetCookie(w, &cookie)
+
 	fmt.Println("successful resistration\n", a.Users)
 }
 

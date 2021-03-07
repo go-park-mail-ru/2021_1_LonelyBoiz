@@ -25,21 +25,22 @@ func validateSignInData(newUser User) (bool, errorResponse) {
 	return true, response
 }
 
-func (a *App) checkPassword(newEmail string, password string) (bool, int) {
+func (a *App) checkPassword(newUser *User) bool {
 	for _, v := range a.Users {
-		if v.Email == newEmail {
+		if v.Email == newUser.Email {
 			pass := sha3.New512()
-			pass.Write([]byte(password))
+			pass.Write([]byte(newUser.Password))
 			err := bcrypt.CompareHashAndPassword(v.PasswordHash, pass.Sum(nil))
 			if err != nil {
-				return false, -1
+				return false
 			}
 
-			return true, v.Id
+			*newUser = v
+			return true
 		}
 	}
 
-	return false, -1
+	return false
 }
 
 func (a *App) SignIn(w http.ResponseWriter, r *http.Request) {
@@ -61,7 +62,7 @@ func (a *App) SignIn(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var isCorrect bool
-	isCorrect, newUser.Id = a.checkPassword(newUser.Email, newUser.Password)
+	isCorrect = a.checkPassword(&newUser)
 
 	if !isCorrect {
 		w.WriteHeader(401)
@@ -74,9 +75,13 @@ func (a *App) SignIn(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(200)
 	expiration := time.Now().Add(24 * time.Hour)
 	key := KeyGen()
-	a.Sessions[newUser.Id] = append(a.Sessions[newUser.Id], session{key: key, expirationDate: expiration})
 	cookie := http.Cookie{Name: "token", Value: key, Expires: expiration}
+	a.Sessions[newUser.Id] = append(a.Sessions[newUser.Id], cookie)
+	fmt.Println("------------", key, "------------")
 	http.SetCookie(w, &cookie)
+	newUser.PasswordHash = nil
+	json.NewEncoder(w).Encode(newUser)
+
 	fmt.Println("successful login\n", newUser)
 }
 
