@@ -3,31 +3,47 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"net/http"
+	"strings"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/crypto/sha3"
 )
 
-func validateSignUpData(newUser User) (bool, errorResponse) {
+func validatePass(pass string) errorResponse {
 	response := errorResponse{map[string]string{}, "Неверный формат входных данных"}
 	switch {
-	case newUser.Email == "":
-		response.Description["Email"] = "Введите почту"
-	case newUser.Name == "":
-		response.Description["Name"] = "Введите имя"
-	case newUser.Password == "":
-		response.Description["Password"] = "Введите пароль"
-	case newUser.SecondPassword == "":
-		response.Description["Password"] = "Введите повторный пароль"
-	case newUser.Password != newUser.SecondPassword:
-		response.Description["Password"] = "Пароли не совпадают"
-		/*case math.Floor(time.Now().Sub(newUser.Birthday).Hours()/24/365) < 18:
-		response.Description["Birthday"] = "Вам должно быть 18"*/
+	case len(pass) < 8:
+		response.Description["password"] = "Пароль должен содержать 8 символов"
+	case pass == strings.ToLower(pass) || pass == strings.ToUpper(pass):
+		response.Description["password"] = "Пароль должен состоять из символов разного регистра"
+	case !strings.ContainsAny(pass, "1234567890"):
+		response.Description["password"] = "Пароль должен содержать цифру"
 	}
 
-	if len(response.Description) > 0 {
+	return response
+}
+
+func validateSignUpData(newUser User) (bool, errorResponse) {
+	response := validatePass(newUser.Password)
+	if len(response.Description) != 0 {
+		return false, response
+	}
+
+	switch {
+	case newUser.Email == "":
+		response.Description["mail"] = "Введите почту"
+	case newUser.Name == "":
+		response.Description["name"] = "Введите имя"
+	case newUser.Password != newUser.SecondPassword:
+		response.Description["password"] = "Пароли не совпадают"
+	case math.Floor(time.Now().Sub(newUser.Birthday).Hours()/24/365) < 18:
+		response.Description["Birthday"] = "Вам должно быть 18"
+	}
+
+	if len(response.Description) != 0 {
 		return false, response
 	}
 	return true, response
@@ -85,7 +101,7 @@ func (a *App) SignUp(w http.ResponseWriter, r *http.Request) {
 
 	if a.isAlreadySignedUp(newUser.Email) {
 		response := errorResponse{map[string]string{}, "Не удалось зарегестрироваться"}
-		response.Description["Email"] = "Почта уже зарегестрирована"
+		response.Description["mail"] = "Почта уже зарегестрирована"
 		json.NewEncoder(w).Encode(response)
 		return
 	}

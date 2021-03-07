@@ -14,9 +14,9 @@ func validateSignInData(newUser User) (bool, errorResponse) {
 	response := errorResponse{map[string]string{}, "Неверный формат входных данных"}
 	switch {
 	case newUser.Email == "":
-		response.Description["Email"] = "Введите почту"
+		response.Description["mail"] = "Введите почту"
 	case newUser.Password == "":
-		response.Description["Password"] = "Введите пароль"
+		response.Description["password"] = "Введите пароль"
 	}
 
 	if len(response.Description) > 0 {
@@ -67,7 +67,7 @@ func (a *App) SignIn(w http.ResponseWriter, r *http.Request) {
 	if !isCorrect {
 		w.WriteHeader(401)
 		response := errorResponse{map[string]string{}, "Авторизация не прошла"}
-		response.Description["Password"] = "Неверный пароль"
+		response.Description["password"] = "Неверный пароль"
 		json.NewEncoder(w).Encode(response)
 		return
 	}

@@ -12,7 +12,7 @@ func (a *App) validateCookie(cookie string) bool {
 	for _, userSessions := range a.Sessions {
 		for _, v := range userSessions {
 			fmt.Println("|||||||||||||||||||||", cookie, v.Value)
-			if v.Value == cookie /*&& math.Floor(time.Now().Sub(v.expirationDate).Hours()) > 0 */ {
+			if v.Value == cookie {
 				fmt.Println("ahuennaya kuka")
 				return true
 			}

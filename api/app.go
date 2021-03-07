@@ -27,15 +27,15 @@ type User struct {
 	Password       string    `json:"pass,omitempty"`
 	SecondPassword string    `json:"passRepeat,omitempty"`
 	PasswordHash   []byte    `json:",omitempty"`
-	OldPass        string    `json:"oldPass,omitempty"`
+	OldPassword    string    `json:"oldPass,omitempty"`
 	Name           string    `json:"name"`
 	Birthday       time.Time `json:"birthday"`
 	Description    string    `json:"description"`
 	City           string    `json:"city"`
-	AvatarAddr     string    `json:"avatarAddr"`
+	AvatarAddr     string    `json:"avatar"`
 	Instagram      string    `json:"instagram"`
 	Sex            string    `json:"sex"`
-	DatePreference []string  `json:"datePreference"`
+	DatePreference string    `json:"datePreference"`
 }
 
 type App struct {
