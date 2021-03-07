@@ -83,8 +83,7 @@ func (a *App) InitializeRoutes(currConfig Config) {
 	a.router.HandleFunc("/users/{id:[0-9]+}", a.ChangeUserInfo).Methods("PATCH")
 	a.router.HandleFunc("/users/{id:[0-9]+}", a.GetUserInfo).Methods("GET")
 	a.router.HandleFunc("/users/{id:[0-9]+}/photos", a.UploadPhoto).Methods("POST")
-	a.router.HandleFunc("/users/{id:[0-9]+}/photos/{photo_addr}", a.DownloadPhoto).Methods("GET")
-	a.router.HandleFunc("/users/{id:[0-9]+}/photos/{photo_addr}", a.DeletePhoto).Methods("DELETE")
+	a.router.HandleFunc("/users/{id:[0-9]+}/photos", a.DeletePhoto).Methods("DELETE")
 	a.router.HandleFunc("/users/{id:[0-9]+}", a.DeleteUser).Methods("DELETE")
 	a.router.HandleFunc("/login", a.LogOut).Methods("DELETE")
 }
