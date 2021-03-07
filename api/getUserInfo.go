@@ -6,18 +6,22 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 func (a *App) validateCookie(cookie string) bool {
+	var mutex = &sync.Mutex{}
+	mutex.Lock()
+	defer mutex.Unlock()
 	for _, userSessions := range a.Sessions {
 		for _, v := range userSessions {
-			fmt.Println("|||||||||||||||||||||", cookie, v.Value)
 			if v.Value == cookie {
-				fmt.Println("ahuennaya kuka")
+
 				return true
 			}
 		}
 	}
+
 	return false
 }
 
@@ -42,7 +46,11 @@ func (a *App) GetUserInfo(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(500)
 	}
 
+	var mutex = &sync.Mutex{}
+	mutex.Lock()
 	response := a.Users[userId]
+	mutex.Unlock()
+
 	response.PasswordHash = nil
 	w.WriteHeader(200)
 	json.NewEncoder(w).Encode(response)

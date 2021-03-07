@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -13,8 +14,10 @@ import (
 )
 
 func (a *App) validateCookieForChanging(cookie string, id int) bool {
+	var mutex = &sync.Mutex{}
+	mutex.Lock()
+	defer mutex.Unlock()
 	for _, v := range a.Sessions[id] {
-		fmt.Println(v.Value, cookie)
 		if v.Value == cookie {
 			return true
 		}
@@ -24,7 +27,11 @@ func (a *App) validateCookieForChanging(cookie string, id int) bool {
 }
 
 func (a *App) checkPasswordForCHanging(newUser User) bool {
+	var mutex = &sync.Mutex{}
+	mutex.Lock()
 	oldUser := a.Users[newUser.Id]
+	mutex.Unlock()
+
 	if oldUser.Email == newUser.Email {
 		pass := sha3.New512()
 		pass.Write([]byte(newUser.OldPassword))
@@ -58,28 +65,47 @@ func validateDatePreferensces(pref string) bool {
 func (a *App) changeUserProperties(newUser User) errorResponse {
 	response := errorResponse{map[string]string{}, "Не удалось поменять данные"}
 
-	switch {
-	case newUser.Email != "":
+	var mutex = &sync.Mutex{}
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	if newUser.Email != "" {
 		a.Users[newUser.Id].Email = newUser.Email
-	case newUser.Name != "":
+	}
+
+	if newUser.Name != "" {
 		a.Users[newUser.Id].Name = newUser.Name
-	case newUser.Birthday != time.Time{}:
+	}
+
+	if newUser.Birthday != (time.Time{}) {
 		a.Users[newUser.Id].Birthday = newUser.Birthday
-	case newUser.Description != "":
+	}
+
+	if newUser.Description != "" {
 		a.Users[newUser.Id].Description = newUser.Description
-	case newUser.City != "":
+	}
+
+	if newUser.City != "" {
 		a.Users[newUser.Id].City = newUser.City
-	case newUser.AvatarAddr != "":
+	}
+
+	if newUser.AvatarAddr != "" {
 		a.Users[newUser.Id].AvatarAddr = newUser.AvatarAddr
-	case newUser.Instagram != "":
+	}
+
+	if newUser.Instagram != "" {
 		a.Users[newUser.Id].Instagram = newUser.Instagram
-	case newUser.Sex != "":
+	}
+
+	if newUser.Sex != "" {
 		if !validateSex(newUser.Sex) {
 			response.Description["sex"] = "Неверно введен пол"
 			return response
 		}
 		a.Users[newUser.Id].Sex = newUser.Sex
-	case newUser.DatePreference != "":
+	}
+
+	if newUser.DatePreference != "" {
 		if !validateDatePreferensces(newUser.DatePreference) {
 			response.Description["datePreferences"] = "Неверно введены предпочтения"
 			return response
@@ -112,10 +138,11 @@ func (a *App) ChangeUserPassword(newUser User) errorResponse {
 		response.Description["password"] = "Не удалось поменять пароль"
 		return response
 	}
+
+	var mutex = &sync.Mutex{}
+	mutex.Lock()
+	defer mutex.Unlock()
 	a.Users[newUser.Id].PasswordHash = newPassHash
-	newUser.Password = ""
-	newUser.SecondPassword = ""
-	newUser.OldPassword = ""
 
 	return errorResponse{}
 }
@@ -169,9 +196,16 @@ func (a *App) ChangeUserInfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var mutex = &sync.Mutex{}
+	mutex.Lock()
+	successfulResponse := a.Users[newUser.Id]
+	mutex.Unlock()
+
+	successfulResponse.PasswordHash = nil
 	w.WriteHeader(200)
-	json.NewEncoder(w).Encode(newUser)
+	json.NewEncoder(w).Encode(successfulResponse)
 	fmt.Println("successful change")
+	fmt.Println(successfulResponse)
 }
 
 /*

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sync"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -26,6 +27,9 @@ func validateSignInData(newUser User) (bool, errorResponse) {
 }
 
 func (a *App) checkPassword(newUser *User) bool {
+	var mutex = &sync.Mutex{}
+	mutex.Lock()
+	defer mutex.Unlock()
 	for _, v := range a.Users {
 		if v.Email == newUser.Email {
 			pass := sha3.New512()
@@ -76,12 +80,16 @@ func (a *App) SignIn(w http.ResponseWriter, r *http.Request) {
 	expiration := time.Now().Add(24 * time.Hour)
 	key := KeyGen()
 	cookie := http.Cookie{Name: "token", Value: key, Expires: expiration}
-	a.Sessions[newUser.Id] = append(a.Sessions[newUser.Id], cookie)
-	fmt.Println("------------", key, "------------")
 	http.SetCookie(w, &cookie)
 	newUser.PasswordHash = nil
 	json.NewEncoder(w).Encode(newUser)
 
+	var mutex = &sync.Mutex{}
+	mutex.Lock()
+	defer mutex.Unlock()
+	a.Sessions[newUser.Id] = append(a.Sessions[newUser.Id], cookie)
+
+	fmt.Println("------------", key, "------------")
 	fmt.Println("successful login\n", newUser)
 }
 

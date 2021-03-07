@@ -6,6 +6,7 @@ import (
 	"math"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -26,10 +27,10 @@ func validatePass(pass string) errorResponse {
 	return response
 }
 
-func validateSignUpData(newUser User) (bool, errorResponse) {
+func validateSignUpData(newUser User) errorResponse {
 	response := validatePass(newUser.Password)
 	if len(response.Description) != 0 {
-		return false, response
+		return response
 	}
 
 	switch {
@@ -44,12 +45,15 @@ func validateSignUpData(newUser User) (bool, errorResponse) {
 	}
 
 	if len(response.Description) != 0 {
-		return false, response
+		return response
 	}
-	return true, response
+	return response
 }
 
 func (a *App) isAlreadySignedUp(newEmail string) bool {
+	var mutex = &sync.Mutex{}
+	mutex.Lock()
+	defer mutex.Unlock()
 	for _, v := range a.Users {
 		if v.Email == newEmail {
 			return true
@@ -68,14 +72,18 @@ func hashPassword(pass string) ([]byte, error) {
 
 func (a *App) addNewUser(newUser User) error {
 	var err error
-	newUser.Id = a.UserIds
-	a.UserIds++
 	newUser.PasswordHash, err = hashPassword(newUser.Password)
 	if err != nil {
 		return err
 	}
 	newUser.Password = ""
 	newUser.SecondPassword = ""
+
+	var mutex = &sync.Mutex{}
+	mutex.Lock()
+	defer mutex.Unlock()
+	newUser.Id = a.UserIds
+	a.UserIds++
 	a.Users = append(a.Users, newUser)
 
 	return nil
@@ -92,8 +100,8 @@ func (a *App) SignUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	isValid, response := validateSignUpData(newUser)
-	if !isValid {
+	response := validateSignUpData(newUser)
+	if len(response.Description) != 0 {
 		w.WriteHeader(400)
 		json.NewEncoder(w).Encode(response)
 		return
@@ -126,6 +134,6 @@ func (a *App) SignUp(w http.ResponseWriter, r *http.Request) {
 /*
 curl --header "Content-Type: application/json" \
   --request POST \
-  --data '{"mail":"xyz","pass":"xyz","passRepeat":"xyz","name":"vasya"|тут должна быть дата рождения но я в душе не чаю как в курле ее ввести|}' \
-  http://localhost:8000/users
+  --data '{"mail":"xyz","pass":"xyz","passRepeat":"xyz","name":"vasya"}' \
+  http://localhost:8003/users
 */
