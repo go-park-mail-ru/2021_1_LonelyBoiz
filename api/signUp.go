@@ -94,7 +94,7 @@ func hashPassword(pass string) ([]byte, error) {
 	return secondHash, err
 }
 
-func (a *App) addNewUser(newUser User) error {
+func (a *App) addNewUser(newUser *User) error {
 	var err error
 	newUser.PasswordHash, err = hashPassword(newUser.Password)
 	if err != nil {
@@ -108,7 +108,7 @@ func (a *App) addNewUser(newUser User) error {
 	defer mutex.Unlock()
 	newUser.Id = a.UserIds
 	a.UserIds++
-	a.Users[newUser.Id] = newUser
+	a.Users[newUser.Id] = *newUser
 
 	return nil
 }
@@ -124,7 +124,6 @@ func (a *App) setSession(w http.ResponseWriter, id int) {
 	mutex.Lock()
 	a.Sessions[id] = append(a.Sessions[id], cookie)
 	mutex.Unlock()
-
 }
 
 func (a *App) SignUp(w http.ResponseWriter, r *http.Request) {
@@ -146,7 +145,7 @@ func (a *App) SignUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = a.addNewUser(newUser)
+	err = a.addNewUser(&newUser)
 	if err != nil {
 		responseWithJson(w, 500, err)
 		return
@@ -156,9 +155,11 @@ func (a *App) SignUp(w http.ResponseWriter, r *http.Request) {
 
 	newUser.Password = ""
 	newUser.SecondPassword = ""
+	newUser.PasswordHash = nil
 	responseWithJson(w, 200, newUser)
 
 	fmt.Println("successful resistration\n", a.Users)
+	//fmt.Println("successful resistration\n", a.Sessions)
 }
 
 /*
