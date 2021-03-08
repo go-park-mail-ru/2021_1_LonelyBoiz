@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 )
 
 const charSet = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM0123456789"
@@ -49,13 +49,18 @@ type App struct {
 func (a *App) Start() error {
 	fmt.Println("Server start")
 
-	ch := handlers.CORS(handlers.AllowedOrigins([]string{"http://localhost:3000"}),
-		handlers.AllowedMethods([]string{"GET", "POST", "DELETE", "PATCH", "OPTIONS"}),
-		handlers.AllowCredentials())
+	cors := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:3000"},
+		AllowCredentials: true,
+		AllowedMethods:   []string{"GET", "POST", "DELETE", "PATCH", "OPTIONS"},
+		Debug:            true,
+	})
+
+	corsHandler := cors.Handler(a.router)
 
 	s := http.Server{
 		Addr:         a.addr,
-		Handler:      ch(a.router),
+		Handler:      corsHandler,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  120 * time.Second,
@@ -104,6 +109,5 @@ func (a *App) InitializeRoutes(currConfig Config) {
 
 /*curl -H "Origin: http://localhost:3000" \
 -H "Access-Control-Request-Method: POST" \
--H "Access-Control-Request-Headers: X-Requested-With" \
 -X OPTIONS --verbose http://localhost/8001/login
 */
