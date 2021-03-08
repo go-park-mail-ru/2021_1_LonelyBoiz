@@ -79,3 +79,4 @@ func (a *App) UploadPhoto(w http.ResponseWriter, r *http.Request) {
   --data '{"addr":"chetiotr"}' \
   http://localhost:8003/users/0/photos
 */
+
