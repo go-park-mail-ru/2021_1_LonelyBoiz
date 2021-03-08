@@ -81,8 +81,9 @@ func (a *App) SignIn(w http.ResponseWriter, r *http.Request) {
 }
 
 /*
-curl --header "Content-Type: application/json" \
+curl -H "Origin: http://localhost:3000" --verbose \
+ --header "Content-Type: application/json" \
   --request POST \
-  --data '{"mail":"xyz","pass":"xyz"}' \
+  --data '{"mail":"2xyz","pass":"1234567Qq"}' \
   http://localhost:8000/login
 */

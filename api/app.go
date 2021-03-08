@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
@@ -46,8 +47,21 @@ type App struct {
 }
 
 func (a *App) Start() error {
-	fmt.Println("server start")
-	err := http.ListenAndServe(a.addr, a.router)
+	fmt.Println("Server start")
+
+	ch := handlers.CORS(handlers.AllowedOrigins([]string{"http://localhost:3000"}),
+		handlers.AllowedMethods([]string{"GET", "POST", "DELETE", "PATCH", "OPTIONS"}),
+		handlers.AllowCredentials())
+
+	s := http.Server{
+		Addr:         a.addr,
+		Handler:      ch(a.router),
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  120 * time.Second,
+	}
+
+	err := s.ListenAndServe()
 	if err != nil {
 		return err
 	}
@@ -63,7 +77,7 @@ type Config struct {
 
 func NewConfig() Config {
 	newConfig := Config{}
-	newConfig.addr = ":8003"
+	newConfig.addr = ":8001"
 	newConfig.userIds = 0
 	newConfig.router = mux.NewRouter()
 	return newConfig
@@ -87,3 +101,9 @@ func (a *App) InitializeRoutes(currConfig Config) {
 	a.router.HandleFunc("/users/{id:[0-9]+}", a.DeleteUser).Methods("DELETE")
 	a.router.HandleFunc("/login", a.LogOut).Methods("DELETE")
 }
+
+/*curl -H "Origin: http://localhost:3000" \
+-H "Access-Control-Request-Method: POST" \
+-H "Access-Control-Request-Headers: X-Requested-With" \
+-X OPTIONS --verbose http://localhost/8001/login
+*/

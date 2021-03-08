@@ -154,14 +154,17 @@ func (a *App) SignUp(w http.ResponseWriter, r *http.Request) {
 
 	a.setSession(w, newUser.Id)
 
+	newUser.Password = ""
+	newUser.SecondPassword = ""
 	responseWithJson(w, 200, newUser)
 
 	fmt.Println("successful resistration\n", a.Users)
 }
 
 /*
-curl --header "Content-Type: application/json" \
+curl -H "Origin: http://localhost:3000" --verbose \
+  --header "Content-Type: application/json" \
   --request POST \
   --data '{"mail":"xyz","pass":"1234567Qq","passRepeat":"1234567Qq","name":"vasya","birthday":1016048654}' \
-  http://localhost:8003/users
+  http://localhost:8000/users
 */
