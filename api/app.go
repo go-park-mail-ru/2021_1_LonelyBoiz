@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -82,7 +83,8 @@ type Config struct {
 
 func NewConfig() Config {
 	newConfig := Config{}
-	newConfig.addr = ":8001"
+	port := os.Getenv("PORT")
+	newConfig.addr = ":" + port
 	newConfig.userIds = 0
 	newConfig.router = mux.NewRouter()
 	return newConfig
