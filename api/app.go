@@ -84,6 +84,9 @@ type Config struct {
 func NewConfig() Config {
 	newConfig := Config{}
 	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8000"
+	}
 	newConfig.addr = ":" + port
 	newConfig.userIds = 0
 	newConfig.router = mux.NewRouter()
