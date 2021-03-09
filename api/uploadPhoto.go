@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"sync"
@@ -73,13 +74,5 @@ func (a *App) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 	user.PasswordHash = nil
 	responseWithJson(w, 200, user)
 
-	fmt.Println("photo uploaded", user)
+	log.Println("photo uploaded", user)
 }
-
-/*
-	curl -b 'token=4PmZNbRkhQdftce2BiBZ8cyL3huAZGUbShdgY5FN' \
-	--header "Content-Type: application/json" \
-  --request POST \
-  --data '{"addr":"chetiotr"}' \
-  http://localhost:8003/users/0/photos
-*/

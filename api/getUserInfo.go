@@ -1,7 +1,7 @@
 package api
 
 import (
-	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"sync"
@@ -63,9 +63,5 @@ func (a *App) GetUserInfo(w http.ResponseWriter, r *http.Request) {
 	userInfo.PasswordHash = nil
 	responseWithJson(w, 200, userInfo)
 
-	fmt.Println("successful get user")
+	log.Println("successful get user", userInfo)
 }
-
-/*
-curl -b 'token=UbalFd4mtHQkvXsMsKKEvidTj1YmuUN2FWtEiVDp' http://localhost:8001/users/1
-*/

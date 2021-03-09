@@ -1,7 +1,7 @@
 package api
 
 import (
-	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"sync"
@@ -52,9 +52,5 @@ func (a *App) DeleteUser(w http.ResponseWriter, r *http.Request) {
 
 	responseWithJson(w, 200, nil)
 
-	fmt.Println(a.Users)
+	log.Println("deleted user", a.Users)
 }
-
-/*
-curl --request DELETE -b 'token=APVpnYtX4EM6eLEaIesgVjbrmmsVabMDbKby35rx' http://localhost:8001/users/1
-*/

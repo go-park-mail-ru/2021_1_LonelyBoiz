@@ -2,7 +2,7 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"sync"
@@ -91,13 +91,5 @@ func (a *App) DeletePhoto(w http.ResponseWriter, r *http.Request) {
 	user.PasswordHash = nil
 	responseWithJson(w, 200, user)
 
-	fmt.Println("photo deleted")
+	log.Println("photo deleted", user)
 }
-
-/*
-curl -b 'token=4PmZNbRkhQdftce2BiBZ8cyL3huAZGUbShdgY5FN' \
-	 --header "Content-Type: application/json" \
-  	 --request DELETE \
-  	 --data '{"addr":"chet123iotr"}' \
-  	 http://localhost:8003/users/0/photos
-*/

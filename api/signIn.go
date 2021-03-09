@@ -2,7 +2,7 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
+	"log"
 	"net/http"
 	"sync"
 
@@ -79,17 +79,5 @@ func (a *App) SignIn(w http.ResponseWriter, r *http.Request) {
 	newUser.PasswordHash = nil
 	responseWithJson(w, 200, newUser)
 
-	fmt.Println("------------", a.Sessions[newUser.Id], "------------")
-	fmt.Println("successful login\n", newUser)
+	log.Println("successful login", newUser, a.Sessions[newUser.Id])
 }
-
-/*
-curl -H "Origin: http://localhost:3000" --verbose \
- --header "Content-Type: application/json" \
-  --request POST \
-  --data '{"mail":"2xyz","pass":"1234567Qq"}' \
-  http://localhost:8000/login
-*/
-
-//400 - кривые данные
-//401 - данные норм но нет юзера

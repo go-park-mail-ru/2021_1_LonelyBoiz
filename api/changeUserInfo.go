@@ -2,7 +2,7 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"sync"
@@ -215,14 +215,5 @@ func (a *App) ChangeUserInfo(w http.ResponseWriter, r *http.Request) {
 	userInfo.PasswordHash = nil
 	responseWithJson(w, 200, userInfo)
 
-	fmt.Println("successful change")
-	fmt.Println(userInfo)
+	log.Println("successful change", userInfo)
 }
-
-/*
-curl -b 'token=hCHjWRWy09NPrA8f0c3PedGTUPPbrK7stm2MVNrm' \
-	 --header "Content-Type: application/json" \
-  	 --request PATCH \
-  	 --data '{"mail":"xyz","pass":"1234567Qq","passRepeat":"1234567Qq","oldPass":"1234567Qq","name":"Kolyan","sex":"female"}' \
-  	 http://localhost:8003/users/0
-*/

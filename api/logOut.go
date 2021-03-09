@@ -1,7 +1,7 @@
 package api
 
 import (
-	"fmt"
+	"log"
 	"net/http"
 	"sync"
 	"time"
@@ -44,13 +44,5 @@ func (a *App) LogOut(w http.ResponseWriter, r *http.Request) {
 	deleteCookie(key, &a.Sessions)
 	responseWithJson(w, 200, nil)
 
-	fmt.Println(a.Sessions)
+	log.Println("logout", a.Sessions)
 }
-
-/*
-curl -b 'token=zeGfP0vqY3xR6vTBDAw90siqzhr1FUnopld9C8be' \
--H "Origin: http://localhost:3000" --verbose \
- --header "Content-Type: application/json" \
-  --request DELETE \
-  http://localhost:8001/login
-*/

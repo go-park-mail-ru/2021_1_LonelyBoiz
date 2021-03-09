@@ -165,13 +165,4 @@ func (a *App) SignUp(w http.ResponseWriter, r *http.Request) {
 	responseWithJson(w, 200, newUser)
 
 	log.Println("successful resistration\n", a.Sessions)
-	//fmt.Println("successful resistration\n", a.Sessions)
 }
-
-/*
-curl -H "Origin: http://localhost:3000" --verbose \
-  --header "Content-Type: application/json" \
-  --request POST \
-  --data '{"mail":"xyz","pass":"1234567Qq","passRepeat":"1234567Qq","name":"vasya","birthday":1016048654}' \
-  http://localhost:8000/users
-*/
