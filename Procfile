@@ -1,1 +1,1 @@
-web: ls bin
+web: ./bin/server
