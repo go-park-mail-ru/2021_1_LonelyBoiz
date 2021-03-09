@@ -10,7 +10,10 @@ import (
 )
 
 func checkAuthorization(a *App, userId int, getKey string) bool {
+	mutex := sync.Mutex{}
+	mutex.Lock()
 	expectedCookies, ok := a.Sessions[userId]
+	mutex.Unlock()
 	if !ok {
 		return false
 	}
@@ -27,7 +30,7 @@ func checkAuthorization(a *App, userId int, getKey string) bool {
 func (a *App) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	cookie, cookieError := r.Cookie("token")
 	if cookieError != nil {
-		responseWithJson(w, 400, cookieError)
+		responseWithJson(w, 401, cookieError)
 		return
 	}
 
@@ -36,21 +39,16 @@ func (a *App) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	args := mux.Vars(r)
 	userId, err := strconv.Atoi(args["id"])
 	if err != nil {
-		responseWithJson(w, 500, err)
+		responseWithJson(w, 400, err)
 		return
 	}
 
-	mutex := sync.Mutex{}
-	mutex.Lock()
-	defer mutex.Unlock()
-	{
-		if !checkAuthorization(a, userId, key) {
-			responseWithJson(w, 400, "Отказано в доступе")
-			return
-		}
-
-		delete(a.Users, userId)
+	if !checkAuthorization(a, userId, key) {
+		responseWithJson(w, 400, "Отказано в доступе")
+		return
 	}
+
+	delete(a.Users, userId)
 
 	responseWithJson(w, 200, nil)
 

@@ -13,12 +13,16 @@ import (
 	"golang.org/x/crypto/sha3"
 )
 
-type errorResponse struct {
+type errorDescriptionResponse struct {
 	Description map[string]string `json:"description"`
 	Err         string            `json:"error"`
 }
 
-func (e errorResponse) Error() string {
+type errorResponse struct {
+	Err string `json:"error"`
+}
+
+func (e errorDescriptionResponse) Error() string {
 	ret, _ := json.Marshal(e)
 
 	return string(ret)
@@ -30,7 +34,7 @@ func responseWithJson(w http.ResponseWriter, code int, body interface{}) {
 }
 
 func validatePass(pass string) error {
-	response := errorResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
+	response := errorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
 	switch {
 	case len(pass) < 8:
 		response.Description["password"] = "Пароль должен содержать 8 символов"
@@ -52,7 +56,7 @@ func validateSignUpData(newUser User) error {
 		return err
 	}
 
-	response := errorResponse{Description: map[string]string{}, Err: "Не удалось зарегестрироваться"}
+	response := errorDescriptionResponse{Description: map[string]string{}, Err: "Не удалось зарегестрироваться"}
 
 	switch {
 	case newUser.Email == "":
@@ -78,7 +82,7 @@ func (a *App) isAlreadySignedUp(newEmail string) (bool, error) {
 	defer mutex.Unlock()
 	for _, v := range a.Users {
 		if v.Email == newEmail {
-			response := errorResponse{Description: map[string]string{}, Err: "Не удалось зарегестрироваться"}
+			response := errorDescriptionResponse{Description: map[string]string{}, Err: "Не удалось зарегестрироваться"}
 			response.Description["mail"] = "Почта уже зарегестрирована"
 			return true, response
 		}
@@ -130,8 +134,10 @@ func (a *App) SignUp(w http.ResponseWriter, r *http.Request) {
 	var newUser User
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&newUser)
+	defer r.Body.Close()
 	if err != nil {
-		responseWithJson(w, 400, err)
+		response := errorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
+		responseWithJson(w, 400, response)
 		return
 	}
 
@@ -147,7 +153,7 @@ func (a *App) SignUp(w http.ResponseWriter, r *http.Request) {
 
 	err = a.addNewUser(&newUser)
 	if err != nil {
-		responseWithJson(w, 500, err)
+		responseWithJson(w, 500, nil)
 		return
 	}
 

@@ -18,10 +18,10 @@ func remove(s []string, i int) []string {
 func (a *App) deletePhoto(userId int, photoId string) (User, error) {
 	var mutex = &sync.Mutex{}
 	mutex.Lock()
-	defer mutex.Unlock()
 	user, ok := a.Users[userId]
+	mutex.Unlock()
 	if !ok {
-		response := errorResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
+		response := errorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
 		response.Description["id"] = "Пользователя с таким id не найдено"
 		return user, response
 	}
@@ -35,29 +35,24 @@ func (a *App) deletePhoto(userId int, photoId string) (User, error) {
 
 	}
 	if num == -1 {
-		response := errorResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
+		response := errorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
 		response.Description["photo_id"] = "Фото с таким id не найдено"
 		return user, response
 	}
 
 	user.AvatarAddr = remove(user.AvatarAddr, num)
+
+	mutex.Lock()
 	a.Users[userId] = user
+	mutex.Unlock()
 
 	return user, nil
 }
 
 func (a *App) DeletePhoto(w http.ResponseWriter, r *http.Request) {
-	var photoAddr inputJson
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&photoAddr)
-	if err != nil {
-		responseWithJson(w, 400, err)
-		return
-	}
-
 	token, err := r.Cookie("token")
 	if err != nil {
-		responseWithJson(w, 400, err)
+		responseWithJson(w, 401, err)
 		return
 	}
 
@@ -69,8 +64,17 @@ func (a *App) DeletePhoto(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !a.validateCookieForChanging(token.Value, userId) {
-		response := errorResponse{Description: map[string]string{}, Err: "Отказано в доступе, кука устарела"}
+		response := errorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе, кука устарела"}
 		responseWithJson(w, 401, response)
+		return
+	}
+
+	var photoAddr inputJson
+	decoder := json.NewDecoder(r.Body)
+	err = decoder.Decode(&photoAddr)
+	defer r.Body.Close()
+	if err != nil {
+		responseWithJson(w, 400, err)
 		return
 	}
 

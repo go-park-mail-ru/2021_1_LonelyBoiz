@@ -28,13 +28,14 @@ func (a *App) validateCookie(cookie string) bool {
 func (a *App) GetUserInfo(w http.ResponseWriter, r *http.Request) {
 	token, err := r.Cookie("token")
 	if err != nil {
-		responseWithJson(w, 400, err)
+		response := errorResponse{Err: "Вы не авторизованы"}
+		responseWithJson(w, 401, response)
 		return
 	}
 
 	if !a.validateCookie(token.Value) {
 		w.WriteHeader(401)
-		response := errorResponse{Description: map[string]string{}, Err: "Отказано в доступе, кука устарела"}
+		response := errorResponse{Err: "Отказано в доступе, кука устарела"}
 		responseWithJson(w, 401, response)
 		return
 	}
@@ -42,17 +43,19 @@ func (a *App) GetUserInfo(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	userId, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		responseWithJson(w, 500, err)
+		response := errorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
+		response.Description["id"] = "Пользоватея с таким id нет"
+		responseWithJson(w, 400, response)
 		return
 	}
 
 	var mutex = &sync.Mutex{}
 	mutex.Lock()
-	defer mutex.Unlock()
 	userInfo, ok := a.Users[userId]
+	mutex.Unlock()
 	if !ok {
-		response := errorResponse{Description: map[string]string{}, Err: "Отказано в доступе, кука устарела"}
-		response.Description["id"] = "Пользователя с таким id не существует"
+		response := errorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе, кука устарела"}
+		response.Description["id"] = "Пользователя с таким id нет"
 		responseWithJson(w, 400, response)
 		return
 	}

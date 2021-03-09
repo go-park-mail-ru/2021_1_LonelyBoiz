@@ -32,7 +32,6 @@ func deleteCookie(key string, sessions *map[int][]http.Cookie) {
 
 func (a *App) LogOut(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("token")
-
 	if err != nil {
 		responseWithJson(w, 400, err)
 		return

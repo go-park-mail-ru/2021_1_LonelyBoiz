@@ -20,7 +20,7 @@ func (a *App) uploadPhoto(userId int, photoId string) (User, error) {
 	defer mutex.Unlock()
 	user, ok := a.Users[userId]
 	if !ok {
-		response := errorResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
+		response := errorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
 		response.Description["id"] = "Пользователя с таким id не найдено"
 		return user, response
 	}
@@ -42,7 +42,7 @@ func (a *App) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 
 	token, err := r.Cookie("token")
 	if err != nil {
-		responseWithJson(w, 400, err)
+		responseWithJson(w, 401, err)
 		return
 	}
 
@@ -55,7 +55,7 @@ func (a *App) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !a.validateCookieForChanging(token.Value, userId) {
-		response := errorResponse{Description: map[string]string{}, Err: "Отказано в доступе, кука устарела"}
+		response := errorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе, кука устарела"}
 		responseWithJson(w, 401, response)
 		return
 	}
@@ -79,4 +79,3 @@ func (a *App) UploadPhoto(w http.ResponseWriter, r *http.Request) {
   --data '{"addr":"chetiotr"}' \
   http://localhost:8003/users/0/photos
 */
-

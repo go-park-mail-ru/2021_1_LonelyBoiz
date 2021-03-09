@@ -11,7 +11,7 @@ import (
 )
 
 func validateSignInData(newUser User) (bool, error) {
-	response := errorResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
+	response := errorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
 	switch {
 	case newUser.Email == "":
 		response.Description["mail"] = "Введите почту"
@@ -23,14 +23,15 @@ func validateSignInData(newUser User) (bool, error) {
 		return false, response
 	}
 
-	return true, response
+	return true, nil
 }
 
 func (a *App) checkPassword(newUser *User) bool {
 	var mutex = &sync.Mutex{}
 	mutex.Lock()
-	defer mutex.Unlock()
-	for _, v := range a.Users {
+	users := a.Users
+	mutex.Unlock()
+	for _, v := range users {
 		if v.Email == newUser.Email {
 			pass := sha3.New512()
 			pass.Write([]byte(newUser.Password))
@@ -39,7 +40,10 @@ func (a *App) checkPassword(newUser *User) bool {
 				return false
 			}
 
+			mutex.Lock()
 			*newUser = v
+			mutex.Unlock()
+
 			return true
 		}
 	}
@@ -51,8 +55,10 @@ func (a *App) SignIn(w http.ResponseWriter, r *http.Request) {
 	var newUser User
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&newUser)
+	defer r.Body.Close()
 	if err != nil {
-		responseWithJson(w, 400, err)
+		response := errorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
+		responseWithJson(w, 400, response)
 		return
 	}
 
@@ -63,17 +69,14 @@ func (a *App) SignIn(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if isCorrect := a.checkPassword(&newUser); !isCorrect {
-		w.WriteHeader(401)
-		response := errorResponse{Description: map[string]string{}, Err: "Не удалось авторизоваться"}
-		response.Description["password"] = "Неверный пароль"
+		response := errorResponse{Err: "Неверный логин или пароль"}
 		responseWithJson(w, 401, response)
 		return
 	}
 
-	newUser.PasswordHash = nil
-
 	a.setSession(w, newUser.Id)
 
+	newUser.PasswordHash = nil
 	responseWithJson(w, 200, newUser)
 
 	fmt.Println("------------", a.Sessions[newUser.Id], "------------")
@@ -87,3 +90,6 @@ curl -H "Origin: http://localhost:3000" --verbose \
   --data '{"mail":"2xyz","pass":"1234567Qq"}' \
   http://localhost:8000/login
 */
+
+//400 - кривые данные
+//401 - данные норм но нет юзера

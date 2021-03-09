@@ -65,7 +65,12 @@ func (a *App) changeUserProperties(newUser User) error {
 	var mutex = &sync.Mutex{}
 	mutex.Lock()
 	defer mutex.Unlock()
-	bufUser := a.Users[newUser.Id]
+	bufUser, ok := a.Users[newUser.Id]
+	if !ok {
+		response := errorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
+		response.Description["id"] = "Пользователя с таким id не существует"
+		return response
+	}
 
 	if newUser.Email != "" {
 		bufUser.Email = newUser.Email
@@ -91,7 +96,7 @@ func (a *App) changeUserProperties(newUser User) error {
 		bufUser.Instagram = newUser.Instagram
 	}
 
-	response := errorResponse{Description: map[string]string{}, Err: "Не удалось поменять данные"}
+	response := errorDescriptionResponse{Description: map[string]string{}, Err: "Не удалось поменять данные"}
 	if newUser.Sex != "" {
 		if !validateSex(newUser.Sex) {
 			response.Description["sex"] = "Неверно введен пол"
@@ -113,20 +118,24 @@ func (a *App) changeUserProperties(newUser User) error {
 	return nil
 }
 
-func (a *App) ChangeUserPassword(newUser User) error {
+func (a *App) changeUserPassword(newUser User) error {
+	if newUser.Password == "" {
+		return nil
+	}
+
 	err := validatePass(newUser.Password)
 	if err != nil {
 		return err
 	}
 
-	response := errorResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
+	response := errorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
 	if newUser.SecondPassword != newUser.Password {
 		response.Description["password"] = "Пароли не совпадают"
 		return response
 	}
 
 	if !a.checkPasswordForCHanging(newUser) {
-		response := errorResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
+		response := errorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
 		response.Description["password"] = "Неверный пароль"
 		return response
 	}
@@ -142,7 +151,7 @@ func (a *App) ChangeUserPassword(newUser User) error {
 	defer mutex.Unlock()
 	bufUser, ok := a.Users[newUser.Id]
 	if !ok {
-		response := errorResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
+		response := errorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
 		response.Description["id"] = "Пользователя с таким id не существует"
 		return response
 	}
@@ -155,28 +164,33 @@ func (a *App) ChangeUserPassword(newUser User) error {
 func (a *App) ChangeUserInfo(w http.ResponseWriter, r *http.Request) {
 	token, err := r.Cookie("token")
 	if err != nil {
-		responseWithJson(w, 400, err)
+		response := errorResponse{Err: "Вы не авторизованы"}
+		responseWithJson(w, 401, response)
 		return
 	}
 
 	vars := mux.Vars(r)
 	userId, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		responseWithJson(w, 400, err)
+		response := errorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
+		response.Description["id"] = "Пользователя с таким id не ceotcndetn"
+		responseWithJson(w, 400, response)
 		return
 	}
 
 	if !a.validateCookieForChanging(token.Value, userId) {
-		response := errorResponse{Description: map[string]string{}, Err: "Отказано в доступе, кука устарела"}
-		responseWithJson(w, 401, response)
+		response := errorResponse{Err: "Отказано в доступе, кука устарела"}
+		responseWithJson(w, 403, response)
 		return
 	}
 
 	var newUser User
 	decoder := json.NewDecoder(r.Body)
 	err = decoder.Decode(&newUser)
+	defer r.Body.Close()
 	if err != nil {
-		responseWithJson(w, 400, err)
+		response := errorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
+		responseWithJson(w, 400, response)
 		return
 	}
 	newUser.Id = userId
@@ -187,7 +201,7 @@ func (a *App) ChangeUserInfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response = a.ChangeUserPassword(newUser)
+	response = a.changeUserPassword(newUser)
 	if response != nil {
 		responseWithJson(w, 400, response)
 		return

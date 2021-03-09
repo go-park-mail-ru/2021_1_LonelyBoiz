@@ -22,7 +22,7 @@ func KeyGen() string {
 }
 
 type User struct {
-	Id             int
+	Id             int      `json:"id"`
 	Email          string   `json:"mail"`
 	Password       string   `json:"pass,omitempty"`
 	SecondPassword string   `json:"passRepeat,omitempty"`
