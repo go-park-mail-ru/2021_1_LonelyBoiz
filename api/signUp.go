@@ -2,7 +2,7 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
+	"log"
 	"math"
 	"net/http"
 	"strings"
@@ -164,7 +164,7 @@ func (a *App) SignUp(w http.ResponseWriter, r *http.Request) {
 	newUser.PasswordHash = nil
 	responseWithJson(w, 200, newUser)
 
-	fmt.Println("successful resistration\n", a.Users)
+	log.Println("successful resistration\n", a.Sessions)
 	//fmt.Println("successful resistration\n", a.Sessions)
 }
 
