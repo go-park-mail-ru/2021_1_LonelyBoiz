@@ -17,8 +17,8 @@ type inputJson struct {
 func (a *App) uploadPhoto(userId int, photoId string) (User, error) {
 	var mutex = &sync.Mutex{}
 	mutex.Lock()
-	defer mutex.Unlock()
 	user, ok := a.Users[userId]
+	defer mutex.Unlock()
 	if !ok {
 		response := errorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
 		response.Description["id"] = "Пользователя с таким id не найдено"
@@ -35,14 +35,16 @@ func (a *App) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&photoAddr)
 	if err != nil {
-		responseWithJson(w, 400, err)
+		response := errorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
+		responseWithJson(w, 400, response)
 		return
 	}
 	fmt.Println(photoAddr)
 
 	token, err := r.Cookie("token")
 	if err != nil {
-		responseWithJson(w, 401, err)
+		response := errorResponse{Err: "Вы не авторизованы"}
+		responseWithJson(w, 401, response)
 		return
 	}
 
@@ -50,12 +52,14 @@ func (a *App) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 
 	userId, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		responseWithJson(w, 400, err)
+		response := errorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
+		response.Description["id"] = "Пользователя с таким id нет"
+		responseWithJson(w, 400, response)
 		return
 	}
 
 	if !a.validateCookieForChanging(token.Value, userId) {
-		response := errorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе, кука устарела"}
+		response := errorResponse{Err: "Отказано в доступе, кука устарела"}
 		responseWithJson(w, 401, response)
 		return
 	}

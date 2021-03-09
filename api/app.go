@@ -24,10 +24,10 @@ func KeyGen() string {
 type User struct {
 	Id             int      `json:"id"`
 	Email          string   `json:"mail"`
-	Password       string   `json:"pass,omitempty"`
-	SecondPassword string   `json:"passRepeat,omitempty"`
+	Password       string   `json:"password,omitempty"`
+	SecondPassword string   `json:"passwordRepeat,omitempty"`
 	PasswordHash   []byte   `json:",omitempty"`
-	OldPassword    string   `json:"oldPass,omitempty"`
+	OldPassword    string   `json:"oldPassword,omitempty"`
 	Name           string   `json:"name"`
 	Birthday       int64    `json:"birthday"`
 	Description    string   `json:"description"`

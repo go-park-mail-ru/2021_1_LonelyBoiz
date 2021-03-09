@@ -52,19 +52,7 @@ func (a *App) deletePhoto(userId int, photoId string) (User, error) {
 func (a *App) DeletePhoto(w http.ResponseWriter, r *http.Request) {
 	token, err := r.Cookie("token")
 	if err != nil {
-		responseWithJson(w, 401, err)
-		return
-	}
-
-	vars := mux.Vars(r)
-	userId, err := strconv.Atoi(vars["id"])
-	if err != nil {
-		responseWithJson(w, 400, err)
-		return
-	}
-
-	if !a.validateCookieForChanging(token.Value, userId) {
-		response := errorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе, кука устарела"}
+		response := errorResponse{Err: "Вы не авторизованы"}
 		responseWithJson(w, 401, response)
 		return
 	}
@@ -74,7 +62,23 @@ func (a *App) DeletePhoto(w http.ResponseWriter, r *http.Request) {
 	err = decoder.Decode(&photoAddr)
 	defer r.Body.Close()
 	if err != nil {
-		responseWithJson(w, 400, err)
+		response := errorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
+		responseWithJson(w, 400, response)
+		return
+	}
+
+	vars := mux.Vars(r)
+	userId, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		response := errorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
+		response.Description["id"] = "Пользователя с таким id нет"
+		responseWithJson(w, 400, response)
+		return
+	}
+
+	if !a.validateCookieForChanging(token.Value, userId) {
+		response := errorResponse{Err: "Отказано в доступе, кука устарела"}
+		responseWithJson(w, 401, response)
 		return
 	}
 
