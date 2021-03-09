@@ -12,11 +12,16 @@ import (
 	"golang.org/x/crypto/sha3"
 )
 
-func (a *App) validateCookieForChanging(cookie string, id int) bool {
+func (a *App) ValidateCookieWithId(cookie string, id int) bool {
 	var mutex = &sync.Mutex{}
 	mutex.Lock()
-	defer mutex.Unlock()
-	for _, v := range a.Sessions[id] {
+	sessions, ok := a.Sessions[id]
+	mutex.Unlock()
+	if !ok {
+		return false
+	}
+
+	for _, v := range sessions {
 		if v.Value == cookie {
 			return true
 		}
@@ -45,7 +50,7 @@ func (a *App) checkPasswordForCHanging(newUser User) bool {
 	return false
 }
 
-func validateSex(sex string) bool {
+func ValidateSex(sex string) bool {
 	if sex != "male" && sex != "female" {
 		return false
 	}
@@ -53,7 +58,7 @@ func validateSex(sex string) bool {
 	return true
 }
 
-func validateDatePreferensces(pref string) bool {
+func ValidateDatePreferensces(pref string) bool {
 	if pref != "male" && pref != "female" && pref != "both" {
 		return false
 	}
@@ -98,7 +103,7 @@ func (a *App) changeUserProperties(newUser User) error {
 
 	response := errorDescriptionResponse{Description: map[string]string{}, Err: "Не удалось поменять данные"}
 	if newUser.Sex != "" {
-		if !validateSex(newUser.Sex) {
+		if !ValidateSex(newUser.Sex) {
 			response.Description["sex"] = "Неверно введен пол"
 			return response
 		}
@@ -106,7 +111,7 @@ func (a *App) changeUserProperties(newUser User) error {
 	}
 
 	if newUser.DatePreference != "" {
-		if !validateDatePreferensces(newUser.DatePreference) {
+		if !ValidateDatePreferensces(newUser.DatePreference) {
 			response.Description["datePreferences"] = "Неверно введены предпочтения"
 			return response
 		}
@@ -178,7 +183,7 @@ func (a *App) ChangeUserInfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !a.validateCookieForChanging(token.Value, userId) {
+	if !a.ValidateCookieWithId(token.Value, userId) {
 		response := errorResponse{Err: "Отказано в доступе, кука устарела"}
 		responseWithJson(w, 403, response)
 		return

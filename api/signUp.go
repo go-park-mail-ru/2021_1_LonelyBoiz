@@ -164,5 +164,5 @@ func (a *App) SignUp(w http.ResponseWriter, r *http.Request) {
 	newUser.PasswordHash = nil
 	responseWithJson(w, 200, newUser)
 
-	log.Println("successful resistration\n", a.Sessions)
+	log.Println("successful resistration\n", newUser)
 }

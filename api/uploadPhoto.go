@@ -59,7 +59,7 @@ func (a *App) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !a.validateCookieForChanging(token.Value, userId) {
+	if !a.ValidateCookieWithId(token.Value, userId) {
 		response := errorResponse{Err: "Отказано в доступе, кука устарела"}
 		responseWithJson(w, 401, response)
 		return

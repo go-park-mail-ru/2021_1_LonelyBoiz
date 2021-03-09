@@ -104,6 +104,7 @@ func (a *App) InitializeRoutes(currConfig Config) {
 
 	a.router.HandleFunc("/login", a.SignIn).Methods("POST")
 	a.router.HandleFunc("/users", a.SignUp).Methods("POST")
+	a.router.HandleFunc("/users", a.GetUsers).Methods("GET")
 	a.router.HandleFunc("/users/{id:[0-9]+}", a.ChangeUserInfo).Methods("PATCH")
 	a.router.HandleFunc("/users/{id:[0-9]+}", a.GetUserInfo).Methods("GET")
 	a.router.HandleFunc("/users/{id:[0-9]+}/photos", a.UploadPhoto).Methods("POST")
@@ -111,8 +112,3 @@ func (a *App) InitializeRoutes(currConfig Config) {
 	a.router.HandleFunc("/users/{id:[0-9]+}", a.DeleteUser).Methods("DELETE")
 	a.router.HandleFunc("/login", a.LogOut).Methods("DELETE")
 }
-
-/*curl -H "Origin: http://localhost:3000" \
--H "Access-Control-Request-Method: POST" \
--X OPTIONS --verbose http://localhost/8001/login
-*/
