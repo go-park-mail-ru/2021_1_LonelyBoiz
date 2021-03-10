@@ -51,7 +51,7 @@ func (a *App) Start() error {
 	fmt.Println("Server start")
 
 	cors := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000"},
+		AllowedOrigins:   []string{"http://localhost:3000", "https://p1ckleFront.herokuapp.com"},
 		AllowCredentials: true,
 		AllowedMethods:   []string{"GET", "POST", "DELETE", "PATCH", "OPTIONS"},
 		Debug:            true,
