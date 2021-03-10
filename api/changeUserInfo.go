@@ -211,10 +211,12 @@ func (a *App) ChangeUserInfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response = a.changeUserPassword(newUser)
-	if response != nil {
-		responseWithJson(w, 400, response)
-		return
+	if newUser.Password != "" {
+		response = a.changeUserPassword(newUser)
+		if response != nil {
+			responseWithJson(w, 400, response)
+			return
+		}
 	}
 
 	var mutex = &sync.Mutex{}
