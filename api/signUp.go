@@ -140,9 +140,9 @@ func (a *App) setSession(w http.ResponseWriter, id int) {
 		SameSite: 0,
 		Expires:  expiration,
 		//Secure:   true,
-		Domain:   "lepick.herokuapp.com",
-		HttpOnly: true,
-		Path:     "/"}
+		Domain: "lepick.herokuapp.com",
+		//HttpOnly: true
+	}
 
 	http.SetCookie(w, &cookie)
 
