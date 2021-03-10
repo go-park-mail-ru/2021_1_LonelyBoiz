@@ -51,47 +51,10 @@ func (a *App) checkPassword(newUser *User) bool {
 	return false
 }
 
-func (a *App) validateCookieAndId(cookie string) (bool, int) {
-	var mutex = &sync.Mutex{}
-	mutex.Lock()
-	defer mutex.Unlock()
-
-	for userId, userSessions := range a.Sessions {
-		for _, v := range userSessions {
-			if v.Value == cookie {
-
-				return true, userId
-			}
-		}
-	}
-
-	return false, -1
-}
-
 func (a *App) SignIn(w http.ResponseWriter, r *http.Request) {
-	token, err := r.Cookie("token")
-	if err == nil {
-		if ok, userId := a.validateCookieAndId(token.Value); ok {
-			var mutex = &sync.Mutex{}
-			mutex.Lock()
-			userInfo, ok := a.Users[userId]
-			mutex.Unlock()
-			if !ok {
-				response := errorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе, кука устарела"}
-				response.Description["id"] = "Пользователя с таким id нет"
-				responseWithJson(w, 400, response)
-				return
-			}
-
-			userInfo.PasswordHash = nil
-			responseWithJson(w, 200, userInfo)
-			return
-		}
-	}
-
 	var newUser User
 	decoder := json.NewDecoder(r.Body)
-	err = decoder.Decode(&newUser)
+	err := decoder.Decode(&newUser)
 	defer r.Body.Close()
 	if err != nil {
 		response := errorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
