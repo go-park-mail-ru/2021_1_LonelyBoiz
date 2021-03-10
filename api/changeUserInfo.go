@@ -78,7 +78,7 @@ func (a *App) changeUserProperties(newUser User) error {
 	}
 
 	if newUser.Email != "" {
-		if !validateEmail(bufUser.Email) {
+		if !validateEmail(newUser.Email) {
 			response := errorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
 			response.Description["mail"] = "Почта не прошла валидацию"
 			return response
