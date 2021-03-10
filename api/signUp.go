@@ -138,12 +138,14 @@ func (a *App) setSession(w http.ResponseWriter, id int) {
 		Name:  "token",
 		Value: key,
 		//SameSite: 4,
-		Expires: expiration,
-		//Secure:   true,
+		Expires:  expiration,
+		Secure:   true,
 		Domain:   "p1ckle.herokuapp.com",
 		HttpOnly: true}
 
 	http.SetCookie(w, &cookie)
+
+	w.Header().Set("SameSite", "None")
 
 	var mutex = &sync.Mutex{}
 	mutex.Lock()
