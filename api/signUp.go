@@ -136,6 +136,8 @@ func (a *App) setSession(w http.ResponseWriter, id int) {
 	expiration := time.Now().Add(24 * time.Hour)
 	cookie := http.Cookie{Name: "token", Value: key, SameSite: http.SameSiteNoneMode, Expires: expiration, HttpOnly: true, Path: "/"}
 
+	http.SetCookie(w, &cookie)
+
 	var mutex = &sync.Mutex{}
 	mutex.Lock()
 	a.Sessions[id] = append(a.Sessions[id], cookie)
