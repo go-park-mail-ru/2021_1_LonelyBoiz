@@ -134,9 +134,7 @@ func (a *App) addNewUser(newUser *User) error {
 func (a *App) setSession(w http.ResponseWriter, id int) {
 	key := KeyGen()
 	expiration := time.Now().Add(24 * time.Hour)
-	cookie := http.Cookie{Name: "token", Value: key, SameSite: http.SameSiteStrictMode, Expires: expiration}
-	cookie.HttpOnly = true
-	http.SetCookie(w, &cookie)
+	cookie := http.Cookie{Name: "token", Value: key, SameSite: http.SameSiteStrictMode, Expires: expiration, HttpOnly: true, Path: "/"}
 
 	var mutex = &sync.Mutex{}
 	mutex.Lock()
