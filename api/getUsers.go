@@ -7,7 +7,7 @@ import (
 	"sync"
 )
 
-func (a *App) getUsers(newUser User) []User {
+func (a *App) listUsers(newUser User) []User {
 	var mutex = &sync.Mutex{}
 	mutex.Lock()
 	users := a.Users
@@ -72,7 +72,7 @@ func (a *App) GetUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := a.getUsers(newUser)
+	response := a.listUsers(newUser)
 
 	responseWithJson(w, 200, response)
 

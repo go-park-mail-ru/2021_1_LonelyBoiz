@@ -140,7 +140,8 @@ func (a *App) setSession(w http.ResponseWriter, id int) {
 		Value:    key,
 		Expires:  expiration,
 		Domain:   "p1ckle.herokuapp.com",
-		HttpOnly: true}
+		HttpOnly: true,
+	}
 
 	str := cookie.String()
 	str = str + key + "; SameSite=None;	Secure=true"
