@@ -106,6 +106,10 @@ func (a *App) changeUserProperties(newUser User) error {
 		bufUser.Instagram = newUser.Instagram
 	}
 
+	if newUser.Avatar != "" {
+		bufUser.Avatar = newUser.Avatar
+	}
+
 	response := errorDescriptionResponse{Description: map[string]string{}, Err: "Не удалось поменять данные"}
 	if newUser.Sex != "" {
 		if !ValidateSex(newUser.Sex) {

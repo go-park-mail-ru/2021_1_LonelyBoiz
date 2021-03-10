@@ -1,5 +1,6 @@
 package api
 
+/*
 import (
 	"encoding/json"
 	"fmt"
@@ -76,3 +77,4 @@ func (a *App) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 
 	log.Println("photo uploaded", user)
 }
+*/

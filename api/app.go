@@ -23,20 +23,20 @@ func KeyGen() string {
 }
 
 type User struct {
-	Id             int      `json:"id"`
-	Email          string   `json:"mail"`
-	Password       string   `json:"password,omitempty"`
-	SecondPassword string   `json:"passwordRepeat,omitempty"`
-	PasswordHash   []byte   `json:",omitempty"`
-	OldPassword    string   `json:"oldPassword,omitempty"`
-	Name           string   `json:"name"`
-	Birthday       int64    `json:"birthday"`
-	Description    string   `json:"description"`
-	City           string   `json:"city"`
-	AvatarAddr     []string `json:"avatar"`
-	Instagram      string   `json:"instagram"`
-	Sex            string   `json:"sex"`
-	DatePreference string   `json:"datePreference"`
+	Id             int    `json:"id"`
+	Email          string `json:"mail"`
+	Password       string `json:"password,omitempty"`
+	SecondPassword string `json:"passwordRepeat,omitempty"`
+	PasswordHash   []byte `json:",omitempty"`
+	OldPassword    string `json:"oldPassword,omitempty"`
+	Name           string `json:"name"`
+	Birthday       int64  `json:"birthday"`
+	Description    string `json:"description"`
+	City           string `json:"city"`
+	Avatar         string `json:"avatar"`
+	Instagram      string `json:"instagram"`
+	Sex            string `json:"sex"`
+	DatePreference string `json:"datePreference"`
 }
 
 type App struct {
@@ -107,8 +107,8 @@ func (a *App) InitializeRoutes(currConfig Config) {
 	a.router.HandleFunc("/users", a.GetUsers).Methods("GET")
 	a.router.HandleFunc("/users/{id:[0-9]+}", a.ChangeUserInfo).Methods("PATCH")
 	a.router.HandleFunc("/users/{id:[0-9]+}", a.GetUserInfo).Methods("GET")
-	a.router.HandleFunc("/users/{id:[0-9]+}/photos", a.UploadPhoto).Methods("POST")
-	a.router.HandleFunc("/users/{id:[0-9]+}/photos", a.DeletePhoto).Methods("DELETE")
+	//a.router.HandleFunc("/users/{id:[0-9]+}/photos", a.UploadPhoto).Methods("POST")
+	//a.router.HandleFunc("/users/{id:[0-9]+}/photos", a.DeletePhoto).Methods("DELETE")
 	a.router.HandleFunc("/users/{id:[0-9]+}", a.DeleteUser).Methods("DELETE")
 	a.router.HandleFunc("/login", a.LogOut).Methods("DELETE")
 }

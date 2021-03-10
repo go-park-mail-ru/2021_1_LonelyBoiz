@@ -1,5 +1,6 @@
 package api
 
+/*
 import (
 	"encoding/json"
 	"log"
@@ -93,3 +94,4 @@ func (a *App) DeletePhoto(w http.ResponseWriter, r *http.Request) {
 
 	log.Println("photo deleted", user)
 }
+*/
