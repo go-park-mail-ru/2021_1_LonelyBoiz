@@ -139,6 +139,7 @@ func (a *App) setSession(w http.ResponseWriter, id int) {
 		Name:     "token",
 		Value:    key,
 		Expires:  expiration,
+		SameSite: http.SameSiteNoneMode,
 		Domain:   "p1ckle.herokuapp.com",
 		HttpOnly: true,
 	}
