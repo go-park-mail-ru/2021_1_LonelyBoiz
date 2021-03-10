@@ -136,18 +136,14 @@ func (a *App) setSession(w http.ResponseWriter, id int) {
 	expiration := time.Now().Add(24 * time.Hour)
 
 	cookie := http.Cookie{
-		Name:  "token",
-		Value: key,
-		//SameSite: 4,
-		//Secure: true,
+		Name:     "token",
+		Value:    key,
 		Expires:  expiration,
 		Domain:   "p1ckle.herokuapp.com",
 		HttpOnly: true}
 
 	str := cookie.String()
-	str = str + key + "; SameSite=None;Secure=true"
-
-	//http.SetCookie(w, &cookie)
+	str = str + key + "; SameSite=None;	Secure=true"
 
 	w.Header().Set("Set-Cookie", str)
 
