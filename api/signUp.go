@@ -145,7 +145,7 @@ func (a *App) setSession(w http.ResponseWriter, id int) {
 		HttpOnly: true}
 
 	str := cookie.String()
-	str = str + key + "; SameSite= None"
+	str = str + key + "; SameSite=None;"
 
 	//http.SetCookie(w, &cookie)
 
