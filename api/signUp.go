@@ -143,9 +143,9 @@ func (a *App) setSession(w http.ResponseWriter, id int) {
 		Domain:   "p1ckle.herokuapp.com",
 		HttpOnly: true}
 
-	http.SetCookie(w, &cookie)
-
 	cookie.SameSite = 4
+
+	http.SetCookie(w, &cookie)
 
 	var mutex = &sync.Mutex{}
 	mutex.Lock()
