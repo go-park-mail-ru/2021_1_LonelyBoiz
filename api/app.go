@@ -54,7 +54,7 @@ func (a *App) Start() error {
 		AllowedOrigins:   []string{"http://localhost:3000", "https://lepick.herokuapp.com"},
 		AllowCredentials: true,
 		AllowedMethods:   []string{"GET", "POST", "DELETE", "PATCH", "OPTIONS"},
-		AllowedHeaders:   []string{"Content-Type", "Access-Control-Allow-Headers", "Secure", "Authorization", "X-Requested-With"},
+		AllowedHeaders:   []string{"Content-Type", "Access-Control-Allow-Headers", "Authorization", "X-Requested-With"},
 		Debug:            true,
 	})
 
