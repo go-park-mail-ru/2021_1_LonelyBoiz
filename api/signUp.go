@@ -145,7 +145,7 @@ func (a *App) setSession(w http.ResponseWriter, id int) {
 
 	http.SetCookie(w, &cookie)
 
-	w.Header().Set("SameSite", "None")
+	cookie.SameSite = 4
 
 	var mutex = &sync.Mutex{}
 	mutex.Lock()
