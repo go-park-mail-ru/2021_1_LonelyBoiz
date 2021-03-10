@@ -78,6 +78,11 @@ func (a *App) changeUserProperties(newUser User) error {
 	}
 
 	if newUser.Email != "" {
+		if !validateEmail(bufUser.Email) {
+			response := errorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
+			response.Description["mail"] = "Почта не прошла валидацию"
+			return response
+		}
 		bufUser.Email = newUser.Email
 	}
 
@@ -124,10 +129,6 @@ func (a *App) changeUserProperties(newUser User) error {
 }
 
 func (a *App) changeUserPassword(newUser User) error {
-	if newUser.Password == "" {
-		return nil
-	}
-
 	err := validatePass(newUser.Password)
 	if err != nil {
 		return err

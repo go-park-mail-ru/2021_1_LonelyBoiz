@@ -5,6 +5,7 @@ import (
 	"log"
 	"math"
 	"net/http"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -12,6 +13,8 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/crypto/sha3"
 )
+
+var emailRegex = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 
 type errorDescriptionResponse struct {
 	Description map[string]string `json:"description"`
@@ -36,7 +39,7 @@ func responseWithJson(w http.ResponseWriter, code int, body interface{}) {
 func validatePass(pass string) error {
 	response := errorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
 	switch {
-	case len(pass) < 8:
+	case len(pass) < 8 || len(pass) > 64:
 		response.Description["password"] = "Пароль должен содержать 8 символов"
 		return response
 	case pass == strings.ToLower(pass) || pass == strings.ToUpper(pass):
@@ -50,6 +53,14 @@ func validatePass(pass string) error {
 	return nil
 }
 
+func validateEmail(email string) bool {
+	if len(email) < 3 && len(email) > 254 {
+		return false
+	}
+
+	return emailRegex.MatchString(email)
+}
+
 func validateSignUpData(newUser User) error {
 	err := validatePass(newUser.Password)
 	if err != nil {
@@ -59,8 +70,8 @@ func validateSignUpData(newUser User) error {
 	response := errorDescriptionResponse{Description: map[string]string{}, Err: "Не удалось зарегестрироваться"}
 
 	switch {
-	case newUser.Email == "":
-		response.Description["mail"] = "Введите почту"
+	case !validateEmail(newUser.Email):
+		response.Description["mail"] = "Почта не прошла валидацию"
 	case newUser.Name == "":
 		response.Description["name"] = "Введите имя"
 	case newUser.Password != newUser.SecondPassword:
