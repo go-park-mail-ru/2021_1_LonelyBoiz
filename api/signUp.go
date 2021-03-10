@@ -69,6 +69,10 @@ func validateSignUpData(newUser User) error {
 
 	response := errorDescriptionResponse{Description: map[string]string{}, Err: "Не удалось зарегестрироваться"}
 
+	tm := time.Unix(newUser.Birthday, 0)
+
+	diff := time.Now().Sub(tm)
+
 	switch {
 	case !validateEmail(newUser.Email):
 		response.Description["mail"] = "Почта не прошла валидацию"
@@ -76,7 +80,7 @@ func validateSignUpData(newUser User) error {
 		response.Description["name"] = "Введите имя"
 	case newUser.Password != newUser.SecondPassword:
 		response.Description["password"] = "Пароли не совпадают"
-	case math.Floor(time.Now().Sub(time.Unix(newUser.Birthday, 0)).Hours()) < 18*24*365:
+	case diff/24/365 < 18:
 		response.Description["Birthday"] = "Вам должно быть 18"
 	}
 
