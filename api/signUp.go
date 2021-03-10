@@ -134,19 +134,20 @@ func (a *App) addNewUser(newUser *User) error {
 func (a *App) setSession(w http.ResponseWriter, id int) {
 	key := KeyGen()
 	expiration := time.Now().Add(24 * time.Hour)
-	cookie := http.Cookie{
-		Name:  "token",
-		Value: key,
-		//SameSite: 4,
-		Expires:  expiration,
-		Secure:   true,
-		Domain:   "p1ckle.herokuapp.com",
-		HttpOnly: true}
+	/*cookie := http.Cookie{
+	Name:  "token",
+	Value: key,
+	//SameSite: 4,
+	Expires:  expiration,
+	Secure:   true,
+	Domain:   "p1ckle.herokuapp.com",
+	HttpOnly: true}
+	*/
+	cookie := http.Cookie{}
+	str := cookie.String()
+	str = str + "; SameSite= None"
 
-	str := cookie.Value
-	str = str + ";SameSite=None"
-
-	http.SetCookie(w, &cookie)
+	//http.SetCookie(w, &cookie)
 
 	w.Header().Set("Set-Cookie", str)
 
