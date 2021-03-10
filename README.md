@@ -8,5 +8,5 @@
 3) Лукаш Сергей;
 4) Наказной Никита;
 
-API - https://hackmd.io/nPSHzr2oSrqKoPsEHbxiDw;
+API - https://hackmd.io/nPSHzr2oSrqKoPsEHbxiDw;\n
 Frontend repo - https://github.com/frontend-park-mail-ru/2021_1_LonelyBoiz;
