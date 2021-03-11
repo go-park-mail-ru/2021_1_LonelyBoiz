@@ -1,5 +1,7 @@
 # 2021_1_LonelyBoiz
 
+[![Go](https://github.com/go-park-mail-ru/2021_1_LonelyBoiz/actions/workflows/go.yml/badge.svg)](https://github.com/go-park-mail-ru/2021_1_LonelyBoiz/actions/workflows/go.yml)
+
 Тема проекта: tinder/badoo/mamba;
 
 Состав команды:
