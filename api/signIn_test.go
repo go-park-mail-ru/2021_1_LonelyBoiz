@@ -254,3 +254,37 @@ func TestApp_SignInCorrectUser(t *testing.T) {
 	assert.Equal(t, "male", resultUser.DatePreference)
 	assert.Equal(t, UserTest.Email, resultUser.Email)
 }
+
+func TestApp_SignInInvalidData2(t *testing.T) {
+	a := App{Users: map[int]User{}, Sessions: map[int][]http.Cookie{}}
+	murl, er := url.Parse("http://localhost:8000/users")
+	if er != nil {
+		t.Error(er)
+	}
+
+	req := &http.Request{
+		Method: "POST",
+		URL:    murl,
+		Body:   ioutil.NopCloser(bytes.NewBuffer(nil)),
+	}
+
+	rw := httptest.NewRecorder()
+	a.SignIn(rw, req)
+	response := rw.Result()
+
+	assert.Equal(t, 400, response.StatusCode)
+
+	postBody, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		t.Error(err)
+	}
+	var resultresp errorDescriptionResponse
+
+	err = json2.Unmarshal(postBody, &resultresp)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	assert.Equal(t, "Неверный формат входных данных", resultresp.Err)
+}
