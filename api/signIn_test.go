@@ -1,8 +1,14 @@
 package api
 
 import (
+	"bytes"
+	json2 "encoding/json"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/crypto/sha3"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
 	"testing"
 )
 
@@ -109,4 +115,142 @@ func TestCheckPassword(t *testing.T) {
 			assert.Equal(t, testCase.out, a.checkPassword(&testCase.in))
 		})
 	}
+}
+
+func TestApp_SignInInvalidData(t *testing.T) {
+	testCases := []struct {
+		name        string
+		in          User
+		outCode     int
+		outResponse errorDescriptionResponse
+	}{
+		{
+			name: "Incorrect password",
+			in: User{
+				Email:    "test@ya.ru",
+				Password: "Kps123456",
+			},
+			outCode:     401,
+			outResponse: errorDescriptionResponse{Err: "Неверный логин или пароль"},
+		},
+		{
+			name: "Missing field mail",
+			in: User{
+				Password: "Kps123456",
+			},
+			outCode: 400,
+			outResponse: errorDescriptionResponse{
+				Description: map[string]string{
+					"mail": "Введите почту",
+				},
+				Err: "Неверный формат входных данных",
+			},
+		},
+	}
+
+	a := App{Users: map[int]User{}}
+	newUser := User{
+		Email:    "test@ya.ru",
+		Password: "Kp123456",
+	}
+	pass := sha3.New512()
+	pass.Write([]byte(newUser.Password))
+	newUser.PasswordHash = pass.Sum(nil)
+	_ = a.addNewUser(&newUser)
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			json, err := json2.Marshal(testCase.in)
+			if err != nil {
+				t.Error(err)
+			}
+
+			murl, er := url.Parse("http://localhost:8000/users")
+			if er != nil {
+				t.Error(er)
+			}
+
+			req := &http.Request{
+				Method: "POST",
+				URL:    murl,
+				Body:   ioutil.NopCloser(bytes.NewBuffer(json)),
+			}
+
+			rw := httptest.NewRecorder()
+			a.SignIn(rw, req)
+			response := rw.Result()
+
+			assert.Equal(t, testCase.outCode, response.StatusCode)
+			postBody, err := ioutil.ReadAll(response.Body)
+			if err != nil {
+				t.Error(err)
+			}
+
+			var resultBody errorDescriptionResponse
+			err = json2.Unmarshal(postBody, &resultBody)
+
+			if err != nil {
+				t.Error(err)
+			}
+
+			assert.Equal(t, testCase.outResponse, resultBody)
+		})
+	}
+}
+
+func TestApp_SignInCorrectUser(t *testing.T) {
+	a := App{Users: map[int]User{}, Sessions: map[int][]http.Cookie{}}
+	newUser := User{
+		Email:          "test@ya.ru",
+		Password:       "Kp123456",
+		DatePreference: "male",
+	}
+	pass := sha3.New512()
+	pass.Write([]byte(newUser.Password))
+	newUser.PasswordHash = pass.Sum(nil)
+	err := a.addNewUser(&newUser)
+	if err != nil {
+		t.Error(nil)
+	}
+
+	UserTest := User{
+		Email:    "test@ya.ru",
+		Password: "Kp123456",
+	}
+
+	json, err := json2.Marshal(UserTest)
+	if err != nil {
+		t.Error(err)
+	}
+
+	murl, er := url.Parse("http://localhost:8000/users")
+	if er != nil {
+		t.Error(er)
+	}
+
+	req := &http.Request{
+		Method: "POST",
+		URL:    murl,
+		Body:   ioutil.NopCloser(bytes.NewBuffer(json)),
+	}
+	rw := httptest.NewRecorder()
+	a.SignIn(rw, req)
+	response := rw.Result()
+
+	assert.Equal(t, 200, response.StatusCode)
+
+	postBody, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		t.Error(err)
+	}
+	var resultUser User
+
+	err = json2.Unmarshal(postBody, &resultUser)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	assert.Equal(t, "male", resultUser.DatePreference)
+	assert.Equal(t, UserTest.Email, resultUser.Email)
 }
