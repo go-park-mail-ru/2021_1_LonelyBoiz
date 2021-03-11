@@ -7,11 +7,6 @@ import (
 	"time"
 )
 
-func removeCookie(s []http.Cookie, i int) []http.Cookie {
-	s[i] = s[len(s)-1]
-	return s[:len(s)-1]
-}
-
 func deleteCookie(key string, sessions *map[int][]http.Cookie) {
 	mutex := &sync.Mutex{}
 

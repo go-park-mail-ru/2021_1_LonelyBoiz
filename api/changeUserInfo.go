@@ -2,14 +2,13 @@ package api
 
 import (
 	"encoding/json"
+	"github.com/gorilla/mux"
+	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/crypto/sha3"
 	"log"
 	"net/http"
 	"strconv"
 	"sync"
-
-	"github.com/gorilla/mux"
-	"golang.org/x/crypto/bcrypt"
-	"golang.org/x/crypto/sha3"
 )
 
 func (a *App) ValidateCookieWithId(cookie string, id int) bool {
@@ -26,7 +25,6 @@ func (a *App) ValidateCookieWithId(cookie string, id int) bool {
 			return true
 		}
 	}
-
 	return false
 }
 
@@ -78,7 +76,7 @@ func (a *App) changeUserProperties(newUser User) error {
 	}
 
 	if newUser.Email != "" {
-		if !validateEmail(bufUser.Email) {
+		if !validateEmail(newUser.Email) {
 			response := errorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
 			response.Description["mail"] = "Почта не прошла валидацию"
 			return response
