@@ -1,6 +1,8 @@
 package api
 
 import (
+	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -9,40 +11,64 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func (a *App) validateCookie(cookie string) bool {
-	var mutex = &sync.Mutex{}
-	mutex.Lock()
-	defer mutex.Unlock()
-	for _, userSessions := range a.Sessions {
-		for _, v := range userSessions {
-			if v.Value == cookie {
+type key int
 
-				return true
+const ctxUserId key = -1
+
+func (a *App) ValidateCookie(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		token, err := r.Cookie("token")
+		if err != nil {
+			response := errorResponse{Err: "Вы не авторизованы"}
+			responseWithJson(w, 401, response)
+			return
+		}
+
+		//здесь будет поход в базу
+		var mutex = &sync.Mutex{}
+		mutex.Lock()
+		defer mutex.Unlock()
+		for id, userSessions := range a.Sessions {
+			for _, v := range userSessions {
+				if v.Value == token.Value {
+					ctx := r.Context()
+					ctx = context.WithValue(ctx,
+						ctxUserId,
+						10,
+					)
+					fmt.Println("id=", id)
+					fmt.Println("валидационная мидалварь")
+					next.ServeHTTP(w, r.WithContext(ctx))
+					return
+				}
 			}
 		}
-	}
 
-	return false
-}
-
-func (a *App) GetUserInfo(w http.ResponseWriter, r *http.Request) {
-	token, err := r.Cookie("token")
-	if err != nil {
 		response := errorResponse{Err: "Вы не авторизованы"}
 		responseWithJson(w, 401, response)
 		return
-	}
+	})
+}
 
-	if !a.validateCookie(token.Value) {
-		w.WriteHeader(401)
-		response := errorResponse{Err: "Отказано в доступе, кука устарела"}
-		responseWithJson(w, 401, response)
-		return
-	}
-
+func (a *App) GetUserInfo(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	userId, err := strconv.Atoi(vars["id"])
 	if err != nil {
+		response := errorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
+		response.Description["id"] = "Пользоватея с таким id нет"
+		responseWithJson(w, 400, response)
+		return
+	}
+
+	ctx := r.Context()
+	val, ok := ctx.Value(ctxUserId).(int)
+	if !ok {
+		fmt.Println("ne ok")
+	}
+	fmt.Println("val=", val)
+
+	if val != userId {
+		fmt.Println("sdfg")
 		response := errorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
 		response.Description["id"] = "Пользоватея с таким id нет"
 		responseWithJson(w, 400, response)
