@@ -34,7 +34,7 @@ func (a *App) ValidateCookie(next http.Handler) http.Handler {
 					ctx := r.Context()
 					ctx = context.WithValue(ctx,
 						ctxUserId,
-						10,
+						id,
 					)
 					fmt.Println("id=", id)
 					fmt.Println("валидационная мидалварь")
