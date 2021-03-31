@@ -1,92 +1,74 @@
 package repository
 
 import (
-	"fmt"
 	"server/api"
 
 	_ "github.com/jackc/pgx/stdlib"
 )
 
-type Item struct {
-	ID          uint32 `schema:"-"`
-	Title       string `schema:"title,required"`
-	Description string `schema:"description,required"`
-	CreatedBy   uint32 `schema:"-"`
-}
+func (repo *RepoSqlx) AddUser(newUser api.User) (int, error) {
+	var id int
 
-func (repo *RepoSqlx) Add(elem *Item) (int64, error) {
-	result, err := repo.DB.NamedExec(
-		`INSERT INTO person (first_name,last_name,email) VALUES (:title, :description)`,
-		map[string]interface{}{
-			"title":       elem.Title,
-			"description": elem.Description,
-		})
-	if err != nil {
-		return 0, err
-	}
-	return result.LastInsertId()
-}
-
-func (repo *RepoSqlx) AddUser(newUser api.User) (int64, error) {
-	id, err := repo.DB.NamedExec(
+	err := repo.DB.QueryRowx(
 		`INSERT INTO users (
 			email, 
-			name, 
-			passwordHash, 
-			birthday, 
-			description, 
-			city,	
-			sex, 
-			isactive, 
-			isdeleted
-			) 
-		VALUES (
-			:email, 
-			:name, 
-			:pass, 
-			:birth, 
-			:description, 
-			:city, 
-			:sex, 
-			:isActive, 
-			:isDeleted
-		)`,
-		map[string]interface{}{
-			"email":       newUser.Email,
-			"pass":        newUser.PasswordHash,
-			"name":        newUser.Name,
-			"birth":       newUser.Birthday,
-			"description": newUser.Description,
-			"city":        newUser.City,
-			"sex":         newUser.Sex,
-			"isActive":    true,
-			"isDeleted":   false,
-		})
-
+			name,
+			passwordHash,
+			birthday,
+			description,
+			city,
+			sex,
+			datePreference,
+			isActive,
+			isDeleted,
+			photos
+		) VALUES (
+			$1, 
+			$2,
+			$3,
+			$4,
+			$5,
+			$6,
+			$7,
+			$8,
+			$9,
+			$10,
+			$11
+		) RETURNING id`,
+		newUser.Email,
+		newUser.Name,
+		newUser.PasswordHash,
+		newUser.Birthday,
+		newUser.Description,
+		newUser.City,
+		newUser.Sex,
+		newUser.DatePreference,
+		newUser.IsActive,
+		newUser.IsDeleted,
+		newUser.Photos,
+	).Scan(&id)
 	if err != nil {
 		return -1, err
 	}
 
-	return id.LastInsertId()
+	return id, nil
 }
 
-func (repo *RepoSqlx) GetUser(id int) (*api.User, error) {
+func (repo *RepoSqlx) GetUser(id int) (api.User, error) {
 	var user []api.User
 	err := repo.DB.Select(&user, `SELECT * FROM users WHERE id = $1`, id)
 	if err != nil {
-		return nil, err
+		return api.User{}, err
 	}
 
-	fmt.Println("user=", user, "id=", id)
-
-	return &user[0], nil
+	return user[0], nil
 }
 
 func (repo *RepoSqlx) DeleteUser(id int) error {
 	_, err := repo.DB.Exec(
 		`UPDATE users 
 		SET isDeleted = TRUE
-		WHERE userid = $1`,
+		WHERE id = $1`,
 		id,
 	)
 
@@ -98,11 +80,44 @@ func (repo *RepoSqlx) ChangeUser(newUser api.User) error {
 		`UPDATE users 
 			SET email = $1, name = $2, passwordHash = $3,
 			birthday = $4, description = $5, city = $6,
-			sex = $7, isActive = $8, isDeleted = $9`,
+			sex = $7, datePreference = $8, isActive = $9, 
+			isDeleted = $10, photos = $11
+		WHERE id = $11`,
 		newUser.Email, newUser.Name, newUser.PasswordHash,
 		newUser.Birthday, newUser.Description, newUser.City,
-		newUser.Sex, true, false,
+		newUser.Sex, newUser.DatePreference, newUser.IsActive,
+		newUser.IsDeleted, newUser.Id, newUser.Photos,
 	)
 
 	return err
+}
+
+func (repo *RepoSqlx) CheckMail(email string) bool {
+	var user []api.User
+	err := repo.DB.Select(&user, `SELECT * FROM users WHERE email = $1`, email)
+	if err != nil {
+		return false
+	}
+
+	return true
+}
+
+func (repo *RepoSqlx) GetPass(id int) ([]byte, error) {
+	var pass [][]byte
+	err := repo.DB.Select(&pass, `SELECT passwordHash FROM users WHERE id = $1`, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return pass[0], nil
+}
+
+func (repo *RepoSqlx) SignIn(email string) (api.User, error) {
+	var user []api.User
+	err := repo.DB.Select(&user, `SELECT * FROM users WHERE email = $1`, email)
+	if err != nil {
+		return api.User{}, err
+	}
+
+	return user[0], nil
 }
