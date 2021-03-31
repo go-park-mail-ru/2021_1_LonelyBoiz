@@ -35,24 +35,24 @@ func (a *App) listUsers(newUser User) []User {
 }
 
 func (a *App) GetUsers(w http.ResponseWriter, r *http.Request) {
-	token, err := r.Cookie("token")
-	if err != nil {
-		response := errorResponse{Err: "Вы не авторизованы"}
-		responseWithJson(w, 401, response)
-		return
-	}
-
 	var newUser User
 	decoder := json.NewDecoder(r.Body)
-	err = decoder.Decode(&newUser)
+	err := decoder.Decode(&newUser)
 	defer r.Body.Close()
+
 	if err != nil {
 		response := errorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
 		responseWithJson(w, 400, response)
 		return
 	}
 
-	if !a.ValidateCookieWithId(token.Value, newUser.Id) {
+	ctx := r.Context()
+	id, ok := ctx.Value(ctxUserId).(int)
+	if !ok {
+		log.Println("error: get id from context")
+	}
+
+	if id != newUser.Id {
 		response := errorResponse{Err: "Отказано в доступе, кука устарела"}
 		responseWithJson(w, 401, response)
 		return

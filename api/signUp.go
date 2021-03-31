@@ -2,18 +2,14 @@ package api
 
 import (
 	"encoding/json"
-	"log"
-	"net/http"
-	"regexp"
-	"strings"
-	"sync"
-	"time"
-
+	"github.com/asaskevich/govalidator"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/crypto/sha3"
+	"log"
+	"net/http"
+	"sync"
+	"time"
 )
-
-var emailRegex = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 
 type errorDescriptionResponse struct {
 	Description map[string]string `json:"description"`
@@ -35,55 +31,22 @@ func responseWithJson(w http.ResponseWriter, code int, body interface{}) {
 	json.NewEncoder(w).Encode(body)
 }
 
-func validatePass(pass string) error {
-	response := errorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
-	switch {
-	case len(pass) < 8 || len(pass) > 64:
-		response.Description["password"] = "Пароль должен содержать 8 символов"
-		return response
-	case pass == strings.ToLower(pass) || pass == strings.ToUpper(pass):
-		response.Description["password"] = "Пароль должен состоять из символов разного регистра"
-		return response
-	case !strings.ContainsAny(pass, "1234567890"):
-		response.Description["password"] = "Пароль должен содержать цифру"
-		return response
-	}
-
-	return nil
-}
-
-func validateEmail(email string) bool {
-	if len(email) < 3 && len(email) > 254 {
-		return false
-	}
-
-	return emailRegex.MatchString(email)
-}
-
 func validateSignUpData(newUser User) error {
-	err := validatePass(newUser.Password)
+	response := errorDescriptionResponse{Description: map[string]string{}, Err: "Не удалось зарегистрироваться"}
+
+	_, err := govalidator.ValidateStruct(newUser)
 	if err != nil {
-		return err
+		response.Description = govalidator.ErrorsByField(err)
+
+		if newUser.Password != newUser.SecondPassword {
+			response.Description["password"] = "Пароли не совпадают"
+		}
+
+		return response
 	}
 
-	response := errorDescriptionResponse{Description: map[string]string{}, Err: "Не удалось зарегестрироваться"}
-
-	tm := time.Unix(newUser.Birthday, 0)
-
-	diff := time.Now().Sub(tm)
-
-	switch {
-	case !validateEmail(newUser.Email):
-		response.Description["mail"] = "Почта не прошла валидацию"
-	case newUser.Name == "":
-		response.Description["name"] = "Введите имя"
-	case newUser.Password != newUser.SecondPassword:
+	if newUser.Password != newUser.SecondPassword {
 		response.Description["password"] = "Пароли не совпадают"
-	case diff/24/365 < 18:
-		response.Description["Birthday"] = "Вам должно быть 18"
-	}
-
-	if len(response.Description) != 0 {
 		return response
 	}
 
@@ -96,8 +59,8 @@ func (a *App) isAlreadySignedUp(newEmail string) (bool, error) {
 	defer mutex.Unlock()
 	for _, v := range a.Users {
 		if v.Email == newEmail {
-			response := errorDescriptionResponse{Description: map[string]string{}, Err: "Не удалось зарегестрироваться"}
-			response.Description["mail"] = "Почта уже зарегестрирована"
+			response := errorDescriptionResponse{Description: map[string]string{}, Err: "Не удалось зарегистрироваться"}
+			response.Description["mail"] = "Почта уже зарегистрирована"
 			return true, response
 		}
 	}
@@ -187,5 +150,5 @@ func (a *App) SignUp(w http.ResponseWriter, r *http.Request) {
 	newUser.PasswordHash = nil
 	responseWithJson(w, 200, newUser)
 
-	log.Println("successful resistration\n", newUser)
+	log.Println("successful registration\n", newUser)
 }

@@ -1,40 +1,18 @@
 package api
 
 import (
+	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 	"strconv"
-	"sync"
-
-	"github.com/gorilla/mux"
 )
 
-func checkAuthorization(a *App, userId int, getKey string) bool {
-	mutex := sync.Mutex{}
-	mutex.Lock()
-	expectedCookies, ok := a.Sessions[userId]
-	mutex.Unlock()
-	if !ok {
-		return false
-	}
-
-	for _, expectedCookie := range expectedCookies {
-		if expectedCookie.Name == "token" && expectedCookie.Value == getKey {
-			return true
-		}
-	}
-
-	return false
-}
-
 func (a *App) DeleteUser(w http.ResponseWriter, r *http.Request) {
-	cookie, cookieError := r.Cookie("token")
-	if cookieError != nil {
-		responseWithJson(w, 401, cookieError)
-		return
+	ctx := r.Context()
+	id, ok := ctx.Value(ctxUserId).(int)
+	if !ok {
+		log.Println("error: get id from context")
 	}
-
-	key := cookie.Value
 
 	args := mux.Vars(r)
 	userId, err := strconv.Atoi(args["id"])
@@ -43,7 +21,7 @@ func (a *App) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !checkAuthorization(a, userId, key) {
+	if userId != id {
 		responseWithJson(w, 400, "Отказано в доступе")
 		return
 	}

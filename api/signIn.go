@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"github.com/asaskevich/govalidator"
 	"log"
 	"net/http"
 	"sync"
@@ -12,14 +13,11 @@ import (
 
 func validateSignInData(newUser User) (bool, error) {
 	response := errorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
-	switch {
-	case newUser.Email == "":
-		response.Description["mail"] = "Введите почту"
-	case newUser.Password == "":
-		response.Description["password"] = "Введите пароль"
-	}
 
-	if len(response.Description) > 0 {
+	_, err := govalidator.ValidateStruct(newUser)
+	if err != nil {
+		response.Description["mail"] = govalidator.ErrorByField(err, "email")
+		response.Description["password"] = govalidator.ErrorByField(err, "password")
 		return false, response
 	}
 
@@ -75,7 +73,6 @@ func (a *App) SignIn(w http.ResponseWriter, r *http.Request) {
 	}
 
 	a.setSession(w, newUser.Id)
-
 	newUser.PasswordHash = nil
 	responseWithJson(w, 200, newUser)
 

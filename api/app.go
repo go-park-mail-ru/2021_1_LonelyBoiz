@@ -2,9 +2,11 @@ package api
 
 import (
 	"fmt"
+	"github.com/asaskevich/govalidator"
 	"math/rand"
 	"net/http"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -12,6 +14,26 @@ import (
 )
 
 const charSet = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM0123456789"
+
+func init() {
+	govalidator.CustomTypeTagMap.Set(
+		"ageValid",
+		govalidator.CustomTypeValidator(func(i interface{}, o interface{}) bool {
+			birthday, ok := i.(int64)
+			if !ok {
+				return false
+			}
+
+			tm := time.Unix(birthday, 0)
+			diff := time.Now().Sub(tm)
+
+			if diff/24/365 < 18 {
+				return false
+			}
+			return true
+		}),
+	)
+}
 
 func KeyGen() string {
 	b := make([]byte, 40)
@@ -24,13 +46,13 @@ func KeyGen() string {
 
 type User struct {
 	Id             int    `json:"id"`
-	Email          string `json:"mail"`
-	Password       string `json:"password,omitempty"`
-	SecondPassword string `json:"passwordRepeat,omitempty"`
+	Email          string `json:"mail" valid:"email~Почта не прошла валидацию"`
+	Password       string `json:"password,omitempty" valid:"length(8|64)~Пароль не прошел валидацию"`
+	SecondPassword string `json:"passwordRepeat,omitempty" valid:"length(8|64)"`
 	PasswordHash   []byte `json:",omitempty"`
 	OldPassword    string `json:"oldPassword,omitempty"`
-	Name           string `json:"name"`
-	Birthday       int64  `json:"birthday"`
+	Name           string `json:"name"` // Введите имя
+	Birthday       int64  `json:"birthday" valid:"ageValid~Вам должно быть 18!"`
 	Description    string `json:"description"`
 	City           string `json:"city"`
 	Avatar         string `json:"avatar"`
@@ -47,6 +69,7 @@ type App struct {
 	Users    map[int]User
 	UserIds  int
 	Sessions map[int][]http.Cookie
+	mutex    *sync.Mutex
 }
 
 func (a *App) Start() error {
@@ -105,15 +128,25 @@ func (a *App) InitializeRoutes(currConfig Config) {
 	a.Sessions = make(map[int][]http.Cookie)
 	a.Users = make(map[int]User)
 
-	a.router.HandleFunc("/login", a.SignIn).Methods("POST")
+	// валидация кук
+	subRouter := a.router.NewRoute().Subrouter()
+	subRouter.Use(a.MiddlewareValidateCookie)
+
+	subRouter.HandleFunc("/users/{id:[0-9]+}", a.GetUserInfo).Methods("GET")
+	//subRouter.HandleFunc("/users", a.GetUsers).Methods("GET")
+	subRouter.HandleFunc("/auth", a.GetLogin).Methods("GET")
+	subRouter.HandleFunc("/users/{id:[0-9]+}", a.DeleteUser).Methods("DELETE")
+	subRouter.HandleFunc("/users/{id:[0-9]+}", a.ChangeUserInfo).Methods("PATCH")
+
+	// валидация всех данных, без кук
 	a.router.HandleFunc("/users", a.SignUp).Methods("POST")
-	a.router.HandleFunc("/users", a.GetUsers).Methods("GET")
-	a.router.HandleFunc("/users/{id:[0-9]+}", a.ChangeUserInfo).Methods("PATCH")
-	final := http.HandlerFunc(a.GetUserInfo)
-	a.router.Handle("/users/{id:[0-9]+}", a.ValidateCookie(final)).Methods("GET")
-	a.router.HandleFunc("/auth", a.GetLogin).Methods("GET")
+
+	// валидация пароля
+	a.router.HandleFunc("/login", a.SignIn).Methods("POST")
+
+	// не требуется
+	a.router.HandleFunc("/login", a.LogOut).Methods("DELETE")
+
 	//a.router.HandleFunc("/users/{id:[0-9]+}/photos", a.UploadPhoto).Methods("POST")
 	//a.router.HandleFunc("/users/{id:[0-9]+}/photos", a.DeletePhoto).Methods("DELETE")
-	a.router.HandleFunc("/users/{id:[0-9]+}", a.DeleteUser).Methods("DELETE")
-	a.router.HandleFunc("/login", a.LogOut).Methods("DELETE")
 }

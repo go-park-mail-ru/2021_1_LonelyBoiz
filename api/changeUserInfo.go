@@ -2,6 +2,8 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
+	"github.com/asaskevich/govalidator"
 	"log"
 	"net/http"
 	"strconv"
@@ -29,6 +31,22 @@ func (a *App) ValidateCookieWithId(cookie string, id int) bool {
 	return false
 }
 
+func ValidateSex(sex string) bool {
+	if sex != "male" && sex != "female" {
+		return false
+	}
+
+	return true
+}
+
+func ValidateDatePreferensces(pref string) bool {
+	if pref != "male" && pref != "female" && pref != "both" {
+		return false
+	}
+
+	return true
+}
+
 func (a *App) checkPasswordForCHanging(newUser User) bool {
 	var mutex = &sync.Mutex{}
 	mutex.Lock()
@@ -49,22 +67,6 @@ func (a *App) checkPasswordForCHanging(newUser User) bool {
 	return false
 }
 
-func ValidateSex(sex string) bool {
-	if sex != "male" && sex != "female" {
-		return false
-	}
-
-	return true
-}
-
-func ValidateDatePreferensces(pref string) bool {
-	if pref != "male" && pref != "female" && pref != "both" {
-		return false
-	}
-
-	return true
-}
-
 func (a *App) changeUserProperties(newUser User) error {
 	var mutex = &sync.Mutex{}
 	mutex.Lock()
@@ -77,7 +79,7 @@ func (a *App) changeUserProperties(newUser User) error {
 	}
 
 	if newUser.Email != "" {
-		if !validateEmail(newUser.Email) {
+		if !govalidator.IsEmail(newUser.Email) {
 			response := errorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
 			response.Description["mail"] = "Почта не прошла валидацию"
 			return response
@@ -132,12 +134,13 @@ func (a *App) changeUserProperties(newUser User) error {
 }
 
 func (a *App) changeUserPassword(newUser User) error {
-	err := validatePass(newUser.Password)
-	if err != nil {
-		return err
+	response := errorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
+
+	if !validatePass(newUser.Password) {
+		response.Description["password"] = "Введите пароль"
+		return response
 	}
 
-	response := errorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
 	if newUser.SecondPassword != newUser.Password {
 		response.Description["password"] = "Пароли не совпадают"
 		return response
@@ -170,14 +173,14 @@ func (a *App) changeUserPassword(newUser User) error {
 	return nil
 }
 
-func (a *App) ChangeUserInfo(w http.ResponseWriter, r *http.Request) {
-	token, err := r.Cookie("token")
-	if err != nil {
-		response := errorResponse{Err: "Вы не авторизованы"}
-		responseWithJson(w, 401, response)
-		return
+func validatePass(password string) bool {
+	if len(password) >= 8 && len(password) <= 64 {
+		return true
 	}
+	return false
+}
 
+func (a *App) ChangeUserInfo(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	userId, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -187,7 +190,14 @@ func (a *App) ChangeUserInfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !a.ValidateCookieWithId(token.Value, userId) {
+	ctx := r.Context()
+	id, ok := ctx.Value(ctxUserId).(int)
+	if !ok {
+		log.Println("error: get id from context")
+	}
+	fmt.Println("id from context =", id)
+
+	if id != userId {
 		response := errorResponse{Err: "Отказано в доступе, кука устарела"}
 		responseWithJson(w, 403, response)
 		return

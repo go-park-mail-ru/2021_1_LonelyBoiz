@@ -94,14 +94,14 @@ var TestCaseValidateDatePreference = []struct {
 	{preference: "genderfluid helisexual", res: false},
 }
 
-func TestValidateDatePreference(t *testing.T) {
-	for _, v := range TestCaseValidateDatePreference {
-		res := ValidateDatePreferensces(v.preference)
-		if res != v.res {
-			t.Error("ValidateSex works wrong", "\nExpected:", v.res, "\nGot:", res)
-		}
-	}
-}
+//func TestValidateDatePreference(t *testing.T) {
+//	for _, v := range TestCaseValidateDatePreference {
+//		res := ValidateDatePreferensces(v.preference)
+//		if res != v.res {
+//			t.Error("ValidateSex works wrong", "\nExpected:", v.res, "\nGot:", res)
+//		}
+//	}
+//}
 
 var TestCaseChangeUserProperties = []struct {
 	newUser, oldUser User
