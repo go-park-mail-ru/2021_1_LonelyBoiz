@@ -59,8 +59,9 @@ type User struct {
 	Instagram      string `json:"instagram"`
 	Sex            string `json:"sex"`
 	DatePreference string `json:"datePreference"`
-	//isDeleted      bool   `json:"isDeleted"`
-	//isActive       bool   `json:"isActive"`
+	IsDeleted      bool   `json:"isDeleted"`
+	IsActive       bool   `json:"isActive"`
+	Photos         string `json:"photos"`
 }
 
 type App struct {
