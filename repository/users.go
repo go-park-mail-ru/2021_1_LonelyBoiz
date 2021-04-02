@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"database/sql"
 	"server/api"
 
 	_ "github.com/jackc/pgx/stdlib"
@@ -92,14 +93,14 @@ func (repo *RepoSqlx) ChangeUser(newUser api.User) error {
 	return err
 }
 
-func (repo *RepoSqlx) CheckMail(email string) bool {
+func (repo *RepoSqlx) CheckMail(email string) (bool, error) {
 	var user []api.User
 	err := repo.DB.Select(&user, `SELECT * FROM users WHERE email = $1`, email)
-	if err != nil {
-		return false
+	if err == sql.ErrNoRows {
+		return false, nil
 	}
 
-	return true
+	return true, err
 }
 
 func (repo *RepoSqlx) GetPass(id int) ([]byte, error) {
