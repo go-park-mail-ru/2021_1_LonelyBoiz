@@ -2,7 +2,9 @@ package api
 
 import (
 	"context"
+	"github.com/sirupsen/logrus"
 	"net/http"
+	"time"
 )
 
 type key int
@@ -33,5 +35,18 @@ func (a *App) MiddlewareValidateCookie(next http.Handler) http.Handler {
 		)
 		next.ServeHTTP(w, r.WithContext(ctx))
 		return
+	})
+}
+
+func (a *App) MiddlewareLogger(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		next.ServeHTTP(w, r)
+
+		a.Logger.WithFields(logrus.Fields{
+			"method":      r.Method,
+			"remote_addr": r.RemoteAddr,
+			"work_time":   time.Since(start),
+		}).Info(r.URL.Path)
 	})
 }

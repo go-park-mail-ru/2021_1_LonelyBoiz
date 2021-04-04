@@ -33,7 +33,7 @@ func (a *App) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Println("deleted user", a.Users)
+	log.Println("deleted user")
 	a.LogOut(w, r)
 
 	//responseWithJson(w, 200, nil)

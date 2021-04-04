@@ -6,13 +6,12 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
-	model "server/models"
 	"server/repository"
-	"sync"
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/rs/cors"
+	cors2 "github.com/rs/cors"
+	"github.com/sirupsen/logrus"
 )
 
 const charSet = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM0123456789"
@@ -47,24 +46,21 @@ func KeyGen() string {
 }
 
 type App struct {
-	addr     string
-	router   *mux.Router
-	Users    map[int]model.User
-	UserIds  int
-	Sessions map[int][]http.Cookie
-	mutex    *sync.Mutex
-	Db       repository.RepoSqlx
+	addr   string
+	router *mux.Router
+	Db     repository.RepoSqlx
+	Logger *logrus.Entry
 }
 
 func (a *App) Start() error {
 	fmt.Println("Server start")
 
-	cors := cors.New(cors.Options{
+	cors := cors2.New(cors2.Options{
 		AllowedOrigins:   []string{"http://localhost:3000", "https://lepick.herokuapp.com"},
 		AllowCredentials: true,
 		AllowedMethods:   []string{"GET", "POST", "DELETE", "PATCH", "OPTIONS"},
 		AllowedHeaders:   []string{"Content-Type", "Access-Control-Allow-Headers", "Authorization", "X-Requested-With"},
-		Debug:            true,
+		Debug:            false,
 	})
 
 	corsHandler := cors.Handler(a.router)
@@ -108,11 +104,16 @@ func (a *App) InitializeRoutes(currConfig Config) {
 
 	a.addr = currConfig.addr
 	a.router = currConfig.router
-	a.UserIds = currConfig.userIds
-	a.Sessions = make(map[int][]http.Cookie)
-	a.Users = make(map[int]model.User)
+	//a.UserIds = currConfig.userIds
 	a.Db = repository.Init()
 
+	contextLogger := logrus.WithFields(logrus.Fields{
+		"mode": "[access_log]",
+	})
+	logrus.SetFormatter(&logrus.TextFormatter{})
+	a.Logger = contextLogger
+
+	a.router.Use(a.MiddlewareLogger)
 	// валидация кук
 	subRouter := a.router.NewRoute().Subrouter()
 	subRouter.Use(a.MiddlewareValidateCookie)

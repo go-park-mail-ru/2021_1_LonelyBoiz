@@ -5,35 +5,34 @@ import (
 	"log"
 	"net/http"
 	model "server/models"
-	"sync"
 )
 
-func (a *App) listUsers(newUser model.User) []model.User {
-	var mutex = &sync.Mutex{}
-	mutex.Lock()
-	users := a.Users
-	mutex.Unlock()
-
-	var usersRet []model.User
-
-	for _, v := range users {
-		if v.Id == newUser.Id {
-			continue
-		}
-
-		if (v.DatePreference == "both" || v.DatePreference == newUser.Sex) &&
-			(newUser.DatePreference == "both" || newUser.DatePreference == v.Sex) {
-			v.PasswordHash = nil
-			usersRet = append(usersRet, v)
-		}
-
-		if len(usersRet) == 5 {
-			break
-		}
-	}
-
-	return usersRet
-}
+//func (a *App) listUsers(newUser model.User) []model.User {
+//	//var mutex = &sync.Mutex{}
+//	//mutex.Lock()
+//	//users := a.Users
+//	//mutex.Unlock()
+//
+//	var usersRet []model.User
+//
+//	for _, v := range users {
+//		if v.Id == newUser.Id {
+//			continue
+//		}
+//
+//		if (v.DatePreference == "both" || v.DatePreference == newUser.Sex) &&
+//			(newUser.DatePreference == "both" || newUser.DatePreference == v.Sex) {
+//			v.PasswordHash = nil
+//			usersRet = append(usersRet, v)
+//		}
+//
+//		if len(usersRet) == 5 {
+//			break
+//		}
+//	}
+//
+//	return usersRet
+//}
 
 func (a *App) GetUsers(w http.ResponseWriter, r *http.Request) {
 	var newUser model.User
@@ -73,9 +72,9 @@ func (a *App) GetUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := a.listUsers(newUser)
+	//response := a.listUsers(newUser)
 
-	responseWithJson(w, 200, response)
-
-	log.Println("successful get user", response)
+	//responseWithJson(w, 200, response)
+	//
+	//log.Println("successful get user", response)
 }
