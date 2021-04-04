@@ -27,7 +27,7 @@ func (repo *RepoSqlx) AddMessage(authorId int, chatId int, text string) (Message
 	}
 
 	err := repo.DB.QueryRow(
-		`INSERT INTO messages (chatId, authorId, text, time, reaction, messageOrder)
+		`INSERT INTO messages (chatId, authorId, text, time, messageOrder)
 			VALUES (
         	$1,
         	$2,

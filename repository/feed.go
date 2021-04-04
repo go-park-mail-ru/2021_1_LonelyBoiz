@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"database/sql"
 	"server/api"
 
 	_ "github.com/jackc/pgx/stdlib"
@@ -23,37 +22,33 @@ func (repo *RepoSqlx) CreateFeed(userId int) error {
                     OR user2.datepreference = 'both'
                 )
                 AND user1.id <> user2.id
-				AND user2.isDeleted = false
-				AND user2.idActive = true
+                AND user2.isDeleted = false
+                AND user2.isActive = true
+                AND user2.id NOT IN (
+                    SELECT userid2
+                    FROM feed
+                    WHERE userid1 = user1.id
+                )
             )
-            AND user2.id NOT IN (
-                SELECT userid2
-                FROM feed
-                WHERE userid1 = user1.id
-            )
-        WHERE user1.id = $1
+        WHERE user1.id = 1
+        LIMIT 100
     )`, userId)
 
 	return err
 }
 
-func (repo *RepoSqlx) GetFeed(offset int) error {
-	var users []api.User
-	err := repo.DB.Select(&users,
-		`SELECT * FROM feed
-			WHERE chatId = $1
-			ORDER BY time
-			LIMIT $2 OFFSET $3`,
-		chatId,
-		count,
-		offset,
+func (repo *RepoSqlx) GetFeed(userId int) ([]api.User, error) {
+	var feed []api.User
+	err := repo.DB.Select(&feed,
+		`SELECT *
+			FROM feed
+    			join users on userid2 = users.id
+			WHERE userid1 = 1 AND rating = 'empty' LIMIT 20`,
+		userId,
 	)
-	if err == sql.ErrNoRows {
-		return nil, nil
-	}
 	if err != nil {
 		return nil, err
 	}
 
-	return users, nil
+	return feed, nil
 }

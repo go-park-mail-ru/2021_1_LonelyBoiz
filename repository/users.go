@@ -82,12 +82,13 @@ func (repo *RepoSqlx) ChangeUser(newUser api.User) error {
 			SET email = $1, name = $2, passwordHash = $3,
 			birthday = $4, description = $5, city = $6,
 			sex = $7, datePreference = $8, isActive = $9, 
-			isDeleted = $10, photos = $11
+			photos = $10
 		WHERE id = $11`,
 		newUser.Email, newUser.Name, newUser.PasswordHash,
 		newUser.Birthday, newUser.Description, newUser.City,
 		newUser.Sex, newUser.DatePreference, newUser.IsActive,
-		newUser.IsDeleted, newUser.Id, newUser.Photos,
+		newUser.Photos,
+		newUser.Id,
 	)
 
 	return err
