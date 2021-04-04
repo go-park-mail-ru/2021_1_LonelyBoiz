@@ -52,3 +52,14 @@ func (repo *RepoSqlx) GetFeed(userId int) ([]api.User, error) {
 
 	return feed, nil
 }
+
+func (repo *RepoSqlx) Rating(userIdFrom int, userIdTo int, reaction string) error {
+	_, err := repo.DB.Exec(
+		`UPDATE feed
+			SET reaction = $1,
+		WHERE feed.userid1 = $2 AND feed.userid2 = $3`,
+		userIdFrom, userIdTo, reaction,
+	)
+
+	return err
+}
