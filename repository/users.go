@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"errors"
 	"log"
 	model "server/models"
 
@@ -125,6 +126,10 @@ func (repo *RepoSqlx) SignIn(email string) (model.User, error) {
 	err := repo.DB.Select(&user, `SELECT * FROM users WHERE email = $1`, email)
 	if err != nil {
 		return model.User{}, err
+	}
+
+	if len(user) == 0 {
+		return model.User{}, errors.New("пользователь не найден")
 	}
 
 	return user[0], nil

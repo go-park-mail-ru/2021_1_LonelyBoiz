@@ -46,6 +46,7 @@ func (a *App) SignIn(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&newUser)
 	defer r.Body.Close()
+
 	if err != nil {
 		response := errorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
 		responseWithJson(w, 400, response)
