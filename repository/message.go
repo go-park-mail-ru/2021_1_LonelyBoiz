@@ -77,7 +77,7 @@ func (repo *RepoSqlx) ChangeMessage(messageId int, text string, reaction int) er
 		`UPDATE messages
 			SET text = $1,
     		reaction = $2
-		WHERE messageId = #3`,
+		WHERE messageId = $3`,
 		text,
 		reaction,
 		messageId,
