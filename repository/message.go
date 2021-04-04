@@ -36,15 +36,14 @@ func (repo *RepoSqlx) AddMessage(authorId int, chatId int, text string) (Message
         	(
             	SELECT COUNT(*)
             	FROM messages
-            	WHERE chatid = $2
+            	WHERE chatid = $1
         	) + 1
-    	)`,
+    	) RETURNING messageid, messageOrder`,
 		newMessage.ChatId,
 		newMessage.AuthorId,
 		newMessage.Text,
 		newMessage.Time,
-		newMessage.Reaction,
-	).Scan(&newMessage.MessageId)
+	).Scan(&newMessage.MessageId, &newMessage.MessageOrder)
 	if err != nil {
 		return Message{}, err
 	}

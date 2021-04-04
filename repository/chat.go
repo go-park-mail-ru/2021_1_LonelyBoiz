@@ -17,29 +17,29 @@ type Chat struct {
 func (repo *RepoSqlx) GetChats(userId int, limit int, offset int) ([]Chat, error) {
 	var chats []Chat
 	err := repo.DB.Select(&chats,
-		`SELECT chats.id as chatId,
-    		chats.userid2 as partnerId,
-    		users.name as partnerName,
-    		lastMessage.text as lastMessage,
-    		lastMessage.time as lastMessageTime,
-    		lastMessage.authorid as lastMessageAuthorid,
-    		users.photos as avatar
+		`SELECT chats.id AS chatId,
+    		chats.userid2 AS partnerId,
+    		users.name AS partnerName,
+    		lastMessage.text AS lastMessage,
+    		lastMessage.time AS lastMessageTime,
+    		lastMessage.authorid AS lastMessageAuthorid,
+    		users.photos AS avatar
 		FROM chats
-    		join users on (users.id = chats.userid2)
-    		join (
+    		JOIN users ON (users.id = chats.userid2)
+    		JOIN (
         		SELECT msg.text,
             		msg.time,
             		msg.messageOrder,
             		msg.chatid,
             		msg.authorid
-        		FROM messages as msg
-        		where msg.messageorder = (
-                		select max(messages2.messageOrder)
-                		from messages as messages2
-                		where msg.chatid = messages2.chatid
+        		FROM messages AS msg
+        		WHERE msg.messageorder = (
+                		SELECT MAX(messages2.messageOrder)
+                		FROM messages AS messages2
+                		WHERE msg.chatid = messages2.chatid
             		)
-    		) lastMessage on lastMessage.chatid = chats.id
-		where chats.userid1 = $1
+    		) lastMessage ON lastMessage.chatid = chats.id
+		WHERE chats.userid1 = $1
 		ORDER BY lastMessageTime
 		LIMIT $2 OFFSET $3`,
 		userId,
@@ -51,4 +51,22 @@ func (repo *RepoSqlx) GetChats(userId int, limit int, offset int) ([]Chat, error
 	}
 
 	return chats, nil
+}
+
+func (repo *RepoSqlx) GetChat(chatId int, limit int, offset int) ([]Message, error) {
+	var messages []Message
+	err := repo.DB.Select(&messages,
+		`SELECT * FROM messages
+			WHERE messages.chatid = $1
+			ORDER BY messages.messageorder
+			LIMIT $2 OFFSET $3;`,
+		chatId,
+		limit,
+		offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return messages, nil
 }

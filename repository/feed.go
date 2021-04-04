@@ -12,7 +12,7 @@ func (repo *RepoSqlx) CreateFeed(userId int) error {
         SELECT user1.id,
             user2.id
         FROM users as user1
-            inner join users user2 on (
+            JOIN users user2 on (
                 (
                     user1.datepreference = user2.sex
                     OR user1.datepreference = 'both'
