@@ -2,34 +2,15 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/asaskevich/govalidator"
-	"log"
-	"net/http"
-	"strconv"
-	"sync"
-
 	"github.com/gorilla/mux"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/crypto/sha3"
+	"log"
+	"net/http"
+	model "server/models"
+	"strconv"
 )
-
-func (a *App) ValidateCookieWithId(cookie string, id int) bool {
-	var mutex = &sync.Mutex{}
-	mutex.Lock()
-	sessions, ok := a.Sessions[id]
-	mutex.Unlock()
-	if !ok {
-		return false
-	}
-
-	for _, v := range sessions {
-		if v.Value == cookie {
-			return true
-		}
-	}
-	return false
-}
 
 func ValidateSex(sex string) bool {
 	if sex != "male" && sex != "female" {
@@ -47,34 +28,27 @@ func ValidateDatePreferensces(pref string) bool {
 	return true
 }
 
-func (a *App) checkPasswordForCHanging(newUser User) bool {
-	var mutex = &sync.Mutex{}
-	mutex.Lock()
-	oldUser := a.Users[newUser.Id]
-	mutex.Unlock()
-
-	if oldUser.Email == newUser.Email {
-		pass := sha3.New512()
-		pass.Write([]byte(newUser.OldPassword))
-		err := bcrypt.CompareHashAndPassword(oldUser.PasswordHash, pass.Sum(nil))
-		if err != nil {
-			return false
-		}
-
-		return true
+func (a *App) checkPasswordForCHanging(newUser model.User) bool {
+	oldUserPass, err := a.Db.GetPass(newUser.Id)
+	if err != nil {
+		return false
 	}
 
-	return false
+	pass := sha3.New512()
+	pass.Write([]byte(newUser.OldPassword))
+	err = bcrypt.CompareHashAndPassword(oldUserPass, pass.Sum(nil))
+	if err != nil {
+		return false
+	}
+
+	return true
 }
 
-func (a *App) changeUserProperties(newUser User) error {
-	var mutex = &sync.Mutex{}
-	mutex.Lock()
-	defer mutex.Unlock()
-	bufUser, ok := a.Users[newUser.Id]
-	if !ok {
-		response := errorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
-		response.Description["id"] = "Пользователя с таким id не существует"
+func (a *App) changeUserProperties(newUser *model.User) error {
+	bufUser, err := a.Db.GetUser(newUser.Id)
+	if err != nil {
+		response := errorDescriptionResponse{Description: map[string]string{}, Err: err.Error()}
+		response.Description["id"] = "Пользователя с таким id нет"
 		return response
 	}
 
@@ -128,12 +102,22 @@ func (a *App) changeUserProperties(newUser User) error {
 		bufUser.DatePreference = newUser.DatePreference
 	}
 
-	a.Users[newUser.Id] = bufUser
+	if len(newUser.PasswordHash) != 0 {
+		bufUser.PasswordHash = newUser.PasswordHash
+	}
+
+	err = a.Db.ChangeUser(bufUser)
+	if err != nil {
+		response := errorDescriptionResponse{Description: map[string]string{}, Err: err.Error()}
+		return response
+	}
+
+	*newUser = bufUser
 
 	return nil
 }
 
-func (a *App) changeUserPassword(newUser User) error {
+func (a *App) changeUserPassword(newUser *model.User) error {
 	response := errorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
 
 	if !validatePass(newUser.Password) {
@@ -146,30 +130,31 @@ func (a *App) changeUserPassword(newUser User) error {
 		return response
 	}
 
-	if !a.checkPasswordForCHanging(newUser) {
+	if !a.checkPasswordForCHanging(*newUser) {
 		response := errorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
 		response.Description["password"] = "Неверный пароль"
 		return response
 	}
 
-	newPassHash, err := hashPassword(newUser.Password)
+	hash, err := hashPassword(newUser.Password)
 	if err != nil {
 		response.Description["password"] = "Не удалось поменять пароль"
 		return response
 	}
+	newUser.PasswordHash = hash
 
-	var mutex = &sync.Mutex{}
-	mutex.Lock()
-	defer mutex.Unlock()
-	bufUser, ok := a.Users[newUser.Id]
-	if !ok {
-		response := errorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
-		response.Description["id"] = "Пользователя с таким id не существует"
-		return response
-	}
-	bufUser.PasswordHash = newPassHash
-	a.Users[newUser.Id] = bufUser
-
+	//bufUser, err := a.Db.GetUser(newUser.Id)
+	//if err != nil{
+	//	response := errorDescriptionResponse{Description: map[string]string{}, Err: err.Error()}
+	//	response.Description["id"] = "Пользователя с таким id нет"
+	//	return response
+	//}
+	//
+	//err = a.Db.ChangeUser(bufUser)
+	//if err != nil {
+	//	response := errorDescriptionResponse{Description: map[string]string{}, Err: err.Error()}
+	//	return response
+	//}
 	return nil
 }
 
@@ -195,7 +180,6 @@ func (a *App) ChangeUserInfo(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		log.Println("error: get id from context")
 	}
-	fmt.Println("id from context =", id)
 
 	if id != userId {
 		response := errorResponse{Err: "Отказано в доступе, кука устарела"}
@@ -203,38 +187,38 @@ func (a *App) ChangeUserInfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var newUser User
+	var newUser model.User
 	decoder := json.NewDecoder(r.Body)
 	err = decoder.Decode(&newUser)
 	defer r.Body.Close()
+	newUser.Id = id
 	if err != nil {
 		response := errorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
 		responseWithJson(w, 400, response)
 		return
 	}
-	newUser.Id = userId
 
-	response := a.changeUserProperties(newUser)
+	var response error
+	if newUser.Password != "" {
+		response = a.changeUserPassword(&newUser)
+		if response != nil {
+			responseWithJson(w, 400, response)
+			return
+		}
+		newUser.Password = ""
+		newUser.OldPassword = ""
+		newUser.SecondPassword = ""
+	}
+
+	newUser.Id = userId
+	response = a.changeUserProperties(&newUser)
 	if response != nil {
 		responseWithJson(w, 400, response)
 		return
 	}
 
-	if newUser.Password != "" {
-		response = a.changeUserPassword(newUser)
-		if response != nil {
-			responseWithJson(w, 400, response)
-			return
-		}
-	}
+	newUser.PasswordHash = nil
+	responseWithJson(w, 200, newUser)
 
-	var mutex = &sync.Mutex{}
-	mutex.Lock()
-	userInfo := a.Users[newUser.Id]
-	mutex.Unlock()
-
-	userInfo.PasswordHash = nil
-	responseWithJson(w, 200, userInfo)
-
-	log.Println("successful change", userInfo)
+	log.Println("successful change", newUser)
 }

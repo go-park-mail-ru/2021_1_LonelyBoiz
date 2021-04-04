@@ -3,15 +3,14 @@ package api
 import (
 	"encoding/json"
 	"github.com/asaskevich/govalidator"
-	"log"
-	"net/http"
-	"sync"
-
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/crypto/sha3"
+	"log"
+	"net/http"
+	model "server/models"
 )
 
-func validateSignInData(newUser User) (bool, error) {
+func validateSignInData(newUser model.User) (bool, error) {
 	response := errorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
 
 	_, err := govalidator.ValidateStruct(newUser)
@@ -24,33 +23,26 @@ func validateSignInData(newUser User) (bool, error) {
 	return true, nil
 }
 
-func (a *App) checkPassword(newUser *User) bool {
-	var mutex = &sync.Mutex{}
-	mutex.Lock()
-	users := a.Users
-	mutex.Unlock()
-	for _, v := range users {
-		if v.Email == newUser.Email {
-			pass := sha3.New512()
-			pass.Write([]byte(newUser.Password))
-			err := bcrypt.CompareHashAndPassword(v.PasswordHash, pass.Sum(nil))
-			if err != nil {
-				return false
-			}
-
-			mutex.Lock()
-			*newUser = v
-			mutex.Unlock()
-
-			return true
-		}
+func (a *App) checkPassword(newUser *model.User) bool {
+	user, err := a.Db.SignIn(newUser.Email)
+	if err != nil || user.IsDeleted == true {
+		return false
 	}
 
-	return false
+	pass := sha3.New512()
+	pass.Write([]byte(newUser.Password))
+	err = bcrypt.CompareHashAndPassword(user.PasswordHash, pass.Sum(nil))
+	if err != nil {
+		return false
+	}
+
+	*newUser = user
+
+	return true
 }
 
 func (a *App) SignIn(w http.ResponseWriter, r *http.Request) {
-	var newUser User
+	var newUser model.User
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&newUser)
 	defer r.Body.Close()
@@ -72,9 +64,15 @@ func (a *App) SignIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	a.setSession(w, newUser.Id)
+	err = a.setSession(w, newUser.Id)
+	if err != nil {
+		response := errorDescriptionResponse{Description: map[string]string{}, Err: err.Error()}
+		responseWithJson(w, 500, response)
+		return
+	}
+
 	newUser.PasswordHash = nil
 	responseWithJson(w, 200, newUser)
 
-	log.Println("successful login", newUser, a.Sessions[newUser.Id])
+	log.Println("successful login", newUser)
 }

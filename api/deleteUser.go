@@ -26,9 +26,16 @@ func (a *App) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	delete(a.Users, userId)
-
-	responseWithJson(w, 200, nil)
+	err = a.Db.DeleteUser(userId)
+	if err != nil {
+		response := errorDescriptionResponse{Description: map[string]string{}, Err: err.Error()}
+		responseWithJson(w, 500, response)
+		return
+	}
 
 	log.Println("deleted user", a.Users)
+	a.LogOut(w, r)
+
+	//responseWithJson(w, 200, nil)
+
 }

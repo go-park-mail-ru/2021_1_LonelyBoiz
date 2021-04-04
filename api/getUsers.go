@@ -4,16 +4,17 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	model "server/models"
 	"sync"
 )
 
-func (a *App) listUsers(newUser User) []User {
+func (a *App) listUsers(newUser model.User) []model.User {
 	var mutex = &sync.Mutex{}
 	mutex.Lock()
 	users := a.Users
 	mutex.Unlock()
 
-	var usersRet []User
+	var usersRet []model.User
 
 	for _, v := range users {
 		if v.Id == newUser.Id {
@@ -35,7 +36,7 @@ func (a *App) listUsers(newUser User) []User {
 }
 
 func (a *App) GetUsers(w http.ResponseWriter, r *http.Request) {
-	var newUser User
+	var newUser model.User
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&newUser)
 	defer r.Body.Close()

@@ -14,10 +14,11 @@ func (a *App) GetLogin(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Println("id from context =", id)
 
-	userInfo, ok := a.Users[id]
-
-	if !ok {
-		responseWithJson(w, 401, nil)
+	userInfo, err := a.Db.GetUser(id)
+	if err != nil {
+		response := errorDescriptionResponse{Description: map[string]string{}, Err: err.Error()}
+		response.Description["id"] = "Пользователя с таким id нет"
+		responseWithJson(w, 401, response)
 		return
 	}
 

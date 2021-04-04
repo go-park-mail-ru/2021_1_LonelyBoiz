@@ -22,7 +22,6 @@ func deleteCookie(key string, sessions *map[int][]http.Cookie) {
 		}
 	}
 	mutex.Unlock()
-
 }
 
 func (a *App) LogOut(w http.ResponseWriter, r *http.Request) {
@@ -36,8 +35,15 @@ func (a *App) LogOut(w http.ResponseWriter, r *http.Request) {
 
 	cookie.Expires = time.Now().AddDate(0, 0, -1)
 	http.SetCookie(w, cookie)
-	deleteCookie(key, &a.Sessions)
+
+	err = a.Db.DeleteCookie(0, key)
+	if err != nil {
+		response := errorDescriptionResponse{Description: map[string]string{}, Err: err.Error()}
+		responseWithJson(w, 500, response)
+		return
+	}
+
 	responseWithJson(w, 200, nil)
 
-	log.Println("logout", a.Sessions)
+	log.Println("logout")
 }

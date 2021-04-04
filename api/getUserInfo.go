@@ -1,12 +1,10 @@
 package api
 
 import (
+	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 	"strconv"
-	"sync"
-
-	"github.com/gorilla/mux"
 )
 
 func (a *App) GetUserInfo(w http.ResponseWriter, r *http.Request) {
@@ -32,14 +30,11 @@ func (a *App) GetUserInfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var mutex = &sync.Mutex{}
-	mutex.Lock()
-	userInfo, ok := a.Users[userId]
-	mutex.Unlock()
-	if !ok {
-		response := errorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе, кука устарела"}
+	userInfo, err := a.Db.GetUser(id)
+	if err != nil {
+		response := errorDescriptionResponse{Description: map[string]string{}, Err: err.Error()}
 		response.Description["id"] = "Пользователя с таким id нет"
-		responseWithJson(w, 400, response)
+		responseWithJson(w, 500, response)
 		return
 	}
 

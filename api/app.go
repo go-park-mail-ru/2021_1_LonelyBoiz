@@ -6,6 +6,8 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	model "server/models"
+	"server/repository"
 	"sync"
 	"time"
 
@@ -44,33 +46,14 @@ func KeyGen() string {
 	return string(b)
 }
 
-type User struct {
-	Id             int    `json:"id"`
-	Email          string `json:"mail" valid:"email~Почта не прошла валидацию"`
-	Password       string `json:"password,omitempty" valid:"length(8|64)~Пароль не прошел валидацию"`
-	SecondPassword string `json:"passwordRepeat,omitempty" valid:"length(8|64)"`
-	PasswordHash   []byte `json:",omitempty"`
-	OldPassword    string `json:"oldPassword,omitempty"`
-	Name           string `json:"name"` // Введите имя
-	Birthday       int64  `json:"birthday" valid:"ageValid~Вам должно быть 18!"`
-	Description    string `json:"description"`
-	City           string `json:"city"`
-	Avatar         string `json:"avatar"`
-	Instagram      string `json:"instagram"`
-	Sex            string `json:"sex"`
-	DatePreference string `json:"datePreference"`
-	IsDeleted      bool   `json:"isDeleted"`
-	IsActive       bool   `json:"isActive"`
-	Photos         string `json:"photos"`
-}
-
 type App struct {
 	addr     string
 	router   *mux.Router
-	Users    map[int]User
+	Users    map[int]model.User
 	UserIds  int
 	Sessions map[int][]http.Cookie
 	mutex    *sync.Mutex
+	Db       repository.RepoSqlx
 }
 
 func (a *App) Start() error {
@@ -127,7 +110,8 @@ func (a *App) InitializeRoutes(currConfig Config) {
 	a.router = currConfig.router
 	a.UserIds = currConfig.userIds
 	a.Sessions = make(map[int][]http.Cookie)
-	a.Users = make(map[int]User)
+	a.Users = make(map[int]model.User)
+	a.Db = repository.Init()
 
 	// валидация кук
 	subRouter := a.router.NewRoute().Subrouter()

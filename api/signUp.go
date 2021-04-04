@@ -7,7 +7,7 @@ import (
 	"golang.org/x/crypto/sha3"
 	"log"
 	"net/http"
-	"sync"
+	model "server/models"
 	"time"
 )
 
@@ -31,7 +31,7 @@ func responseWithJson(w http.ResponseWriter, code int, body interface{}) {
 	json.NewEncoder(w).Encode(body)
 }
 
-func validateSignUpData(newUser User) error {
+func validateSignUpData(newUser model.User) error {
 	response := errorDescriptionResponse{Description: map[string]string{}, Err: "Не удалось зарегистрироваться"}
 
 	_, err := govalidator.ValidateStruct(newUser)
@@ -54,15 +54,11 @@ func validateSignUpData(newUser User) error {
 }
 
 func (a *App) isAlreadySignedUp(newEmail string) (bool, error) {
-	var mutex = &sync.Mutex{}
-	mutex.Lock()
-	defer mutex.Unlock()
-	for _, v := range a.Users {
-		if v.Email == newEmail {
-			response := errorDescriptionResponse{Description: map[string]string{}, Err: "Не удалось зарегистрироваться"}
-			response.Description["mail"] = "Почта уже зарегистрирована"
-			return true, response
-		}
+	isSignUp := a.Db.CheckMail(newEmail)
+	if isSignUp == true {
+		response := errorDescriptionResponse{Description: map[string]string{}, Err: "Не удалось зарегистрироваться"}
+		response.Description["mail"] = "Почта уже зарегистрирована"
+		return true, response
 	}
 
 	return false, nil
@@ -75,7 +71,7 @@ func hashPassword(pass string) ([]byte, error) {
 	return secondHash, err
 }
 
-func (a *App) addNewUser(newUser *User) error {
+func (a *App) addNewUser(newUser *model.User) error {
 	var err error
 	newUser.PasswordHash, err = hashPassword(newUser.Password)
 	if err != nil {
@@ -84,17 +80,21 @@ func (a *App) addNewUser(newUser *User) error {
 	newUser.Password = ""
 	newUser.SecondPassword = ""
 
-	var mutex = &sync.Mutex{}
-	mutex.Lock()
-	defer mutex.Unlock()
-	newUser.Id = a.UserIds
-	a.UserIds++
-	a.Users[newUser.Id] = *newUser
+	log.Println("45")
+
+	id, err := a.Db.AddUser(*newUser)
+	if err != nil {
+		response := errorDescriptionResponse{Description: map[string]string{}, Err: err.Error()}
+		return response
+	}
+
+	log.Println("46")
+	newUser.Id = id
 
 	return nil
 }
 
-func (a *App) setSession(w http.ResponseWriter, id int) {
+func (a *App) setSession(w http.ResponseWriter, id int) error {
 	key := KeyGen()
 	expiration := time.Now().Add(24 * time.Hour)
 
@@ -110,14 +110,17 @@ func (a *App) setSession(w http.ResponseWriter, id int) {
 
 	http.SetCookie(w, &cookie)
 
-	var mutex = &sync.Mutex{}
-	mutex.Lock()
-	a.Sessions[id] = append(a.Sessions[id], cookie)
-	mutex.Unlock()
+	err := a.Db.AddCookie(id, key)
+	if err != nil {
+		response := errorDescriptionResponse{Description: map[string]string{}, Err: err.Error()}
+		return response
+	}
+
+	return nil
 }
 
 func (a *App) SignUp(w http.ResponseWriter, r *http.Request) {
-	var newUser User
+	var newUser model.User
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&newUser)
 	defer r.Body.Close()
@@ -127,23 +130,36 @@ func (a *App) SignUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Println("5")
+
 	if response := validateSignUpData(newUser); response != nil {
 		responseWithJson(w, 400, response)
 		return
 	}
+
+	log.Println("4")
 
 	if isSignedUp, response := a.isAlreadySignedUp(newUser.Email); isSignedUp {
 		responseWithJson(w, 400, response)
 		return
 	}
 
+	log.Println("3")
 	err = a.addNewUser(&newUser)
 	if err != nil {
 		responseWithJson(w, 500, nil)
 		return
 	}
+	log.Println("2")
 
-	a.setSession(w, newUser.Id)
+	err = a.setSession(w, newUser.Id)
+	if err != nil {
+		response := errorDescriptionResponse{Description: map[string]string{}, Err: err.Error()}
+		responseWithJson(w, 500, response)
+		return
+	}
+
+	log.Println("1")
 
 	newUser.Password = ""
 	newUser.SecondPassword = ""

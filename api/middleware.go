@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"net/http"
-	"sync"
 )
 
 type key int
@@ -20,25 +19,19 @@ func (a *App) MiddlewareValidateCookie(next http.Handler) http.Handler {
 		}
 
 		//здесь будет поход в базу
-		var mutex = &sync.Mutex{}
-		mutex.Lock()
-		defer mutex.Unlock()
-		for id, userSessions := range a.Sessions {
-			for _, v := range userSessions {
-				if v.Value == token.Value {
-					ctx := r.Context()
-					ctx = context.WithValue(ctx,
-						ctxUserId,
-						id,
-					)
-					next.ServeHTTP(w, r.WithContext(ctx))
-					return
-				}
-			}
+		id, err := a.Db.GetCookie(token.Value)
+		if err != nil {
+			response := errorResponse{Err: err.Error()}
+			responseWithJson(w, 401, response)
+			return
 		}
 
-		response := errorResponse{Err: "Вы не авторизованы"}
-		responseWithJson(w, 401, response)
+		ctx := r.Context()
+		ctx = context.WithValue(ctx,
+			ctxUserId,
+			id,
+		)
+		next.ServeHTTP(w, r.WithContext(ctx))
 		return
 	})
 }
