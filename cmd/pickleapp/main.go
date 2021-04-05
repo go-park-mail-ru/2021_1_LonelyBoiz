@@ -102,9 +102,12 @@ func (a *App) InitializeRoutes(currConfig Config) {
 		Sessions: &sessionManager,
 	}
 
+	// мидллвары
 	checkcookiem := middleware.ValidateCookieMiddleware{Session: &sessionManager}
+	loggerm := middleware.LoggerMiddleware{Logger: a.Logger}
 
-	//a.router.Use(middleware.MiddlewareLogger)
+	a.router.Use(loggerm.Middleware)
+
 	// валидация кук
 	subRouter := a.router.NewRoute().Subrouter()
 	subRouter.Use(checkcookiem.Middleware)
