@@ -39,7 +39,7 @@ func (repo *RepoSqlx) GetChats(userId int, limit int, offset int) ([]Chat, error
                 		WHERE msg.chatid = messages2.chatid
             		)
     		) lastMessage ON lastMessage.chatid = chats.id
-		WHERE chats.userid1 = $1
+		WHERE chats.userid1 = $1 OR chats.userid2 = $1
 		ORDER BY lastMessageTime
 		LIMIT $2 OFFSET $3`,
 		userId,
@@ -69,4 +69,21 @@ func (repo *RepoSqlx) GetChat(chatId int, limit int, offset int) ([]Message, err
 	}
 
 	return messages, nil
+}
+
+func (repo *RepoSqlx) CreateChat(userId1 int, userId2 int) (int, error) {
+	var chatId int
+	err := repo.DB.QueryRow(
+		`INSERT INTO chats (userid1, userod2)
+			VALUES (
+        	$1,
+        	$2,
+    	) RETURNING chatid`,
+		userId1, userId2,
+	).Scan(&chatId)
+	if err != nil {
+		return -1, err
+	}
+
+	return chatId, err
 }
