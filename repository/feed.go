@@ -30,7 +30,7 @@ func (repo *RepoSqlx) CreateFeed(userId int) error {
                     WHERE userid1 = user1.id
                 )
             )
-        WHERE user1.id = 1
+        WHERE user1.id = $1
         LIMIT 100
     )`, userId)
 
@@ -43,7 +43,7 @@ func (repo *RepoSqlx) GetFeed(userId int) ([]api.User, error) {
 		`SELECT *
 			FROM feed
     			join users on userid2 = users.id
-			WHERE userid1 = 1 AND rating = 'empty' LIMIT 20`,
+			WHERE userid1 = $1 AND rating = 'empty' LIMIT 20`,
 		userId,
 	)
 	if err != nil {
@@ -65,4 +65,23 @@ func (repo *RepoSqlx) Rating(userIdFrom int, userIdTo int, reaction string) (int
 	}
 
 	return res.RowsAffected()
+}
+
+func (repo *RepoSqlx) CheckReciprocity(userId1 int, userId2 int) (bool, error) {
+	var rating string
+	err := repo.DB.Select(&rating,
+		`SELECT rating
+			FROM feed
+			WHERE userid1 = $1 AND userid2 = $2`,
+		userId1, userId2,
+	)
+	if err != nil {
+		return false, err
+	}
+
+	if rating == "like" {
+		return true, nil
+	}
+
+	return false, nil
 }
