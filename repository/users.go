@@ -62,6 +62,7 @@ func (repo *RepoSqlx) GetUser(id int) (api.User, error) {
 		return api.User{}, err
 	}
 
+	user[0].PasswordHash = nil
 	return user[0], nil
 }
 

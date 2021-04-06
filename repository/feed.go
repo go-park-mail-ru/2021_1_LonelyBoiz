@@ -40,10 +40,21 @@ func (repo *RepoSqlx) CreateFeed(userId int) error {
 func (repo *RepoSqlx) GetFeed(userId int) ([]api.User, error) {
 	var feed []api.User
 	err := repo.DB.Select(&feed,
-		`SELECT *
-			FROM feed
-    			join users on userid2 = users.id
-			WHERE userid1 = $1 AND rating = 'empty' LIMIT 20`,
+		`SELECT users.id,
+    		users.email,
+    		users.name,
+    		users.city,
+    		users.sex,
+			users.birthday,
+    		users.datePreference,
+    		users.city,
+    		users.description,
+			users.photos,
+			users.isActive,
+			users.isDeleted
+    	FROM feed
+    		join users on userid2 = users.id
+		WHERE userid1 = $1 AND rating = 'empty' LIMIT 20`,
 		userId,
 	)
 	if err != nil {
