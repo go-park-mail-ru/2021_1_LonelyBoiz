@@ -18,15 +18,15 @@ func (repo *RepoSqlx) GetChats(userId int, limit int, offset int) ([]Chat, error
 	var chats []Chat
 	err := repo.DB.Select(&chats,
 		`SELECT chats.id AS chatId,
-    		chats.userid2 AS partnerId,
+    		users.id AS partnerId,
     		users.name AS partnerName,
     		lastMessage.text AS lastMessage,
     		lastMessage.time AS lastMessageTime,
     		lastMessage.authorid AS lastMessageAuthorid,
     		users.photos AS avatar
 		FROM chats
-    		JOIN users ON (users.id = chats.userid2)
-    		JOIN (
+    		JOIN users ON ((users.id = chats.userid2 OR users.id = chats.userid1) AND users.id <> $1)
+    		LEFT JOIN (
         		SELECT msg.text,
             		msg.time,
             		msg.messageOrder,
