@@ -8,13 +8,13 @@ import (
 )
 
 type Message struct {
-	MessageId    int    `json:"messageId"`
+	MessageId    int    `json:"messageId,omitempty"`
 	AuthorId     int    `json:"authorId"`
 	ChatId       int    `json:"chatId"`
 	Text         string `json:"text"`
-	Reaction     int    `json:"reaction"`
-	Time         int64  `json:"time"`
-	MessageOrder int    `json:"messageOrder"`
+	Reaction     int    `json:"reaction,omitempty"`
+	Time         int64  `json:"time,omitempty"`
+	MessageOrder int    `json:"messageOrder,omitempty"`
 }
 
 func (repo *RepoSqlx) AddMessage(authorId int, chatId int, text string) (Message, error) {
