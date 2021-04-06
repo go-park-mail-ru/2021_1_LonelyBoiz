@@ -68,7 +68,7 @@ func (repo *RepoSqlx) Rating(userIdFrom int, userIdTo int, reaction string) (int
 }
 
 func (repo *RepoSqlx) CheckReciprocity(userId1 int, userId2 int) (bool, error) {
-	var rating string
+	var rating []string
 	err := repo.DB.Select(&rating,
 		`SELECT rating
 			FROM feed
@@ -79,7 +79,7 @@ func (repo *RepoSqlx) CheckReciprocity(userId1 int, userId2 int) (bool, error) {
 		return false, err
 	}
 
-	if rating == "like" {
+	if len(rating) != 0 && rating[0] == "like" {
 		return true, nil
 	}
 
