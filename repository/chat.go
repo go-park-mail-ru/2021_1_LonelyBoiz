@@ -74,10 +74,10 @@ func (repo *RepoSqlx) GetChat(chatId int, limit int, offset int) ([]Message, err
 func (repo *RepoSqlx) CreateChat(userId1 int, userId2 int) (int, error) {
 	var chatId int
 	err := repo.DB.QueryRow(
-		`INSERT INTO chats (userid1, userod2)
+		`INSERT INTO chats (userid1, userid2)
 			VALUES (
         	$1,
-        	$2,
+        	$2
     	) RETURNING chatid`,
 		userId1, userId2,
 	).Scan(&chatId)
