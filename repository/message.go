@@ -12,8 +12,8 @@ type Message struct {
 	AuthorId     int    `json:"authorId"`
 	ChatId       int    `json:"chatId"`
 	Text         string `json:"text"`
-	Reaction     int    `json:"reaction,omitempty"`
-	Time         int64  `json:"time,omitempty"`
+	Reaction     int    `json:"reactioId,omitempty"`
+	Time         int64  `json:"date,omitempty"`
 	MessageOrder int    `json:"messageOrder,omitempty"`
 }
 
@@ -49,6 +49,23 @@ func (repo *RepoSqlx) AddMessage(authorId int, chatId int, text string) (Message
 	}
 
 	return newMessage, nil
+}
+
+func (repo *RepoSqlx) GetPartnerId(chatId int, userId int) (int, error) {
+	var users []int
+	err := repo.DB.Select(&users,
+		`SELECT userid1, userid2 FROM chats WHERE id = $1`,
+		chatId,
+	)
+	if err != nil {
+		return -1, err
+	}
+
+	if users[0] != userId {
+		return users[0], nil
+	}
+
+	return users[1], nil
 }
 
 func (repo *RepoSqlx) GetMessages(chatId int, offset int, count int) ([]Message, error) {
