@@ -21,6 +21,7 @@ var upgrader = websocket.Upgrader{
 func main() {
 	router := mux.NewRouter()
 	router.HandleFunc("/chats/{chatId:[0-9]+}/messages", messageHandler).Methods("POST")
+	router.HandleFunc("/likes", likesHandler).Methods("POST")
 	router.HandleFunc("/ws", wsHandler)
 	go webSocketResponse()
 
@@ -42,9 +43,15 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 	clients[id] = ws
 }
 
-func writer(newMessage *Message) {
+func messagesWriter(newMessage *Message) {
 	messagesChan <- newMessage
 }
+
+func chatsWriter(newChat *Chat) {
+	chatsChan <- newChat
+}
+
+func likesHandler(w http.ResponseWriter, r *http.Request) {}
 
 func messageHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -83,7 +90,7 @@ func messageHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	go writer(&newMessage)
+	go messagesWriter(&newMessage)
 }
 
 func webSocketResponse() {
