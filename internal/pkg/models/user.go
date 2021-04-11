@@ -72,3 +72,7 @@ func ResponseWithJson(w http.ResponseWriter, code int, body interface{}) {
 	w.WriteHeader(code)
 	json.NewEncoder(w).Encode(body)
 }
+
+var (
+	UserErrorInvalidData = "Неверный формат входных данных"
+)

@@ -2,7 +2,6 @@ package delivery
 
 import (
 	"github.com/gorilla/mux"
-	"log"
 	"net/http"
 	model "server/internal/pkg/models"
 	"strconv"
@@ -11,23 +10,13 @@ import (
 func (a *UserHandler) GetUserInfo(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	userId, err := strconv.Atoi(vars["id"])
-	if err != nil {
-		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
-		response.Description["id"] = "Пользователя с таким id нет"
-		model.ResponseWithJson(w, 400, response)
-		return
-	}
 
-	ctx := r.Context()
-	id, ok := ctx.Value(model.CtxUserId).(int)
-	if !ok {
-		log.Println("error: get id from context")
-	}
+	id, ok := a.Sessions.GetIdFromContext(r.Context())
 
-	if id != userId {
-		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
-		response.Description["id"] = "Пользователя с таким id нет"
-		model.ResponseWithJson(w, 400, response)
+	if !ok || err != nil || id != userId {
+		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
+		model.ResponseWithJson(w, 403, response)
+		a.UserCase.Logger.Info(response.Err)
 		return
 	}
 
@@ -36,11 +25,12 @@ func (a *UserHandler) GetUserInfo(w http.ResponseWriter, r *http.Request) {
 		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: err.Error()}
 		response.Description["id"] = "Пользователя с таким id нет"
 		model.ResponseWithJson(w, 500, response)
+		a.UserCase.Logger.Error(err.Error())
 		return
 	}
 
 	userInfo.PasswordHash = nil
 	model.ResponseWithJson(w, 200, userInfo)
 
-	log.Println("successful get user", userInfo)
+	a.UserCase.Logger.Info("Success")
 }

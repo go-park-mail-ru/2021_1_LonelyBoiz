@@ -23,7 +23,7 @@ type App struct {
 	addr   string
 	router *mux.Router
 	Db     *sqlx.DB
-	Logger *logrus.Entry
+	Logger *logrus.Logger
 }
 
 func (a *App) Start() error {
@@ -81,9 +81,8 @@ func (a *App) InitializeRoutes(currConfig Config) {
 	a.router = currConfig.router
 
 	// логгер
-	contextLogger := logrus.WithFields(logrus.Fields{
-		"mode": "[access_log]",
-	})
+	contextLogger := logrus.New()
+
 	logrus.SetFormatter(&logrus.TextFormatter{})
 	a.Logger = contextLogger
 
@@ -97,14 +96,17 @@ func (a *App) InitializeRoutes(currConfig Config) {
 
 	userHandler := handler.UserHandler{
 		Db:       userRep,
-		Logger:   a.Logger,
 		UserCase: userUcase,
 		Sessions: &sessionManager,
 	}
 
+	loggerm := middleware.LoggerMiddleware{
+		Logger: contextLogger,
+		User:   &userHandler,
+	}
+
 	// мидллвары
 	checkcookiem := middleware.ValidateCookieMiddleware{Session: &sessionManager}
-	loggerm := middleware.LoggerMiddleware{Logger: a.Logger}
 
 	a.router.Use(loggerm.Middleware)
 

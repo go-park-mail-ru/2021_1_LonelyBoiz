@@ -1,19 +1,18 @@
 package delivery
 
 import (
-	"fmt"
-	"log"
 	"net/http"
 	model "server/internal/pkg/models"
 )
 
 func (a *UserHandler) GetLogin(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	id, ok := ctx.Value(model.CtxUserId).(int)
+	id, ok := a.Sessions.GetIdFromContext(r.Context())
 	if !ok {
-		log.Println("error: get id from context")
+		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
+		model.ResponseWithJson(w, 403, response)
+		a.UserCase.Logger.Info(response.Err)
+		return
 	}
-	fmt.Println("id from context =", id)
 
 	userInfo, err := a.Db.GetUser(id)
 	if err != nil {
@@ -25,5 +24,4 @@ func (a *UserHandler) GetLogin(w http.ResponseWriter, r *http.Request) {
 
 	userInfo.PasswordHash = nil
 	model.ResponseWithJson(w, 200, userInfo)
-	return
 }

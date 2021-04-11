@@ -2,28 +2,21 @@ package delivery
 
 import (
 	"github.com/gorilla/mux"
-	"log"
 	"net/http"
 	model "server/internal/pkg/models"
 	"strconv"
 )
 
 func (a *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	id, ok := ctx.Value(model.CtxUserId).(int)
-	if !ok {
-		log.Println("error: get id from context")
-	}
+	vars := mux.Vars(r)
+	userId, err := strconv.Atoi(vars["id"])
 
-	args := mux.Vars(r)
-	userId, err := strconv.Atoi(args["id"])
-	if err != nil {
-		model.ResponseWithJson(w, 400, err)
-		return
-	}
+	id, ok := a.Sessions.GetIdFromContext(r.Context())
 
-	if userId != id {
-		model.ResponseWithJson(w, 400, "Отказано в доступе")
+	if !ok || err != nil || id != userId {
+		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
+		model.ResponseWithJson(w, 403, response)
+		a.UserCase.Logger.Info(response.Err)
 		return
 	}
 
@@ -31,9 +24,10 @@ func (a *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: err.Error()}
 		model.ResponseWithJson(w, 500, response)
+		a.UserCase.Logger.Error(err.Error())
 		return
 	}
 
-	log.Println("deleted user")
+	a.UserCase.Logger.Info("Success Delete User")
 	a.LogOut(w, r)
 }

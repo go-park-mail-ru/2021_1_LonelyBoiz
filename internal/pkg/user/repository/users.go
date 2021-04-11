@@ -3,7 +3,6 @@ package repository
 import (
 	"errors"
 	"github.com/jmoiron/sqlx"
-	"log"
 	model "server/internal/pkg/models"
 
 	_ "github.com/jackc/pgx/stdlib"
@@ -15,8 +14,6 @@ type UserRepository struct {
 
 func (repo *UserRepository) AddUser(newUser model.User) (int, error) {
 	var id int
-
-	log.Println("bd")
 
 	err := repo.DB.QueryRowx(
 		`INSERT INTO users (
@@ -59,8 +56,6 @@ func (repo *UserRepository) AddUser(newUser model.User) (int, error) {
 	if err != nil {
 		return -1, err
 	}
-
-	log.Println(id)
 
 	return id, nil
 }

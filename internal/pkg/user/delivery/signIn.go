@@ -1,39 +1,31 @@
 package delivery
 
 import (
-	"encoding/json"
-	"io"
-	"log"
 	"net/http"
 	model "server/internal/pkg/models"
 )
 
-func ParseJsonToUser(body io.ReadCloser) (model.User, error) {
-	var newUser model.User
-	decoder := json.NewDecoder(body)
-	err := decoder.Decode(&newUser)
-	defer body.Close()
-	return newUser, err
-}
-
 func (a *UserHandler) SignIn(w http.ResponseWriter, r *http.Request) {
-	newUser, err := ParseJsonToUser(r.Body)
+	newUser, err := a.UserCase.ParseJsonToUser(r.Body)
 
 	if err != nil {
-		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
+		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: model.UserErrorInvalidData}
 		model.ResponseWithJson(w, 400, response)
+		a.UserCase.Logger.Error(model.UserErrorInvalidData)
 		return
 	}
 
 	isValid, response := a.UserCase.ValidateSignInData(newUser)
 	if !isValid {
 		model.ResponseWithJson(w, 400, response)
+		a.UserCase.Logger.Info(response.Error())
 		return
 	}
 
 	if isCorrect := a.UserCase.CheckPassword(&newUser); !isCorrect {
 		response := model.ErrorResponse{Err: "Неверный логин или пароль"}
 		model.ResponseWithJson(w, 401, response)
+		a.UserCase.Logger.Info(response.Err)
 		return
 	}
 
@@ -41,11 +33,12 @@ func (a *UserHandler) SignIn(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: err.Error()}
 		model.ResponseWithJson(w, 500, response)
+		a.UserCase.Logger.Error(err.Error())
 		return
 	}
 
 	newUser.PasswordHash = nil
 	model.ResponseWithJson(w, 200, newUser)
 
-	log.Println("successful login", newUser)
+	a.UserCase.Logger.Info("Success LogIn")
 }
