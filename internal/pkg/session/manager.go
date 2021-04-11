@@ -1,6 +1,8 @@
 package session
 
 import (
+	"context"
+	"github.com/sirupsen/logrus"
 	"math/rand"
 	"net/http"
 	model "server/internal/pkg/models"
@@ -9,7 +11,8 @@ import (
 )
 
 type SessionsManager struct {
-	DB repository.SessionRepository
+	DB     repository.SessionRepository
+	Logger *logrus.Entry
 }
 
 func (session *SessionsManager) KeyGen() string {
@@ -40,9 +43,11 @@ func (session *SessionsManager) SetSession(w http.ResponseWriter, id int) error 
 	err := session.DB.AddCookie(id, key)
 	if err != nil {
 		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: err.Error()}
+		session.Logger.Info("Set Cookie : " + err.Error())
 		return response
 	}
 
+	session.Logger.Info("Success Set Cookie")
 	return nil
 }
 
@@ -50,8 +55,18 @@ func (session *SessionsManager) DeleteSession(cookie *http.Cookie) error {
 	key := cookie.Value
 	cookie.Expires = time.Now().AddDate(0, 0, -1)
 	if err := session.DB.DeleteCookie(0, key); err != nil {
+		session.Logger.Info("Delete Cookie : " + err.Error())
 		return err
 	}
 
+	session.Logger.Info("Success Delete Cookie")
 	return nil
+}
+
+func (session *SessionsManager) GetIdFromContext(ctx context.Context) (int, bool) {
+	id, ok := ctx.Value(model.CtxUserId).(int)
+	if !ok {
+		return 0, false
+	}
+	return id, true
 }

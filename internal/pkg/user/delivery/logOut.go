@@ -1,7 +1,6 @@
 package delivery
 
 import (
-	"log"
 	"net/http"
 	model "server/internal/pkg/models"
 )
@@ -18,9 +17,10 @@ func (a *UserHandler) LogOut(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: err.Error()}
 		model.ResponseWithJson(w, 500, response)
+		a.UserCase.Logger.Error(err.Error())
 		return
 	}
 
 	model.ResponseWithJson(w, 200, nil)
-	log.Println("logout")
+	a.UserCase.Logger.Info("Success LogOut")
 }

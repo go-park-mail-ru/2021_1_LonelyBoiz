@@ -32,6 +32,7 @@ func (m *ValidateCookieMiddleware) Middleware(next http.Handler) http.Handler {
 			model.CtxUserId,
 			id,
 		)
+		m.Session.Logger.Info("Pass ValidateCookie middleware")
 		next.ServeHTTP(w, r.WithContext(ctx))
 		return
 	})

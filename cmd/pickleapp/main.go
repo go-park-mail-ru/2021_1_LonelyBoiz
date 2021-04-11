@@ -2,15 +2,25 @@ package main
 
 import (
 	"fmt"
+	"github.com/gorilla/mux"
+	"github.com/jmoiron/sqlx"
+	cors2 "github.com/rs/cors"
+	"github.com/sirupsen/logrus"
 	"math/rand"
 	"net/http"
 	"os"
 	"server/internal/pickleapp/middleware"
-	repository2 "server/internal/pickleapp/repository"
+	mainrep "server/internal/pickleapp/repository"
+	"server/internal/pkg/chat/delivery"
+	chatrep "server/internal/pkg/chat/repository"
+	usecase2 "server/internal/pkg/chat/usecase"
+	delivery2 "server/internal/pkg/message/delivery"
+	mesrep "server/internal/pkg/message/repository"
+	usecase3 "server/internal/pkg/message/usecase"
 	"server/internal/pkg/session"
-	repository3 "server/internal/pkg/session/repository"
+	sesrep "server/internal/pkg/session/repository"
 	handler "server/internal/pkg/user/delivery"
-	"server/internal/pkg/user/repository"
+	userrep "server/internal/pkg/user/repository"
 	"server/internal/pkg/user/usecase"
 	"time"
 
@@ -24,11 +34,11 @@ type App struct {
 	addr   string
 	router *mux.Router
 	Db     *sqlx.DB
-	Logger *logrus.Entry
+	Logger *logrus.Logger
 }
 
 func (a *App) Start() error {
-	fmt.Println("Server start")
+	a.Logger.Info("Server Start")
 
 	cors := cors2.New(cors2.Options{
 		AllowedOrigins:   []string{"http://localhost:3000", "https://lepick.herokuapp.com"},
@@ -77,39 +87,65 @@ func NewConfig() Config {
 func (a *App) InitializeRoutes(currConfig Config) {
 	rand.Seed(time.Now().UnixNano())
 
-	//конфиг
+	//init config
 	a.addr = currConfig.addr
 	a.router = currConfig.router
 
-	// логгер
-	contextLogger := logrus.WithFields(logrus.Fields{
-		"mode": "[access_log]",
-	})
+	// init logger
+	contextLogger := logrus.New()
 	logrus.SetFormatter(&logrus.TextFormatter{})
 	a.Logger = contextLogger
 
-	// бд
-	a.Db = repository2.Init()
-	userRep := repository.UserRepository{DB: a.Db}
-	sessionRep := repository3.SessionRepository{DB: a.Db}
+	// init db
+	a.Db = mainrep.Init()
+	userRep := userrep.UserRepository{DB: a.Db}
+	sessionRep := sesrep.SessionRepository{DB: a.Db}
+	messageRep := mesrep.MessageRepository{DB: a.Db}
+	chatRep := chatrep.ChatRepository{DB: a.Db}
 
+	// init uCases & handlers
 	userUcase := usecase.UserUsecase{Db: userRep}
 	sessionManager := session.SessionsManager{DB: sessionRep}
 
+	chatUcase := usecase2.ChatUsecase{
+		Db:      &chatRep,
+		Clients: make(map[int]*websocket.Conn),
+	}
+
+	messUcase := usecase3.MessageUsecase{
+		Db: messageRep,
+	}
+
+	chatHandler := delivery.ChatHandler{
+		Sessions: &sessionManager,
+		Usecase:  &chatUcase,
+	}
+
+	messHandler := delivery2.MessageHandler{
+		Db:       messageRep,
+		Sessions: &sessionManager,
+		Usecase:  &messUcase,
+	}
+
 	userHandler := handler.UserHandler{
 		Db:       userRep,
-		Logger:   a.Logger,
 		UserCase: userUcase,
 		Sessions: &sessionManager,
 	}
 
-	// мидллвары
+	// init middlewares
+	loggerm := middleware.LoggerMiddleware{
+		Logger:  contextLogger,
+		User:    &userHandler,
+		Chat:    &chatHandler,
+		Message: &messHandler,
+	}
+
 	checkcookiem := middleware.ValidateCookieMiddleware{Session: &sessionManager}
-	loggerm := middleware.LoggerMiddleware{Logger: a.Logger}
 
 	a.router.Use(loggerm.Middleware)
 
-	// валидация кук
+	// validate cookie router
 	subRouter := a.router.NewRoute().Subrouter()
 	subRouter.Use(checkcookiem.Middleware)
 
@@ -125,13 +161,13 @@ func (a *App) InitializeRoutes(currConfig Config) {
 
 	// валидация всех данных, без кук
 	a.router.HandleFunc("/users", userHandler.SignUp).Methods("POST")
-
-	// валидация пароля
 	a.router.HandleFunc("/login", userHandler.SignIn).Methods("POST")
-
-	// не требуется
 	a.router.HandleFunc("/login", userHandler.LogOut).Methods("DELETE")
 
+	subRouter.HandleFunc("/chats/{chatId:[0-9]+}/messages", messHandler.Message).Methods("POST")
+	a.router.HandleFunc("/likes", chatHandler.LikesHandler).Methods("POST")
+	a.router.HandleFunc("/ws", chatHandler.CreateChat)
+	go chatUcase.WebSocketResponse()
 }
 
 func main() {
@@ -140,7 +176,7 @@ func main() {
 	a.InitializeRoutes(config)
 	err := a.Start()
 	if err != nil {
-		fmt.Println(err)
+		a.Logger.Error(err)
 		os.Exit(1)
 	}
 }

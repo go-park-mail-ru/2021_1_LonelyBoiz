@@ -4,13 +4,19 @@ import (
 	model "server/internal/pkg/models"
 	"server/internal/pkg/user/repository"
 
+	"encoding/json"
 	"github.com/asaskevich/govalidator"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/crypto/sha3"
+	"io"
+	model "server/internal/pkg/models"
+	"server/internal/pkg/user/repository"
 )
 
 type UserUsecase struct {
-	Db repository.UserRepository
+	Db     repository.UserRepository
+	Logger *logrus.Entry
 }
 
 func (u *UserUsecase) ValidateSex(sex string) bool {
@@ -261,4 +267,12 @@ func (u *UserUsecase) AddNewUser(newUser *model.User) error {
 	newUser.Id = id
 
 	return nil
+}
+
+func (u *UserUsecase) ParseJsonToUser(body io.ReadCloser) (model.User, error) {
+	var newUser model.User
+	decoder := json.NewDecoder(body)
+	err := decoder.Decode(&newUser)
+	defer body.Close()
+	return newUser, err
 }
