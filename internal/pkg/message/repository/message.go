@@ -45,23 +45,6 @@ func (repo *MessageRepository) AddMessage(authorId int, chatId int, text string)
 	return newMessage, nil
 }
 
-func (repo *MessageRepository) GetPartnerId(chatId int, userId int) (int, error) {
-	var users []int
-	err := repo.DB.Select(&users,
-		`SELECT userid1, userid2 FROM chats WHERE id = $1`,
-		chatId,
-	)
-	if err != nil {
-		return -1, err
-	}
-
-	if users[0] != userId {
-		return users[0], nil
-	}
-
-	return users[1], nil
-}
-
 func (repo *MessageRepository) GetMessages(chatId int, offset int, count int) ([]model.Message, error) {
 	var messages []model.Message
 	err := repo.DB.Select(&messages,

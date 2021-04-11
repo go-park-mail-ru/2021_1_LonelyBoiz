@@ -9,8 +9,9 @@ import (
 )
 
 type MessageUsecase struct {
-	Db     mesrep.MessageRepository
-	Logger *logrus.Entry
+	Db           mesrep.MessageRepository
+	Logger       *logrus.Entry
+	messagesChan chan *model.Message
 }
 
 func (m MessageUsecase) ParseJsonToMessage(body io.ReadCloser) (model.Message, error) {
@@ -19,4 +20,8 @@ func (m MessageUsecase) ParseJsonToMessage(body io.ReadCloser) (model.Message, e
 	err := decoder.Decode(&message)
 	defer body.Close()
 	return message, err
+}
+
+func (m MessageUsecase) messagesWriter(newMessage *model.Message) {
+	m.messagesChan <- newMessage
 }

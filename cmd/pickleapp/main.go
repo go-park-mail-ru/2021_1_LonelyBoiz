@@ -10,8 +10,12 @@ import (
 	"os"
 	"server/internal/pickleapp/middleware"
 	mainrep "server/internal/pickleapp/repository"
+	"server/internal/pkg/chat/delivery"
 	chatrep "server/internal/pkg/chat/repository"
+	usecase2 "server/internal/pkg/chat/usecase"
+	delivery2 "server/internal/pkg/message/delivery"
 	mesrep "server/internal/pkg/message/repository"
+	usecase3 "server/internal/pkg/message/usecase"
 	"server/internal/pkg/session"
 	sesrep "server/internal/pkg/session/repository"
 	handler "server/internal/pkg/user/delivery"
@@ -91,11 +95,32 @@ func (a *App) InitializeRoutes(currConfig Config) {
 	userRep := userrep.UserRepository{DB: a.Db}
 	sessionRep := sesrep.SessionRepository{DB: a.Db}
 	messageRep := mesrep.MessageRepository{DB: a.Db}
-	charRep := chatrep.ChatRepository{DB: a.Db}
+	chatRep := chatrep.ChatRepository{DB: a.Db}
 
 	// init uCases & handlers
 	userUcase := usecase.UserUsecase{Db: userRep}
 	sessionManager := session.SessionsManager{DB: sessionRep}
+
+	chatUcase := usecase2.ChatUsecase{
+		Db:      &chatRep,
+		Clients: make(map[int]*websocket.Conn),
+	}
+
+	messUcase := usecase3.MessageUsecase{
+		Db: messageRep,
+	}
+
+	chatHandler := delivery.ChatHandler{
+		Sessions: &sessionManager,
+		Usecase:  &chatUcase,
+	}
+
+	messHandler := delivery2.MessageHandler{
+		Db:       messageRep,
+		Sessions: &sessionManager,
+		Usecase:  &messUcase,
+	}
+
 	userHandler := handler.UserHandler{
 		Db:       userRep,
 		UserCase: userUcase,
@@ -104,9 +129,12 @@ func (a *App) InitializeRoutes(currConfig Config) {
 
 	// init middlewares
 	loggerm := middleware.LoggerMiddleware{
-		Logger: contextLogger,
-		User:   &userHandler,
+		Logger:  contextLogger,
+		User:    &userHandler,
+		Chat:    &chatHandler,
+		Message: &messHandler,
 	}
+
 	checkcookiem := middleware.ValidateCookieMiddleware{Session: &sessionManager}
 
 	a.router.Use(loggerm.Middleware)
@@ -128,12 +156,10 @@ func (a *App) InitializeRoutes(currConfig Config) {
 	//a.router.HandleFunc("/users/{id:[0-9]+}/photos", userHandler.UploadPhoto).Methods("POST")
 	//a.router.HandleFunc("/users/{id:[0-9]+}/photos", userHandler.DeletePhoto).Methods("DELETE")
 
-	wbR := a.router.NewRoute()
-
-	wbR.HandleFunc("/chats/{chatId:[0-9]+}/messages", messageHandler).Methods("POST")
-	wbR.HandleFunc("/likes", likesHandler).Methods("POST")
-	wbR.HandleFunc("/ws", wsHandler)
-	go webSocketResponse()
+	subRouter.HandleFunc("/chats/{chatId:[0-9]+}/messages", messHandler.Message).Methods("POST")
+	a.router.HandleFunc("/likes", chatHandler.LikesHandler).Methods("POST")
+	a.router.HandleFunc("/ws", chatHandler.CreateChat)
+	go chatUcase.WebSocketResponse()
 }
 
 func main() {

@@ -82,3 +82,20 @@ func (repo *ChatRepository) CreateChat(userId1 int, userId2 int) (int, error) {
 
 	return chatId, err
 }
+
+func (repo *ChatRepository) GetPartnerId(chatId int, userId int) (int, error) {
+	var users []int
+	err := repo.DB.Select(&users,
+		`SELECT userid1, userid2 FROM chats WHERE id = $1`,
+		chatId,
+	)
+	if err != nil {
+		return -1, err
+	}
+
+	if users[0] != userId {
+		return users[0], nil
+	}
+
+	return users[1], nil
+}

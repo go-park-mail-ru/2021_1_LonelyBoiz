@@ -9,3 +9,5 @@ type Message struct {
 	Time         int64  `json:"date,omitempty"`
 	MessageOrder int    `json:"messageOrder,omitempty"`
 }
+
+var MessagesChan = make(chan *Message)

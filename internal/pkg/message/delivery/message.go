@@ -1,35 +1,30 @@
 package delivery
 
 import (
-	"encoding/json"
-	"github.com/sirupsen/logrus"
-	"log"
 	"net/http"
 	mesrep "server/internal/pkg/message/repository"
 	"server/internal/pkg/message/usecase"
 	model "server/internal/pkg/models"
 	"server/internal/pkg/session"
-	"server/internal/pkg/user/repository"
 )
 
 type MessageHandler struct {
 	Db       mesrep.MessageRepository
 	Sessions *session.SessionsManager
-	Logger   *logrus.Entry
-	usecase  *usecase.MessageUsecase
+	Usecase  *usecase.MessageUsecase
 }
 
 func (m *MessageHandler) Message(w http.ResponseWriter, r *http.Request) {
 	id, ok := m.Sessions.GetIdFromContext(r.Context())
 	if !ok {
-		m.Logger.Info("Can't get id from context")
+		m.Usecase.Logger.Error("Can't get id from context")
 	}
 
-	newMessage, err := m.usecase.ParseJsonToMessage(r.Body)
+	newMessage, err := m.Usecase.ParseJsonToMessage(r.Body)
 	if err != nil {
 		response := model.ErrorResponse{Err: model.UserErrorInvalidData}
 		model.ResponseWithJson(w, 400, response)
-		a.UserCase.Logger.Info(response.Err)
+		m.Usecase.Logger.Info(response.Err)
 		return
 	}
 
@@ -48,7 +43,7 @@ func (m *MessageHandler) Message(w http.ResponseWriter, r *http.Request) {
 
 	newMessage, err = m.Db.AddMessage(newMessage.AuthorId, newMessage.ChatId, newMessage.Text)
 	if err != nil {
-		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: err}
+		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: err.Error()}
 		model.ResponseWithJson(w, 400, response)
 		return
 	}
@@ -57,5 +52,5 @@ func (m *MessageHandler) Message(w http.ResponseWriter, r *http.Request) {
 }
 
 func messagesWriter(newMessage *model.Message) {
-	messagesChan <- newMessage
+	model.MessagesChan <- newMessage
 }
