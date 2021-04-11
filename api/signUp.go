@@ -140,8 +140,8 @@ func (a *App) setSession(w http.ResponseWriter, id int) {
 		Value:    key,
 		Expires:  expiration,
 		SameSite: http.SameSiteNoneMode,
-		Secure:   true,
-		Domain:   "p1ckle.herokuapp.com",
+		//Secure:   true,
+		Domain:   "localhost:3000",
 		HttpOnly: true,
 	}
 

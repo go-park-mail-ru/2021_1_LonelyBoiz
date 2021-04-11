@@ -1,0 +1,89 @@
+package repository
+
+import (
+	"time"
+
+	_ "github.com/jackc/pgx/stdlib"
+)
+
+type Message struct {
+	MessageId    int    `json:"messageId,omitempty"`
+	AuthorId     int    `json:"authorId"`
+	ChatId       int    `json:"chatId"`
+	Text         string `json:"text"`
+	Reaction     int    `json:"reactioId,omitempty"`
+	Time         int64  `json:"date,omitempty"`
+	MessageOrder int    `json:"messageOrder,omitempty"`
+}
+
+func (repo *RepoSqlx) AddMessage(authorId int, chatId int, text string) (Message, error) {
+	newMessage := Message{
+		AuthorId: authorId,
+		ChatId:   chatId,
+		Text:     text,
+		Time:     time.Now().Unix(),
+		Reaction: -1,
+	}
+
+	err := repo.DB.QueryRow(
+		`INSERT INTO messages (chatId, authorId, text, time, messageOrder)
+			VALUES (
+        	$1,
+        	$2,
+        	$3,
+        	$4,
+        	(
+            	SELECT COUNT(*)
+            	FROM messages
+            	WHERE chatid = $1
+        	) + 1
+    	) RETURNING messageid, messageOrder`,
+		newMessage.ChatId,
+		newMessage.AuthorId,
+		newMessage.Text,
+		newMessage.Time,
+	).Scan(&newMessage.MessageId, &newMessage.MessageOrder)
+	if err != nil {
+		return Message{}, err
+	}
+
+	return newMessage, nil
+}
+
+func (repo *RepoSqlx) GetPartnerId(chatId int, userId int) (int, error) {
+	var users []int
+	err := repo.DB.Select(&users,
+		`SELECT userid1, userid2 FROM chats WHERE id = $1`,
+		chatId,
+	)
+	if err != nil {
+		return -1, err
+	}
+
+	if users[0] != userId {
+		return users[0], nil
+	}
+
+	return users[1], nil
+}
+
+func (repo *RepoSqlx) ChangeMessage(messageId int, text string, reaction int) error {
+	_, err := repo.DB.Exec(
+		`UPDATE messages
+			SET text = $1,
+    		reaction = $2
+		WHERE messageId = $3`,
+		text,
+		reaction,
+		messageId,
+	)
+
+	return err
+}
+
+func (repo *RepoSqlx) DeleteMessage(messageId int) error {
+	_, err := repo.DB.Exec(
+		`DELETE FROM messages WHERE messageid = $1`, messageId)
+
+	return err
+}
