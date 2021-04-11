@@ -1,6 +1,6 @@
 package repository
 
-import (
+/*import (
 	"encoding/json"
 	"log"
 	"net/http"
@@ -18,12 +18,20 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
+type Resp struct {
+	ResponseType string      `json:"type"`
+	Object       interface{} `json:"obj"`
+}
+
 func main() {
 	router := mux.NewRouter()
+	//надо обернуть в проверку куки
 	router.HandleFunc("/chats/{chatId:[0-9]+}/messages", messageHandler).Methods("POST")
 	router.HandleFunc("/likes", likesHandler).Methods("POST")
-	router.HandleFunc("/ws", wsHandler)
-	go webSocketResponse()
+	router.HandleFunc("/ws", wsHandler).Methods("Get")
+
+	go webSocketMessageResponse()
+	go webSocketChatResponse()
 
 	log.Fatal(http.ListenAndServe(":8000", router))
 }
@@ -51,7 +59,78 @@ func chatsWriter(newChat *Chat) {
 	chatsChan <- newChat
 }
 
-func likesHandler(w http.ResponseWriter, r *http.Request) {}
+func likesHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	id, ok := ctx.Value(model.CtxUserId).(int)
+	if !ok {
+		//ответить что сервер не смог взять адйишникиз контекста
+		log.Println("error: get id from context")
+	}
+
+	var like Like
+	decoder := json.NewDecoder(r.Body)
+	defer r.Body.Close()
+	err := decoder.Decode(&like)
+	if err != nil {
+		response := errorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
+		responseWithJson(w, 400, response)
+		return
+	}
+
+	if like.Reaction != "like" || like.Reaction != "skip" {
+		response := errorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
+		response.Description["like"] = "неправильный формат реацкции ожидается skip или like"
+		responseWithJson(w, 400, response)
+		return
+	}
+
+	rowsAffected, err := DB.Rating(id, like.UserId, like.Reaction)
+	if err != nil {
+		//залогировать ошибку
+		response := errorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
+		responseWithJson(w, 500, response)
+		return
+	}
+	if rowsAffected == -1 {
+		response := errorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
+		response.Description["userID"] = "Пытаешься поставить лайк человеку не со своей ленты"
+		responseWithJson(w, 403, response)
+		return
+	}
+
+	reciprocity, err := DB.CheckReciprocity(like.UserId, id)
+	if err != nil {
+		//залогировать ошибку
+		response := errorDescriptionResponse{Description: map[string]string{}, Err: "Не удалось проверить взаимность"}
+		responseWithJson(w, 500, response)
+		return
+	}
+	if reciprocity == false {
+		w.WriteHeader(204)
+		return
+	}
+
+	var newChat Chat
+	newChat.ChatId, err = DB.CreateChat(id, like.UserId)
+	if err != nil {
+		//залогировать ошибку
+		response := errorDescriptionResponse{Description: map[string]string{}, Err: "Не удалось создать чат"}
+		responseWithJson(w, 500, response)
+		return
+	}
+
+	newChat, err = DB.GetNewChat(newChat.ChatId, like.UserId)
+	if err != nil {
+		//залогировать ошибку
+		response := errorDescriptionResponse{Description: map[string]string{}, Err: "Не удалось получить новый чат из базы"}
+		responseWithJson(w, 500, response)
+		return
+	}
+
+	go chatsWriter(&newChat)
+
+	responseWithJson(w, 200, newChat)
+}
 
 func messageHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -83,7 +162,7 @@ func messageHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newMessage, err = AddMessage(newMessage.AuthorId, newMessage.ChatId, newMessage.Text)
+	newMessage, err = DB.AddMessage(newMessage.AuthorId, newMessage.ChatId, newMessage.Text)
 	if err != nil {
 		response := errorDescriptionResponse{Description: map[string]string{}, Err: err}
 		responseWithJson(w, 400, response)
@@ -91,19 +170,29 @@ func messageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	go messagesWriter(&newMessage)
+
+	responseWithJson(w, 200, newMessage)
 }
 
-func webSocketResponse() {
+func webSocketMessageResponse() {
 	for {
 		newMessage := <-messagesChan
-		partnerId, err := GetPartnerId(newMessage.ChatId, newMessage.AuthorId)
+		partnerId, err := DB.GetPartnerId(newMessage.ChatId, newMessage.AuthorId)
 		if err != nil {
 			//надо залогировать ошибку
 			continue
 		}
 
-		client := clients[partnerId]
-		err = client.WriteJSON(newMessage)
+		response := Resp{ResponseType: "message", Object: newMessage}
+
+		client, ok := clients[partnerId]
+		if !ok {
+			client.Close()
+			delete(clients, partnerId)
+			continue
+		}
+
+		err = client.WriteJSON(response)
 		if err != nil {
 			//тут тоже залогировать
 			client.Close()
@@ -111,3 +200,27 @@ func webSocketResponse() {
 		}
 	}
 }
+
+func webSocketChatResponse() {
+	for {
+		newChat := <-chatsChan
+		partnerId := newChat.PartnerId
+
+		response := Resp{ResponseType: "chat", Object: newChat}
+
+		client, ok := clients[partnerId]
+		if !ok {
+			client.Close()
+			delete(clients, partnerId)
+			continue
+		}
+
+		err := client.WriteJSON(response)
+		if err != nil {
+			//тут тоже залогировать
+			client.Close()
+			delete(clients, partnerId)
+		}
+	}
+}
+*/

@@ -6,6 +6,11 @@ import (
 	_ "github.com/jackc/pgx/stdlib"
 )
 
+type Like struct {
+	UserId   int    `json:"userId"`
+	Reaction string `json:"reaction"`
+}
+
 func (repo *RepoSqlx) CreateFeed(userId int) error {
 	_, err := repo.DB.Exec(
 		`INSERT into feed (

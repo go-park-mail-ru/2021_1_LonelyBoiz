@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"database/sql"
+
 	_ "github.com/jackc/pgx/stdlib"
 )
 
@@ -53,22 +55,53 @@ func (repo *RepoSqlx) GetChats(userId int, limit int, offset int) ([]Chat, error
 	return chats, nil
 }
 
-func (repo *RepoSqlx) GetChat(chatId int, limit int, offset int) ([]Message, error) {
+func (repo *RepoSqlx) GetMessages(chatId int, limit int, offset int) ([]Message, error) {
 	var messages []Message
 	err := repo.DB.Select(&messages,
 		`SELECT * FROM messages
-			WHERE messages.chatid = $1
-			ORDER BY messages.messageorder
+			WHERE chatid = $1
+			ORDER messageorder
 			LIMIT $2 OFFSET $3;`,
 		chatId,
 		limit,
 		offset,
 	)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
 	if err != nil {
 		return nil, err
 	}
 
 	return messages, nil
+}
+
+func (repo *RepoSqlx) GetNewChat(chatId int, userId int) (Chat, error) {
+	var chats []Chat
+	err := repo.DB.Select(&chats,
+		`SELECT chats.id AS chatId,
+    		users.id AS partnerId,
+    		users.name AS partnerName,
+    		users.photos AS avatar
+		FROM chats
+    		JOIN users ON (
+        		(
+            	chats.userid1 = $1
+            	AND chats.userid2 = users.id
+        		)
+        	OR(
+            	chats.userid1 = users.id
+            	AND chats.userid2 = $1
+        	)
+    	)
+	WHERE chats.id = $2;`,
+		userId, chatId,
+	)
+	if err != nil {
+		return Chat{}, err
+	}
+
+	return chats[0], nil
 }
 
 func (repo *RepoSqlx) CreateChat(userId1 int, userId2 int) (int, error) {

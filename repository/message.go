@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"database/sql"
 	"time"
 
 	_ "github.com/jackc/pgx/stdlib"
@@ -66,27 +65,6 @@ func (repo *RepoSqlx) GetPartnerId(chatId int, userId int) (int, error) {
 	}
 
 	return users[1], nil
-}
-
-func (repo *RepoSqlx) GetMessages(chatId int, offset int, count int) ([]Message, error) {
-	var messages []Message
-	err := repo.DB.Select(&messages,
-		`SELECT * FROM messages
-			WHERE chatId = $1
-			ORDER BY time
-			LIMIT $2 OFFSET $3`,
-		chatId,
-		count,
-		offset,
-	)
-	if err == sql.ErrNoRows {
-		return nil, nil
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	return messages, nil
 }
 
 func (repo *RepoSqlx) ChangeMessage(messageId int, text string, reaction int) error {
