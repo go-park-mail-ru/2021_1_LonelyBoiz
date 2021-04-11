@@ -25,6 +25,7 @@ func (logger *LoggerMiddleware) Middleware(next http.Handler) http.Handler {
 			"method":      r.Method,
 			"url":         r.URL.Path,
 			"remote_addr": r.RemoteAddr,
+			"user_agent":  r.UserAgent(),
 			"work_time":   time.Since(start),
 		})
 

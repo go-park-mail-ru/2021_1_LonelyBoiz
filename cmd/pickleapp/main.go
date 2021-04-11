@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
 	cors2 "github.com/rs/cors"
@@ -10,11 +9,13 @@ import (
 	"net/http"
 	"os"
 	"server/internal/pickleapp/middleware"
-	repository2 "server/internal/pickleapp/repository"
+	mainrep "server/internal/pickleapp/repository"
+	chatrep "server/internal/pkg/chat/repository"
+	mesrep "server/internal/pkg/message/repository"
 	"server/internal/pkg/session"
-	repository3 "server/internal/pkg/session/repository"
+	sesrep "server/internal/pkg/session/repository"
 	handler "server/internal/pkg/user/delivery"
-	"server/internal/pkg/user/repository"
+	userrep "server/internal/pkg/user/repository"
 	"server/internal/pkg/user/usecase"
 	"time"
 )
@@ -27,7 +28,7 @@ type App struct {
 }
 
 func (a *App) Start() error {
-	fmt.Println("Server start")
+	a.Logger.Info("Server Start")
 
 	cors := cors2.New(cors2.Options{
 		AllowedOrigins:   []string{"http://localhost:3000", "https://lepick.herokuapp.com"},
@@ -76,41 +77,41 @@ func NewConfig() Config {
 func (a *App) InitializeRoutes(currConfig Config) {
 	rand.Seed(time.Now().UnixNano())
 
-	//конфиг
+	//init config
 	a.addr = currConfig.addr
 	a.router = currConfig.router
 
-	// логгер
+	// init logger
 	contextLogger := logrus.New()
-
 	logrus.SetFormatter(&logrus.TextFormatter{})
 	a.Logger = contextLogger
 
-	// бд
-	a.Db = repository2.Init()
-	userRep := repository.UserRepository{DB: a.Db}
-	sessionRep := repository3.SessionRepository{DB: a.Db}
+	// init db
+	a.Db = mainrep.Init()
+	userRep := userrep.UserRepository{DB: a.Db}
+	sessionRep := sesrep.SessionRepository{DB: a.Db}
+	messageRep := mesrep.MessageRepository{DB: a.Db}
+	charRep := chatrep.ChatRepository{DB: a.Db}
 
+	// init uCases & handlers
 	userUcase := usecase.UserUsecase{Db: userRep}
 	sessionManager := session.SessionsManager{DB: sessionRep}
-
 	userHandler := handler.UserHandler{
 		Db:       userRep,
 		UserCase: userUcase,
 		Sessions: &sessionManager,
 	}
 
+	// init middlewares
 	loggerm := middleware.LoggerMiddleware{
 		Logger: contextLogger,
 		User:   &userHandler,
 	}
-
-	// мидллвары
 	checkcookiem := middleware.ValidateCookieMiddleware{Session: &sessionManager}
 
 	a.router.Use(loggerm.Middleware)
 
-	// валидация кук
+	// validate cookie router
 	subRouter := a.router.NewRoute().Subrouter()
 	subRouter.Use(checkcookiem.Middleware)
 
@@ -120,17 +121,19 @@ func (a *App) InitializeRoutes(currConfig Config) {
 	subRouter.HandleFunc("/users/{id:[0-9]+}", userHandler.DeleteUser).Methods("DELETE")
 	subRouter.HandleFunc("/users/{id:[0-9]+}", userHandler.ChangeUserInfo).Methods("PATCH")
 
-	// валидация всех данных, без кук
 	a.router.HandleFunc("/users", userHandler.SignUp).Methods("POST")
-
-	// валидация пароля
 	a.router.HandleFunc("/login", userHandler.SignIn).Methods("POST")
-
-	// не требуется
 	a.router.HandleFunc("/login", userHandler.LogOut).Methods("DELETE")
 
 	//a.router.HandleFunc("/users/{id:[0-9]+}/photos", userHandler.UploadPhoto).Methods("POST")
 	//a.router.HandleFunc("/users/{id:[0-9]+}/photos", userHandler.DeletePhoto).Methods("DELETE")
+
+	wbR := a.router.NewRoute()
+
+	wbR.HandleFunc("/chats/{chatId:[0-9]+}/messages", messageHandler).Methods("POST")
+	wbR.HandleFunc("/likes", likesHandler).Methods("POST")
+	wbR.HandleFunc("/ws", wsHandler)
+	go webSocketResponse()
 }
 
 func main() {
@@ -139,7 +142,7 @@ func main() {
 	a.InitializeRoutes(config)
 	err := a.Start()
 	if err != nil {
-		fmt.Println(err)
+		a.Logger.Error(err)
 		os.Exit(1)
 	}
 }
