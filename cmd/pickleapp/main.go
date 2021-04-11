@@ -2,10 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/gorilla/mux"
-	"github.com/jmoiron/sqlx"
-	cors2 "github.com/rs/cors"
-	"github.com/sirupsen/logrus"
 	"math/rand"
 	"net/http"
 	"os"
@@ -17,6 +13,11 @@ import (
 	"server/internal/pkg/user/repository"
 	"server/internal/pkg/user/usecase"
 	"time"
+
+	"github.com/gorilla/mux"
+	"github.com/jmoiron/sqlx"
+	cors2 "github.com/rs/cors"
+	"github.com/sirupsen/logrus"
 )
 
 type App struct {
@@ -118,6 +119,10 @@ func (a *App) InitializeRoutes(currConfig Config) {
 	subRouter.HandleFunc("/users/{id:[0-9]+}", userHandler.DeleteUser).Methods("DELETE")
 	subRouter.HandleFunc("/users/{id:[0-9]+}", userHandler.ChangeUserInfo).Methods("PATCH")
 
+	subRouter.HandleFunc("/images", userHandler.UploadPhoto).Methods("POST")
+	//subRouter.HandleFunc("/images/{id:[0-9]+}", userHandler.DeletePhoto).Methods("DELETE")
+	subRouter.HandleFunc("/images/{id:[0-9]+}", userHandler.DownloadPhoto).Methods("GET")
+
 	// валидация всех данных, без кук
 	a.router.HandleFunc("/users", userHandler.SignUp).Methods("POST")
 
@@ -127,8 +132,6 @@ func (a *App) InitializeRoutes(currConfig Config) {
 	// не требуется
 	a.router.HandleFunc("/login", userHandler.LogOut).Methods("DELETE")
 
-	//a.router.HandleFunc("/users/{id:[0-9]+}/photos", userHandler.UploadPhoto).Methods("POST")
-	//a.router.HandleFunc("/users/{id:[0-9]+}/photos", userHandler.DeletePhoto).Methods("DELETE")
 }
 
 func main() {

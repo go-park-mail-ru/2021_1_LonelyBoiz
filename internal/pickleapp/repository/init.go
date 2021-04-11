@@ -9,7 +9,7 @@ import (
 
 func getPostgres() *sql.DB {
 	//jdbc:postgresql://localhost:5432/postgres
-	dsn := "dbname=postgres host=127.0.0.1 port=5432 sslmode=disable"
+	dsn := "user=sniki dbname=postgres password=p@ssword1 host=127.0.0.1 port=5432 sslmode=disable"
 	db, err := sql.Open("pgx", dsn)
 	if err != nil {
 		fmt.Println("cant parse config", err)

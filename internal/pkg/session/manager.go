@@ -30,7 +30,7 @@ func (session *SessionsManager) SetSession(w http.ResponseWriter, id int) error 
 		Value:    key,
 		Expires:  expiration,
 		SameSite: http.SameSiteNoneMode,
-		//Secure:   true,
+		Secure:   true,
 		Domain:   "localhost:3000",
 		HttpOnly: true,
 	}

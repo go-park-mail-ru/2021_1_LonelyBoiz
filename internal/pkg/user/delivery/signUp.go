@@ -30,14 +30,13 @@ func (a *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 
 	err = a.UserCase.AddNewUser(&newUser)
 	if err != nil {
-		model.ResponseWithJson(w, 500, nil)
+		model.ResponseWithJson(w, 500, err)
 		return
 	}
 
 	err = a.Sessions.SetSession(w, newUser.Id)
 	if err != nil {
-		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: err.Error()}
-		model.ResponseWithJson(w, 500, response)
+		model.ResponseWithJson(w, 500, err)
 		return
 	}
 

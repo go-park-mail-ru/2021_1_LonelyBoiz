@@ -1,12 +1,12 @@
 package usecase
 
 import (
+	model "server/internal/pkg/models"
+	"server/internal/pkg/user/repository"
+
 	"github.com/asaskevich/govalidator"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/crypto/sha3"
-	"log"
-	model "server/internal/pkg/models"
-	"server/internal/pkg/user/repository"
 )
 
 type UserUsecase struct {
@@ -46,6 +46,7 @@ func (u *UserUsecase) checkPasswordForCHanging(newUser model.User) bool {
 }
 
 func (u *UserUsecase) ChangeUserProperties(newUser *model.User) error {
+
 	bufUser, err := u.Db.GetUser(newUser.Id)
 	if err != nil {
 		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: err.Error()}
@@ -82,10 +83,6 @@ func (u *UserUsecase) ChangeUserProperties(newUser *model.User) error {
 		bufUser.Instagram = newUser.Instagram
 	}
 
-	if newUser.Avatar != "" {
-		bufUser.Avatar = newUser.Avatar
-	}
-
 	response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Не удалось поменять данные"}
 	if newUser.Sex != "" {
 		if !u.ValidateSex(newUser.Sex) {
@@ -103,9 +100,7 @@ func (u *UserUsecase) ChangeUserProperties(newUser *model.User) error {
 		bufUser.DatePreference = newUser.DatePreference
 	}
 
-	if len(newUser.PasswordHash) != 0 {
-		bufUser.PasswordHash = newUser.PasswordHash
-	}
+	isActive(&bufUser)
 
 	err = u.Db.ChangeUser(bufUser)
 	if err != nil {
@@ -139,10 +134,17 @@ func (u *UserUsecase) ChangeUserPassword(newUser *model.User) error {
 
 	hash, err := u.HashPassword(newUser.Password)
 	if err != nil {
+		response.Err = err.Error()
 		response.Description["password"] = "Не удалось поменять пароль"
 		return response
 	}
-	newUser.PasswordHash = hash
+
+	err = u.Db.ChangePassword(newUser.Id, hash)
+	if err != nil {
+		response.Err = err.Error()
+		response.Description["password"] = "Не удалось поменять пароль"
+		return response
+	}
 
 	return nil
 }
@@ -208,7 +210,12 @@ func (u *UserUsecase) ValidateSignUpData(newUser model.User) error {
 }
 
 func (u *UserUsecase) IsAlreadySignedUp(newEmail string) (bool, error) {
-	isSignUp := u.Db.CheckMail(newEmail)
+	isSignUp, err := u.Db.CheckMail(newEmail)
+	if err != nil {
+		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: err.Error()}
+		response.Description["mail"] = "Ошибка при поиске почты"
+		return true, response
+	}
 	if isSignUp == true {
 		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Не удалось зарегистрироваться"}
 		response.Description["mail"] = "Почта уже зарегистрирована"
@@ -225,6 +232,15 @@ func (u *UserUsecase) HashPassword(pass string) ([]byte, error) {
 	return secondHash, err
 }
 
+func isActive(newUser *model.User) {
+	if len(newUser.Name) != 0 && len(newUser.DatePreference) != 0 && len(newUser.Sex) != 0 {
+		newUser.IsActive = true
+		return
+	}
+
+	newUser.IsActive = false
+}
+
 func (u *UserUsecase) AddNewUser(newUser *model.User) error {
 	var err error
 	newUser.PasswordHash, err = u.HashPassword(newUser.Password)
@@ -234,7 +250,7 @@ func (u *UserUsecase) AddNewUser(newUser *model.User) error {
 	newUser.Password = ""
 	newUser.SecondPassword = ""
 
-	log.Println("45")
+	isActive(newUser)
 
 	id, err := u.Db.AddUser(*newUser)
 	if err != nil {
@@ -242,7 +258,6 @@ func (u *UserUsecase) AddNewUser(newUser *model.User) error {
 		return response
 	}
 
-	log.Println("46")
 	newUser.Id = id
 
 	return nil

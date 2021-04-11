@@ -2,11 +2,12 @@ package delivery
 
 import (
 	"encoding/json"
-	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 	model "server/internal/pkg/models"
 	"strconv"
+
+	"github.com/gorilla/mux"
 )
 
 func (a *UserHandler) ChangeUserInfo(w http.ResponseWriter, r *http.Request) {
@@ -61,7 +62,6 @@ func (a *UserHandler) ChangeUserInfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newUser.PasswordHash = nil
 	model.ResponseWithJson(w, 200, newUser)
 
 	log.Println("successful change", newUser)
