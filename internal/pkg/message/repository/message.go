@@ -1,14 +1,52 @@
 package repository
 
 import (
-	"database/sql"
-	"github.com/jmoiron/sqlx"
 	model "server/internal/pkg/models"
 	"time"
+
+	"github.com/jmoiron/sqlx"
 )
 
 type MessageRepository struct {
 	DB *sqlx.DB
+}
+
+func (repo *MessageRepository) CheckMessageForReacting(userId int, messageId int) (int, error) {
+	var ids []int
+	err := repo.DB.Select(&ids,
+		`SELECT authorId FROM messages
+    		JOIN chats ON 
+				messages.chatid = chats.id
+    		AND(
+        		chats.userid1 = $1 OR chats.userid2 = $1
+    		)
+			WHERE messages.messageid = $2;`,
+		userId, messageId)
+	if err != nil {
+		return -1, err
+	}
+	if len(ids) == 0 {
+		return -1, nil
+	}
+
+	return ids[0], nil
+}
+
+func (repo *MessageRepository) CheckChat(userId int, chatId int) (bool, error) {
+	var ids []int
+	err := repo.DB.Select(&ids,
+		`SELECT id FROM chats 
+			WHERE (userid1 = $1 OR userid2 = $1) 
+				AND (id = $2)`,
+		userId, chatId)
+	if err != nil {
+		return false, err
+	}
+	if len(ids) == 0 {
+		return false, nil
+	}
+
+	return true, nil
 }
 
 func (repo *MessageRepository) AddMessage(authorId int, chatId int, text string) (model.Message, error) {
@@ -45,34 +83,40 @@ func (repo *MessageRepository) AddMessage(authorId int, chatId int, text string)
 	return newMessage, nil
 }
 
-func (repo *MessageRepository) GetMessages(chatId int, offset int, count int) ([]model.Message, error) {
-	var messages []model.Message
-	err := repo.DB.Select(&messages,
-		`SELECT * FROM messages
-			WHERE chatId = $1
-			ORDER BY time
-			LIMIT $2 OFFSET $3`,
+func (repo *MessageRepository) GetPartnerId(chatId int, userId int) (int, error) {
+	var users []int
+	err := repo.DB.Select(&users,
+		`SELECT userid1, userid2 FROM chats WHERE id = $1`,
 		chatId,
-		count,
-		offset,
 	)
-	if err == sql.ErrNoRows {
-		return nil, nil
-	}
 	if err != nil {
-		return nil, err
+		return -1, err
 	}
 
-	return messages, nil
+	if users[0] != userId {
+		return users[0], nil
+	}
+
+	return users[1], nil
 }
 
-func (repo *MessageRepository) ChangeMessage(messageId int, text string, reaction int) error {
+func (repo *MessageRepository) ChangeMessageText(messageId int, text string) error {
 	_, err := repo.DB.Exec(
 		`UPDATE messages
-			SET text = $1,
-    		reaction = $2
-		WHERE messageId = $3`,
+			SET text = $1
+		WHERE messageId = $2`,
 		text,
+		messageId,
+	)
+
+	return err
+}
+
+func (repo *MessageRepository) ChangeMessageReaction(messageId int, reaction int) error {
+	_, err := repo.DB.Exec(
+		`UPDATE messages
+			SET reaction = $1
+		WHERE messageId = $2`,
 		reaction,
 		messageId,
 	)

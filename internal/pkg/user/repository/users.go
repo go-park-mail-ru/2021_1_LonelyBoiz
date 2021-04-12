@@ -160,7 +160,7 @@ func (repo *UserRepository) AddPhoto(userId int) (int, error) {
 
 func (repo *UserRepository) CheckPhoto(photoId int, userId int) (bool, error) {
 	var idFromDB []int
-	err := repo.DB.Select(&idFromDB, `SELECT * FROM photos WHERE photoId = $1`, photoId)
+	err := repo.DB.Select(&idFromDB, `SELECT userId FROM photos WHERE photoId = $1`, photoId)
 	if err != nil {
 		return false, err
 	}

@@ -1,15 +1,9 @@
 package delivery
 
 import (
-	"encoding/json"
-	"log"
-	"net/http"
 	chatrep "server/internal/pkg/chat/repository"
 	"server/internal/pkg/chat/usecase"
-	model "server/internal/pkg/models"
 	"server/internal/pkg/session"
-
-	"github.com/gorilla/websocket"
 )
 
 type ChatHandler struct {
@@ -18,12 +12,7 @@ type ChatHandler struct {
 	Usecase  *usecase.ChatUsecase
 }
 
-var upgrader = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
-}
-
+/*
 func (c *ChatHandler) CreateChat(w http.ResponseWriter, r *http.Request) {
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -36,7 +25,7 @@ func (c *ChatHandler) CreateChat(w http.ResponseWriter, r *http.Request) {
 		c.Usecase.Logger.Error("Can't get id from context")
 	}
 
-	c.Usecase.Clients[id] = ws
+	(*c.Usecase).Clients[id] = ws
 }
 
 func (c *ChatHandler) LikesHandler(w http.ResponseWriter, r *http.Request) {
@@ -69,14 +58,14 @@ func (c *ChatHandler) LikesHandler(w http.ResponseWriter, r *http.Request) {
 	rowsAffected, err := c.Usecase.Db.Rating(id, like.UserId, like.Reaction)
 	if err != nil {
 		//залогировать ошибку
-		response := errorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
-		responseWithJson(w, 500, response)
+		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
+		model.ResponseWithJson(w, 500, response)
 		return
 	}
 	if rowsAffected == -1 {
-		response := errorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
+		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
 		response.Description["userID"] = "Пытаешься поставить лайк человеку не со своей ленты"
-		responseWithJson(w, 403, response)
+		mpdel.ResponseWithJson(w, 403, response)
 		return
 	}
 	reciprocity, err := DB.CheckReciprocity(like.UserId, id)
@@ -108,3 +97,4 @@ func (c *ChatHandler) LikesHandler(w http.ResponseWriter, r *http.Request) {
 	go chatsWriter(&newChat)
 	responseWithJson(w, 200, newChat)
 }
+*/

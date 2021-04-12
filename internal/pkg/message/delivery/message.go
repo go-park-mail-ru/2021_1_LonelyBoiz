@@ -1,12 +1,20 @@
 package delivery
 
 import (
+	"encoding/json"
 	"net/http"
 	mesrep "server/internal/pkg/message/repository"
 	"server/internal/pkg/message/usecase"
 	model "server/internal/pkg/models"
 	"server/internal/pkg/session"
+	"strconv"
+
+	"github.com/gorilla/mux"
 )
+
+func messagesWriter(newMessage *model.Message) {
+	model.MessagesChan <- newMessage
+}
 
 type MessageHandler struct {
 	Db       mesrep.MessageRepository
@@ -14,23 +22,46 @@ type MessageHandler struct {
 	Usecase  *usecase.MessageUsecase
 }
 
-func (m *MessageHandler) Message(w http.ResponseWriter, r *http.Request) {
-	id, ok := m.Sessions.GetIdFromContext(r.Context())
-	if !ok {
-		m.Usecase.Logger.Error("Can't get id from context")
+func (m *MessageHandler) SendMessage(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	chatId, err := strconv.Atoi(vars["chatId"])
+	if err != nil {
+		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
+		response.Description["chatId"] = "Чата с таким id нет"
+		model.ResponseWithJson(w, 400, response)
+		return
 	}
 
-	newMessage, err := m.Usecase.ParseJsonToMessage(r.Body)
+	id, ok := m.Sessions.GetIdFromContext(r.Context())
+	if !ok {
+		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
+		model.ResponseWithJson(w, 403, response)
+		m.Usecase.Logger.Error(response.Err)
+		return
+	}
+
+	var newMessage model.Message
+	decoder := json.NewDecoder(r.Body)
+	err = decoder.Decode(&newMessage)
+	defer r.Body.Close()
 	if err != nil {
-		response := model.ErrorResponse{Err: model.UserErrorInvalidData}
+		response := model.ErrorResponse{Err: "Не удалось прочитать тело запроса"}
 		model.ResponseWithJson(w, 400, response)
-		m.Usecase.Logger.Info(response.Err)
+		m.Usecase.Logger.Error(err)
+		return
+	}
+
+	if chatId != newMessage.ChatId {
+		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
+		response.Description["chatId"] = "Пытаешься отправить сообщение не в тот чат"
+		model.ResponseWithJson(w, 403, response)
 		return
 	}
 
 	if id != newMessage.AuthorId {
-		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: model.SessionErrorDenAccess}
-		model.ResponseWithJson(w, 401, response)
+		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
+		response.Description["userId"] = "Пытаешься отправить сообщение не от своего имени"
+		model.ResponseWithJson(w, 403, response)
 		return
 	}
 
@@ -41,16 +72,113 @@ func (m *MessageHandler) Message(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ok, err = m.Db.CheckChat(id, newMessage.ChatId)
+	if err != nil {
+		m.Usecase.Logger.Error(err)
+		model.ResponseWithJson(w, 500, nil)
+		return
+	}
+	if !ok {
+		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
+		response.Description["chatId"] = "Пытаешься писать не в свой чат"
+		model.ResponseWithJson(w, 403, response)
+		return
+	}
+
 	newMessage, err = m.Db.AddMessage(newMessage.AuthorId, newMessage.ChatId, newMessage.Text)
 	if err != nil {
-		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: err.Error()}
-		model.ResponseWithJson(w, 400, response)
+		m.Usecase.Logger.Error(err)
+		model.ResponseWithJson(w, 500, nil)
 		return
 	}
 
 	go messagesWriter(&newMessage)
+
+	model.ResponseWithJson(w, 200, newMessage)
 }
 
-func messagesWriter(newMessage *model.Message) {
-	model.MessagesChan <- newMessage
+func (m *MessageHandler) ChangeMessage(w http.ResponseWriter, r *http.Request) {
+	userId, ok := m.Sessions.GetIdFromContext(r.Context())
+	if !ok {
+		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
+		model.ResponseWithJson(w, 403, response)
+		m.Usecase.Logger.Error(response.Err)
+		return
+	}
+
+	vars := mux.Vars(r)
+	messageId, err := strconv.Atoi(vars["messageId"])
+	if err != nil {
+		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
+		response.Description["messageId"] = "Сообщения с таким id нет"
+		model.ResponseWithJson(w, 400, response)
+		return
+	}
+
+	authorId, err := m.Db.CheckMessageForReacting(userId, messageId)
+	if err != nil {
+		m.Usecase.Logger.Error(err)
+		model.ResponseWithJson(w, 500, nil)
+		return
+	}
+	if authorId == -1 {
+		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
+		response.Description["userId"] = "Пытаешь поменять сообщение не из своего чата"
+		model.ResponseWithJson(w, 403, response)
+		return
+	}
+	if authorId == userId {
+		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
+		response.Description["userId"] = "Пытаешь поставить реакцию на свое сообщение"
+		model.ResponseWithJson(w, 403, response)
+		return
+	}
+
+	var newMessage model.Message
+	decoder := json.NewDecoder(r.Body)
+	err = decoder.Decode(&newMessage)
+	defer r.Body.Close()
+	if err != nil {
+		response := model.ErrorResponse{Err: "Не удалось прочитать тело запроса"}
+		model.ResponseWithJson(w, 400, response)
+		m.Usecase.Logger.Error(err)
+		return
+	}
+
+	err = m.Db.ChangeMessageReaction(messageId, newMessage.Reaction)
+	if err != nil {
+		m.Usecase.Logger.Error(err)
+		model.ResponseWithJson(w, 500, nil)
+		return
+	}
+
+	model.ResponseWithJson(w, 204, nil)
+}
+
+func (m *MessageHandler) WebSocketMessageResponse() {
+	for {
+		newMessage := <-model.MessagesChan
+		partnerId, err := m.Db.GetPartnerId(newMessage.ChatId, newMessage.AuthorId)
+		if err != nil {
+			m.Usecase.Logger.Error("Пользователь с id = ", newMessage.AuthorId, " не найден")
+			continue
+		}
+
+		response := model.WebsocketReesponse{ResponseType: "message", Object: newMessage}
+		client, ok := (*m.Usecase.Clients)[partnerId]
+		if !ok {
+			m.Usecase.Logger.Info("Пользователь с id = ", partnerId, " не в сети")
+			client.Close()
+			delete(*m.Usecase.Clients, partnerId)
+			continue
+		}
+
+		err = client.WriteJSON(response)
+		if err != nil {
+			m.Usecase.Logger.Error("Не удалось отправить сообщение")
+			client.Close()
+			delete(*m.Usecase.Clients, partnerId)
+			continue
+		}
+	}
 }

@@ -102,9 +102,9 @@ func (a *App) InitializeRoutes(currConfig Config) {
 	clients := make(map[int]*websocket.Conn)
 	// init uCases & handlers
 	userUcase := usecase.UserUsecase{Db: userRep, Clients: &clients}
-	sessionManager := session.SessionsManager{DB: sessionRep}
 	chatUcase := usecase2.ChatUsecase{Db: chatRep, Clients: &clients}
 	messUcase := usecase3.MessageUsecase{Db: messageRep, Clients: &clients}
+	sessionManager := session.SessionsManager{DB: sessionRep}
 
 	chatHandler := delivery.ChatHandler{
 		Db:       chatRep,
@@ -155,9 +155,17 @@ func (a *App) InitializeRoutes(currConfig Config) {
 	a.router.HandleFunc("/login", userHandler.SignIn).Methods("POST")
 	a.router.HandleFunc("/login", userHandler.LogOut).Methods("DELETE")
 
-	subRouter.HandleFunc("/chats/{chatId:[0-9]+}/messages", messHandler.Message).Methods("POST")
-	a.router.HandleFunc("/likes", chatHandler.LikesHandler).Methods("POST")
-	a.router.HandleFunc("/ws", chatHandler.CreateChat)
+	// открытие вэсокетного соединения
+	subRouter.HandleFunc("/ws", userHandler.WsHandler).Methods("GET")
+
+	// отправка нового сообщения
+	subRouter.HandleFunc("/chats/{chatId:[0-9]+}/messages", messHandler.SendMessage).Methods("POST")
+	subRouter.HandleFunc("/messages/{messageId:[0-9]+}", messHandler.ChangeMessage).Methods("PATCH")
+	// отправка сообщения по вэбсокету собеседнику
+	go messHandler.WebSocketMessageResponse()
+
+	//a.router.HandleFunc("/likes", chatHandler.LikesHandler).Methods("POST")
+
 	go chatUcase.WebSocketResponse()
 }
 

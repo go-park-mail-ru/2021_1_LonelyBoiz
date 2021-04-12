@@ -15,33 +15,20 @@ func (a *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	query := r.URL.Query()
-	limit, ok := query["limit"]
+	limit, ok := query["count"]
 	if !ok {
-		response := model.ErrorResponse{Err: "Не указан limit"}
+		response := model.ErrorResponse{Err: "Не указан count"}
 		model.ResponseWithJson(w, 400, response)
 		return
 	}
 	limitInt, err := strconv.Atoi(limit[0])
 	if err != nil {
-		response := model.ErrorResponse{Err: "Неверный формат limit"}
+		response := model.ErrorResponse{Err: "Неверный формат count"}
 		model.ResponseWithJson(w, 400, response)
 		return
 	}
 
-	offset, ok := query["offset"]
-	if !ok {
-		response := model.ErrorResponse{Err: "Не указан offset"}
-		model.ResponseWithJson(w, 400, response)
-		return
-	}
-	offsetInt, err := strconv.Atoi(offset[0])
-	if err != nil {
-		response := model.ErrorResponse{Err: "Неверный формат offset"}
-		model.ResponseWithJson(w, 400, response)
-		return
-	}
-
-	feed, err := a.Db.GetFeed(id, limitInt, offsetInt)
+	feed, err := a.Db.GetFeed(id, limitInt)
 	if err != nil {
 		a.UserCase.Logger.Logger.Error(err)
 		model.ResponseWithJson(w, 500, nil)
@@ -54,7 +41,7 @@ func (a *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 			model.ResponseWithJson(w, 500, nil)
 			return
 		}
-		feed, err = a.Db.GetFeed(id, limitInt, offsetInt)
+		feed, err = a.Db.GetFeed(id, limitInt)
 		if err != nil {
 			a.UserCase.Logger.Info(err)
 			model.ResponseWithJson(w, 500, nil)

@@ -31,14 +31,13 @@ func (repo *UserRepository) CreateFeed(userId int) error {
 	return err
 }
 
-func (repo *UserRepository) GetFeed(userId int, limit int, offset int) ([]int, error) {
+func (repo *UserRepository) GetFeed(userId int, limit int) ([]int, error) {
 	var feed []int
 	err := repo.DB.Select(&feed,
-		`SELECT users.id
+		`SELECT userid2
     		FROM feed
-    			join users on userid2 = users.id
-			WHERE userid1 = $1 AND rating = 'empty' LIMIT $2 OFFSET $3 `,
-		userId, limit, offset,
+			WHERE userid1 = $1 AND rating = 'empty' LIMIT $2`,
+		userId, limit,
 	)
 	if err != nil {
 		return nil, err
