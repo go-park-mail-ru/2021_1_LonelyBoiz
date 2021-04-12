@@ -35,8 +35,27 @@ func (u *UserUsecase) ValidateDatePreferences(pref string) bool {
 	return true
 }
 
-func (u *UserUsecase) CheckPassword(passToCheck string, email string) (bool, error) {
-	password, err := u.Db.GetPass(email)
+func (u *UserUsecase) CheckPasswordWithId(passToCheck string, id int) (bool, error) {
+	password, err := u.Db.GetPassWithId(id)
+	if err != nil {
+		return false, err
+	}
+	if password == nil {
+		return false, nil
+	}
+
+	pass := sha3.New512()
+	pass.Write([]byte(passToCheck))
+	err = bcrypt.CompareHashAndPassword(password, pass.Sum(nil))
+	if err != nil {
+		return false, nil
+	}
+
+	return true, nil
+}
+
+func (u *UserUsecase) CheckPasswordWithEmail(passToCheck string, email string) (bool, error) {
+	password, err := u.Db.GetPassWithEmail(email)
 	if err != nil {
 		return false, err
 	}
@@ -141,7 +160,7 @@ func (u *UserUsecase) ChangeUserPassword(newUser *model.User) error {
 		return response
 	}
 
-	ok, err := u.CheckPassword(newUser.OldPassword, newUser.Email)
+	ok, err := u.CheckPasswordWithId(newUser.OldPassword, newUser.Id)
 	if err != nil {
 		return err
 	}

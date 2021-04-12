@@ -136,9 +136,25 @@ func (repo *UserRepository) CheckMail(email string) (bool, error) {
 	return true, nil
 }
 
-func (repo *UserRepository) GetPass(email string) ([]byte, error) {
+func (repo *UserRepository) GetPassWithEmail(email string) ([]byte, error) {
 	var pass [][]byte
 	err := repo.DB.Select(&pass, `SELECT passwordHash FROM users WHERE email = $1`, email)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	if len(pass) == 0 {
+		return nil, nil
+	}
+
+	return pass[0], nil
+}
+
+func (repo *UserRepository) GetPassWithId(id int) ([]byte, error) {
+	var pass [][]byte
+	err := repo.DB.Select(&pass, `SELECT passwordHash FROM users WHERE id= $1`, id)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}

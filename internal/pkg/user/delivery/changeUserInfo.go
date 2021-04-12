@@ -42,6 +42,8 @@ func (a *UserHandler) ChangeUserInfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	newUser.Id = userId
+
 	if newUser.Password != "" {
 		err := a.UserCase.ChangeUserPassword(&newUser)
 		if err != nil {
