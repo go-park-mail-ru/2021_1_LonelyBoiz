@@ -1,8 +1,10 @@
 package repository
 
 import (
-	"github.com/jmoiron/sqlx"
+	"database/sql"
 	"time"
+
+	"github.com/jmoiron/sqlx"
 
 	_ "github.com/jackc/pgx/stdlib"
 )
@@ -15,6 +17,9 @@ func (repo *SessionRepository) AddCookie(id int, token string) error {
 	_, err := repo.DB.Exec(
 		`INSERT INTO sessions (userid, token, expiration) VALUES ($1, $2, $3)`,
 		id, token, time.Now().Unix())
+	if err == sql.ErrNoRows {
+		return nil
+	}
 
 	return err
 }
