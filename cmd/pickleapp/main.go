@@ -163,7 +163,7 @@ func (a *App) InitializeRoutes(currConfig Config) {
 	// валидация всех данных, без кук
 	// регистрация
 	a.router.HandleFunc("/users", userHandler.SignUp).Methods("POST")
-	// логтн
+	// логин
 	a.router.HandleFunc("/login", userHandler.SignIn).Methods("POST")
 	// логаут
 	a.router.HandleFunc("/login", userHandler.LogOut).Methods("DELETE")
