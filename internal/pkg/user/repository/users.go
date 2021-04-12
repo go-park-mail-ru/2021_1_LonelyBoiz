@@ -131,9 +131,9 @@ func (repo *UserRepository) CheckMail(email string) (bool, error) {
 	return true, nil
 }
 
-func (repo *UserRepository) GetPass(id int) ([]byte, error) {
+func (repo *UserRepository) GetPass(email string) ([]byte, error) {
 	var pass [][]byte
-	err := repo.DB.Select(&pass, `SELECT passwordHash FROM users WHERE id = $1`, id)
+	err := repo.DB.Select(&pass, `SELECT passwordHash FROM users WHERE email = $1`, email)
 	if err != nil {
 		return nil, err
 	}

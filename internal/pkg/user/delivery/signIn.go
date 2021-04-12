@@ -28,8 +28,7 @@ func (a *UserHandler) SignIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !isCorrect {
-		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Не удлаось авторизоваться"}
-		response.Description["pass"] = "Неверный пароль"
+		response := model.ErrorResponse{Err: "Неверный логин или пароль"}
 		model.ResponseWithJson(w, 401, response)
 		a.UserCase.Logger.Info(response.Err)
 		return

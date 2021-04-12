@@ -172,7 +172,7 @@ func (u *UserUsecase) ValidateSignInData(newUser model.User) (bool, error) {
 }
 
 func (u *UserUsecase) CheckPassword(newUser *model.User) (bool, error) {
-	password, err := u.Db.GetPass(newUser.Id)
+	password, err := u.Db.GetPass(newUser.Email)
 	if err != nil {
 		return false, err
 	}
