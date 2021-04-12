@@ -63,7 +63,8 @@ func (repo *UserRepository) AddUser(newUser model.User) (int, error) {
 func (repo *UserRepository) GetUser(id int) (model.User, error) {
 	var user []model.User
 	err := repo.DB.Select(&user,
-		`SELECT email,
+		`SELECT id, 
+			email,
     		name,
     		birthday,
     		description,
