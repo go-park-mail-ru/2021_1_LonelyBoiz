@@ -34,14 +34,14 @@ func (a *UserHandler) SignIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = a.Sessions.SetSession(w, newUser.Id)
+	newUser, err = a.Db.GetUser(newUser.Id)
 	if err != nil {
 		a.UserCase.Logger.Logger.Error(err)
 		model.ResponseWithJson(w, 500, nil)
 		return
 	}
 
-	newUser, err = a.Db.GetUser(newUser.Id)
+	err = a.Sessions.SetSession(w, newUser.Id)
 	if err != nil {
 		a.UserCase.Logger.Logger.Error(err)
 		model.ResponseWithJson(w, 500, nil)
