@@ -172,6 +172,7 @@ func (repo *UserRepository) SignIn(email string) (model.User, error) {
 	var user []model.User
 	err := repo.DB.Select(&user,
 		`SELECT id,
+			email,
     		name,
     		birthday,
     		description,
