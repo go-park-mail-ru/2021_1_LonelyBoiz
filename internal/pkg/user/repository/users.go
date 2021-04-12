@@ -111,7 +111,7 @@ func (repo *UserRepository) ChangeUser(newUser model.User) error {
 		`UPDATE users 
 			SET email = $1, name = $2, birthday = $3, 
 			description = $4, city = $5, sex = $6, 
-			datePreference = $7, isActive = $8, instagram = &9
+			datePreference = $7, isActive = $8, instagram = $9
 		WHERE id = $10`,
 		newUser.Email, newUser.Name, newUser.Birthday,
 		newUser.Description, newUser.City, newUser.Sex,
