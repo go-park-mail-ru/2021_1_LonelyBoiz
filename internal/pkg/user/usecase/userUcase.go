@@ -176,6 +176,9 @@ func (u *UserUsecase) CheckPassword(newUser *model.User) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	if password == nil {
+		return false, nil
+	}
 
 	pass := sha3.New512()
 	pass.Write([]byte(newUser.Password))
