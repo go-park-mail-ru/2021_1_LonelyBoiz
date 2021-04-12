@@ -197,7 +197,7 @@ func (repo *UserRepository) CreateChat(userId1 int, userId2 int) (int, error) {
 	return chatId, err
 }
 
-/*func (repo *UserRepository) GetChatById(userId int, chatId int) (model.Chat, error) {
+func (repo *UserRepository) GetChatById(chatId int, userId int) (model.Chat, error) {
 	var chats []model.Chat
 	err := repo.DB.Select(&chats,
 		`SELECT chats.id AS chatId,
@@ -205,8 +205,7 @@ func (repo *UserRepository) CreateChat(userId1 int, userId2 int) (int, error) {
     		users.name AS partnerName,
     		lastMessage.text AS lastMessage,
     		lastMessage.time AS lastMessageTime,
-    		lastMessage.authorid AS lastMessageAuthorid,
-    		users.photos AS avatar
+    		lastMessage.authorid AS lastMessageAuthorid
 		FROM chats
     		JOIN users ON (users.id <> $1 AND (users.id = chats.userid2 OR users.id = chats.userid1))
     		LEFT JOIN (
@@ -223,18 +222,18 @@ func (repo *UserRepository) CreateChat(userId1 int, userId2 int) (int, error) {
             		)
     		) lastMessage ON lastMessage.chatid = chats.id
 		WHERE chats.userid1 = $1 OR chats.userid2 = $1
-		ORDER BY lastMessageTime
-		LIMIT $2 OFFSET $3`,
-		userId,
-		limit,
-		offset,
+		ORDER BY lastMessageTime`,
+		chatId, userId,
 	)
 	if err != nil {
-		return nil, err
+		return model.Chat{}, err
 	}
 
-	return chats, nil
+	err = repo.DB.Select(&chats[0].Photos, `SELECT photoId FROM photos WHERE userid = $1`, chats[0].PartnerId)
+	if err != nil {
+		fmt.Println(err)
+		return model.Chat{}, err
+	}
 
-	return chats[0], err
+	return chats[0], nil
 }
-*/

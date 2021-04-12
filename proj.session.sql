@@ -19,7 +19,7 @@ CREATE TABLE messages (
     FOREIGN KEY (chatId) REFERENCES chats (id),
     authorId INT,
     FOREIGN KEY (authorId) REFERENCES users (id),
-    text varchar(200) NOT NULL,
+    text varchar(200) NOT NULLDEFAULT 'empty',
     time INT,
     reaction int DEFAULT -1,
     messageOrder INT

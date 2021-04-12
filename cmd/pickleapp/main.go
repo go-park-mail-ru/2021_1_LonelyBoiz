@@ -183,7 +183,8 @@ func (a *App) InitializeRoutes(currConfig Config) {
 	// отправка сообщения по вэбсокету собеседнику
 	go messHandler.WebSocketMessageResponse()
 
-	//go chatUcase.WebSocketResponse()
+	// отправка оповещения о новом чате
+	go userHandler.WebSocketChatResponse()
 }
 
 func main() {

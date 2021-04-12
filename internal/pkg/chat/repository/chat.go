@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	model "server/internal/pkg/models"
 
 	"github.com/jmoiron/sqlx"
@@ -18,8 +19,7 @@ func (repo *ChatRepository) GetChats(userId int, limit int, offset int) ([]model
     		users.name AS partnerName,
     		lastMessage.text AS lastMessage,
     		lastMessage.time AS lastMessageTime,
-    		lastMessage.authorid AS lastMessageAuthorid,
-    		users.photos AS avatar
+    		lastMessage.authorid AS lastMessageAuthorid
 		FROM chats
     		JOIN users ON (users.id <> $1 AND (users.id = chats.userid2 OR users.id = chats.userid1))
     		LEFT JOIN (
@@ -46,5 +46,12 @@ func (repo *ChatRepository) GetChats(userId int, limit int, offset int) ([]model
 		return nil, err
 	}
 
+	for i, _ := range chats {
+		err = repo.DB.Select(&chats[i].Photos, `SELECT photoId FROM photos WHERE userid = $1`, chats[i].PartnerId)
+		if err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
+	}
 	return chats, nil
 }

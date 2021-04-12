@@ -75,49 +75,32 @@ func chatsWriter(newChat *model.Chat) {
 	model.ChatsChan <- newChat
 }
 
-/*func (c *UserHandler) WebSocketChatResponse() {
+func (a *UserHandler) WebSocketChatResponse() {
 	for {
 		newChat := <-model.ChatsChan
-		partnerId, err := m.Db.GetPartnerId(newMessage.ChatId, newMessage.AuthorId)
-		if err != nil {
-			m.Usecase.Logger.Error("Пользователь с id = ", newMessage.AuthorId, " не найден")
+
+		client, ok := (*a.UserCase.Clients)[newChat.PartnerId]
+		if !ok {
+			a.UserCase.Logger.Info("Пользователь с id = ", newChat.PartnerId, " не в сети")
+			client.Close()
+			delete(*a.UserCase.Clients, newChat.PartnerId)
 			continue
 		}
 
-		response := model.WebsocketReesponse{ResponseType: "message", Object: newMessage}
-		client, ok := (*m.Usecase.Clients)[partnerId]
-		if !ok {
-			m.Usecase.Logger.Info("Пользователь с id = ", partnerId, " не в сети")
-			client.Close()
-			delete(*m.Usecase.Clients, partnerId)
+		newChatToSend, err := a.Db.GetChatById(newChat.ChatId, newChat.PartnerId)
+		if err != nil {
+			a.UserCase.Logger.Error("Пользователь с id = ", newChat.PartnerId, " не найден")
 			continue
 		}
+
+		response := model.WebsocketReesponse{ResponseType: "chat", Object: newChatToSend}
 
 		err = client.WriteJSON(response)
 		if err != nil {
-			m.Usecase.Logger.Error("Не удалось отправить сообщение")
+			a.UserCase.Logger.Error("Не удалось отправить сообщение")
 			client.Close()
-			delete(*m.Usecase.Clients, partnerId)
+			delete(*a.UserCase.Clients, newChat.PartnerId)
 			continue
 		}
 	}
 }
-
-/*for {
-		newChat := <-chatsChan
-		partnerId := newChat.PartnerId
-		response := Resp{ResponseType: "chat", Object: newChat}
-		client, ok := clients[partnerId]
-		if !ok {
-			client.Close()
-			delete(clients, partnerId)
-			continue
-		}
-		err := client.WriteJSON(response)
-		if err != nil {
-			//тут тоже залогировать
-			client.Close()
-			delete(clients, partnerId)
-		}
-	}
-}*/

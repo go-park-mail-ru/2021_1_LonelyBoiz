@@ -7,7 +7,7 @@ type Chat struct {
 	LastMessage         string `json:"lastMessage"`
 	LastMessageTime     int64  `json:"lastMessageTime"`
 	LastMessageAuthorId int    `json:"lastMessageAuthor"`
-	Avatar              string `json:"pathToAvatar"`
+	Photos              string `json:"photos"`
 }
 
 var ChatsChan = make(chan *Chat)
