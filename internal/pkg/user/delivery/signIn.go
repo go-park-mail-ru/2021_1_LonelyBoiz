@@ -34,7 +34,7 @@ func (a *UserHandler) SignIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newUser, err = a.Db.GetUser(newUser.Id)
+	newUser, err = a.Db.SignIn(newUser.Email)
 	if err != nil {
 		a.UserCase.Logger.Logger.Error(err)
 		model.ResponseWithJson(w, 500, nil)
