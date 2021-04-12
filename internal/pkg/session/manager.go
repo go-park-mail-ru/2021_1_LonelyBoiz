@@ -43,9 +43,7 @@ func (session *SessionsManager) SetSession(w http.ResponseWriter, id int) error 
 
 	err := session.DB.AddCookie(id, key)
 	if err != nil {
-		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: err.Error()}
-		session.Logger.Info("Set Cookie : " + err.Error())
-		return response
+		return err
 	}
 
 	session.Logger.Info("Success Set Cookie")

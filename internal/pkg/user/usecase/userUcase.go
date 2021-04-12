@@ -172,19 +172,17 @@ func (u *UserUsecase) ValidateSignInData(newUser model.User) (bool, error) {
 }
 
 func (u *UserUsecase) CheckPassword(newUser *model.User) (bool, error) {
-	user, err := u.Db.SignIn(newUser.Email)
-	if err != nil || user.IsDeleted == true {
+	password, err := u.Db.GetPass(newUser.Id)
+	if err != nil {
 		return false, err
 	}
 
 	pass := sha3.New512()
 	pass.Write([]byte(newUser.Password))
-	err = bcrypt.CompareHashAndPassword(user.PasswordHash, pass.Sum(nil))
+	err = bcrypt.CompareHashAndPassword(password, pass.Sum(nil))
 	if err != nil {
-		return false, err
+		return false, nil
 	}
-
-	*newUser = user
 
 	return true, nil
 }

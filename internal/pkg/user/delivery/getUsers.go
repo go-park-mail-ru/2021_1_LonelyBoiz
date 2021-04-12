@@ -48,11 +48,6 @@ func (a *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	if len(feed) == 0 {
-		response := model.ErrorResponse{Err: "Лента закончилась"}
-		model.ResponseWithJson(w, 503, response)
-		return
-	}
 
 	model.ResponseWithJson(w, 200, feed)
 	return
