@@ -35,20 +35,23 @@ func (u *UserUsecase) ValidateDatePreferences(pref string) bool {
 	return true
 }
 
-func (u *UserUsecase) checkPasswordForCHanging(newUser model.User) (bool, error) {
-	oldUserPass, err := u.Db.GetPass(newUser.Email)
+func (u *UserUsecase) CheckPassword(newUser *model.User) (bool, error) {
+	password, err := u.Db.GetPass(newUser.Email)
 	if err != nil {
 		return false, err
+	}
+	if password == nil {
+		return false, nil
 	}
 
 	pass := sha3.New512()
-	pass.Write([]byte(newUser.OldPassword))
-	err = bcrypt.CompareHashAndPassword(oldUserPass, pass.Sum(nil))
+	pass.Write([]byte(newUser.Password))
+	err = bcrypt.CompareHashAndPassword(password, pass.Sum(nil))
 	if err != nil {
-		return false, err
+		return false, nil
 	}
 
-	return true, err
+	return true, nil
 }
 
 func (u *UserUsecase) ChangeUserProperties(newUser *model.User) error {
@@ -138,7 +141,7 @@ func (u *UserUsecase) ChangeUserPassword(newUser *model.User) error {
 		return response
 	}
 
-	ok, err := u.checkPasswordForCHanging(*newUser)
+	ok, err := u.CheckPassword(newUser)
 	if err != nil {
 		return err
 	}
@@ -176,25 +179,6 @@ func (u *UserUsecase) ValidateSignInData(newUser model.User) (bool, error) {
 		response.Description["mail"] = govalidator.ErrorByField(err, "email")
 		response.Description["password"] = govalidator.ErrorByField(err, "password")
 		return false, response
-	}
-
-	return true, nil
-}
-
-func (u *UserUsecase) CheckPassword(newUser *model.User) (bool, error) {
-	password, err := u.Db.GetPass(newUser.Email)
-	if err != nil {
-		return false, err
-	}
-	if password == nil {
-		return false, nil
-	}
-
-	pass := sha3.New512()
-	pass.Write([]byte(newUser.Password))
-	err = bcrypt.CompareHashAndPassword(password, pass.Sum(nil))
-	if err != nil {
-		return false, nil
 	}
 
 	return true, nil

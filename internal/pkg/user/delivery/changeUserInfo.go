@@ -45,11 +45,7 @@ func (a *UserHandler) ChangeUserInfo(w http.ResponseWriter, r *http.Request) {
 	if newUser.Password != "" {
 		err := a.UserCase.ChangeUserPassword(&newUser)
 		if err != nil {
-			if reflect.TypeOf(err) != reflect.TypeOf(model.ErrorDescriptionResponse{}) {
-				a.UserCase.Logger.Logger.Error(err)
-				model.ResponseWithJson(w, 500, nil)
-				return
-			}
+
 			model.ResponseWithJson(w, 400, err)
 			return
 		}
