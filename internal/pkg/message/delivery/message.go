@@ -22,6 +22,73 @@ type MessageHandler struct {
 	Usecase  *usecase.MessageUsecase
 }
 
+func (m *MessageHandler) GetMessages(w http.ResponseWriter, r *http.Request) {
+	userId, ok := m.Sessions.GetIdFromContext(r.Context())
+	if !ok {
+		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
+		model.ResponseWithJson(w, 403, response)
+		m.Usecase.Logger.Error(response.Err)
+		return
+	}
+
+	vars := mux.Vars(r)
+	chatId, err := strconv.Atoi(vars["chatId"])
+	if err != nil {
+		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
+		response.Description["messageId"] = "Сообщения с таким id нет"
+		model.ResponseWithJson(w, 400, response)
+		return
+	}
+
+	query := r.URL.Query()
+	limit, ok := query["count"]
+	if !ok {
+		response := model.ErrorResponse{Err: "Не указан count"}
+		model.ResponseWithJson(w, 400, response)
+		return
+	}
+	limitInt, err := strconv.Atoi(limit[0])
+	if err != nil {
+		response := model.ErrorResponse{Err: "Неверный формат count"}
+		model.ResponseWithJson(w, 400, response)
+		return
+	}
+	offset, ok := query["offset"]
+	if !ok {
+		response := model.ErrorResponse{Err: "Не указан offset"}
+		model.ResponseWithJson(w, 400, response)
+		return
+	}
+	offsetInt, err := strconv.Atoi(offset[0])
+	if err != nil {
+		response := model.ErrorResponse{Err: "Неверный формат offset"}
+		model.ResponseWithJson(w, 400, response)
+		return
+	}
+
+	ok, err = m.Db.CheckChat(userId, chatId)
+	if err != nil {
+		m.Usecase.Logger.Error(err)
+		model.ResponseWithJson(w, 500, nil)
+		return
+	}
+	if !ok {
+		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
+		response.Description["chatId"] = "Пытаешься получить не свой чат"
+		model.ResponseWithJson(w, 403, response)
+		return
+	}
+
+	messages, err := m.Db.GetMessages(chatId, limitInt, offsetInt)
+	if err != nil {
+		m.Usecase.Logger.Error(err)
+		model.ResponseWithJson(w, 500, nil)
+		return
+	}
+
+	model.ResponseWithJson(w, 200, messages)
+}
+
 func (m *MessageHandler) SendMessage(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	chatId, err := strconv.Atoi(vars["chatId"])

@@ -1,9 +1,14 @@
 package delivery
 
 import (
+	"net/http"
 	chatrep "server/internal/pkg/chat/repository"
 	"server/internal/pkg/chat/usecase"
+	model "server/internal/pkg/models"
 	"server/internal/pkg/session"
+	"strconv"
+
+	"github.com/gorilla/mux"
 )
 
 type ChatHandler struct {
@@ -12,89 +17,63 @@ type ChatHandler struct {
 	Usecase  *usecase.ChatUsecase
 }
 
-/*
-func (c *ChatHandler) CreateChat(w http.ResponseWriter, r *http.Request) {
-	ws, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	ctx := r.Context()
-	id, ok := ctx.Value(model.CtxUserId).(int)
-	if !ok {
-		c.Usecase.Logger.Error("Can't get id from context")
-	}
-
-	(*c.Usecase).Clients[id] = ws
-}
-
-func (c *ChatHandler) LikesHandler(w http.ResponseWriter, r *http.Request) {
+func (c *ChatHandler) GetChats(w http.ResponseWriter, r *http.Request) {
 	cookieId, ok := c.Sessions.GetIdFromContext(r.Context())
 	if !ok {
 		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
 		model.ResponseWithJson(w, 403, response)
-		c.Usecase.Logger.Info(response.Err)
+		c.Usecase.Logger.Error(response.Err)
 		return
 	}
 
-	var like model.Like
-	decoder := json.NewDecoder(r.Body)
-	defer r.Body.Close()
-	err := decoder.Decode(&like)
+	vars := mux.Vars(r)
+	userId, err := strconv.Atoi(vars["chatId"])
 	if err != nil {
-		c.Usecase.Logger.Info(err)
 		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
+		response.Description["messageId"] = "Сообщения с таким id нет"
 		model.ResponseWithJson(w, 400, response)
 		return
 	}
 
-	if like.Reaction != "like" || like.Reaction != "skip" {
-		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
-		response.Description["like"] = "неправильный формат реацкции ожидается skip или like"
-		model.ResponseWithJson(w, 400, response)
-		return
-	}
-
-	rowsAffected, err := c.Usecase.Db.Rating(id, like.UserId, like.Reaction)
-	if err != nil {
-		//залогировать ошибку
-		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
-		model.ResponseWithJson(w, 500, response)
-		return
-	}
-	if rowsAffected == -1 {
+	if userId != cookieId {
 		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
-		response.Description["userID"] = "Пытаешься поставить лайк человеку не со своей ленты"
-		mpdel.ResponseWithJson(w, 403, response)
+		response.Description["messageId"] = "Пытаешься взять не свои чаты"
+		model.ResponseWithJson(w, 403, response)
 		return
 	}
-	reciprocity, err := DB.CheckReciprocity(like.UserId, id)
+
+	query := r.URL.Query()
+	limit, ok := query["count"]
+	if !ok {
+		response := model.ErrorResponse{Err: "Не указан count"}
+		model.ResponseWithJson(w, 400, response)
+		return
+	}
+	limitInt, err := strconv.Atoi(limit[0])
 	if err != nil {
-		//залогировать ошибку
-		response := errorDescriptionResponse{Description: map[string]string{}, Err: "Не удалось проверить взаимность"}
-		responseWithJson(w, 500, response)
+		response := model.ErrorResponse{Err: "Неверный формат count"}
+		model.ResponseWithJson(w, 400, response)
 		return
 	}
-	if reciprocity == false {
-		w.WriteHeader(204)
+	offset, ok := query["offset"]
+	if !ok {
+		response := model.ErrorResponse{Err: "Не указан offset"}
+		model.ResponseWithJson(w, 400, response)
 		return
 	}
-	var newChat Chat
-	newChat.ChatId, err = DB.CreateChat(id, like.UserId)
+	offsetInt, err := strconv.Atoi(offset[0])
 	if err != nil {
-		//залогировать ошибку
-		response := errorDescriptionResponse{Description: map[string]string{}, Err: "Не удалось создать чат"}
-		responseWithJson(w, 500, response)
+		response := model.ErrorResponse{Err: "Неверный формат offset"}
+		model.ResponseWithJson(w, 400, response)
 		return
 	}
-	newChat, err = DB.GetNewChat(newChat.ChatId, like.UserId)
+
+	chats, err := c.Db.GetChats(userId, limitInt, offsetInt)
 	if err != nil {
-		//залогировать ошибку
-		response := errorDescriptionResponse{Description: map[string]string{}, Err: "Не удалось получить новый чат из базы"}
-		responseWithJson(w, 500, response)
+		c.Usecase.Logger.Error(err)
+		model.ResponseWithJson(w, 500, nil)
 		return
 	}
-	go chatsWriter(&newChat)
-	responseWithJson(w, 200, newChat)
+
+	model.ResponseWithJson(w, 200, chats)
 }
-*/

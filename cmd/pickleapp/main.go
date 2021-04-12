@@ -140,33 +140,50 @@ func (a *App) InitializeRoutes(currConfig Config) {
 	subRouter := a.router.NewRoute().Subrouter()
 	subRouter.Use(checkcookiem.Middleware)
 
+	// получить информацию о пользователе
 	subRouter.HandleFunc("/users/{id:[0-9]+}", userHandler.GetUserInfo).Methods("GET")
+	// получить ленту
 	subRouter.HandleFunc("/feed", userHandler.GetUsers).Methods("GET")
+	// првоерить куку
 	subRouter.HandleFunc("/auth", userHandler.GetLogin).Methods("GET")
+	// удалить юзера
 	subRouter.HandleFunc("/users/{id:[0-9]+}", userHandler.DeleteUser).Methods("DELETE")
+	// изменить информацию о юзере
 	subRouter.HandleFunc("/users/{id:[0-9]+}", userHandler.ChangeUserInfo).Methods("PATCH")
+	// поставить оценку юзеру из ленты
+	subRouter.HandleFunc("/likes", userHandler.LikesHandler).Methods("POST")
 
+	// загрузить новую фотку на сервер
 	subRouter.HandleFunc("/images", userHandler.UploadPhoto).Methods("POST")
-	//subRouter.HandleFunc("/images/{id:[0-9]+}", userHandler.DeletePhoto).Methods("DELETE")
+	// выгрузить фотку с сервера
 	subRouter.HandleFunc("/images/{id:[0-9]+}", userHandler.DownloadPhoto).Methods("GET")
+	// удалить фотку
+	//subRouter.HandleFunc("/images/{id:[0-9]+}", userHandler.DeletePhoto).Methods("DELETE")
 
 	// валидация всех данных, без кук
+	// регистрация
 	a.router.HandleFunc("/users", userHandler.SignUp).Methods("POST")
+	// логтн
 	a.router.HandleFunc("/login", userHandler.SignIn).Methods("POST")
+	// логаут
 	a.router.HandleFunc("/login", userHandler.LogOut).Methods("DELETE")
 
 	// открытие вэсокетного соединения
 	subRouter.HandleFunc("/ws", userHandler.WsHandler).Methods("GET")
 
+	// получить чаты юзера
+	subRouter.HandleFunc("/users/{userId:[0-9]+}/chats", chatHandler.GetChats).Methods("GET")
+
+	// получить сообщения из чата
+	subRouter.HandleFunc("/chats/{chatId:[0-9]+}/messages", messHandler.GetMessages).Methods("GET")
 	// отправка нового сообщения
 	subRouter.HandleFunc("/chats/{chatId:[0-9]+}/messages", messHandler.SendMessage).Methods("POST")
+	// реакция
 	subRouter.HandleFunc("/messages/{messageId:[0-9]+}", messHandler.ChangeMessage).Methods("PATCH")
 	// отправка сообщения по вэбсокету собеседнику
 	go messHandler.WebSocketMessageResponse()
 
-	//a.router.HandleFunc("/likes", chatHandler.LikesHandler).Methods("POST")
-
-	go chatUcase.WebSocketResponse()
+	//go chatUcase.WebSocketResponse()
 }
 
 func main() {

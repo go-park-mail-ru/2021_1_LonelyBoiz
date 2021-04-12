@@ -130,3 +130,21 @@ func (repo *MessageRepository) DeleteMessage(messageId int) error {
 
 	return err
 }
+
+func (repo *MessageRepository) GetMessages(chatId int, limit int, offset int) ([]model.Message, error) {
+	var messages []model.Message
+	err := repo.DB.Select(&messages,
+		`SELECT * FROM messages
+			WHERE messages.chatid = $1
+			ORDER BY messages.messageorder
+			LIMIT $2 OFFSET $3;`,
+		chatId,
+		limit,
+		offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return messages, nil
+}

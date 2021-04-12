@@ -27,6 +27,11 @@ type User struct {
 	Photos         []int  `json:"photos"`
 }
 
+type Like struct {
+	UserId   int    `json:"userId"`
+	Reaction string `json:"reaction"`
+}
+
 func init() {
 	govalidator.CustomTypeTagMap.Set(
 		"ageValid",

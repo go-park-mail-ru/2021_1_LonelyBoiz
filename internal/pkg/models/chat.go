@@ -10,7 +10,4 @@ type Chat struct {
 	Avatar              string `json:"pathToAvatar"`
 }
 
-type Like struct {
-	UserId   int    `json:"userId"`
-	Reaction string `json:"reaction"`
-}
+var ChatsChan = make(chan *Chat)
