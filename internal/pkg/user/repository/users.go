@@ -71,7 +71,7 @@ func (repo *UserRepository) GetUser(id int) (model.User, error) {
     		sex,
     		datepreference,
     		isactive,
-    		is deleted
+    		isdeleted
 		FROM users WHERE id = $1`,
 		id)
 	if err != nil {
@@ -152,7 +152,7 @@ func (repo *UserRepository) SignIn(email string) (model.User, error) {
     		sex,
     		datepreference,
     		isactive,
-    		is deleted
+    		isdeleted
 		FROM users WHERE id = $1 WHERE email = $1`, email)
 	if err != nil {
 		return model.User{}, err
