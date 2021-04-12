@@ -140,6 +140,9 @@ func (repo *UserRepository) GetPass(email string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	if len(pass) == 0 {
+		return nil, nil
+	}
 
 	return pass[0], nil
 }
@@ -161,7 +164,6 @@ func (repo *UserRepository) SignIn(email string) (model.User, error) {
 	if err != nil {
 		return model.User{}, err
 	}
-
 	if len(user) == 0 {
 		return model.User{}, errors.New("пользователь не найден")
 	}

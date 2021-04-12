@@ -1,9 +1,9 @@
-DROP TABLE users;
+DROP TABLE sessions;
 DROP TABLE messages;
 DROP TABLE photos;
 DROP TABLE chats;
 DROP TABLE feed;
-DROP TABLE sessions;
+DROP TABLE users;
 
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
