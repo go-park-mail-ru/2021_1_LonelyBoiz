@@ -62,7 +62,18 @@ func (repo *UserRepository) AddUser(newUser model.User) (int, error) {
 
 func (repo *UserRepository) GetUser(id int) (model.User, error) {
 	var user []model.User
-	err := repo.DB.Select(&user, `SELECT * FROM users WHERE id = $1`, id)
+	err := repo.DB.Select(&user,
+		`SELECT email,
+    		name,
+    		birthday,
+    		description,
+    		city,
+    		sex,
+    		datepreference,
+    		isactive,
+    		is deleted
+		FROM users WHERE id = $1`,
+		id)
 	if err != nil {
 		return model.User{}, err
 	}
@@ -132,7 +143,17 @@ func (repo *UserRepository) GetPass(id int) ([]byte, error) {
 
 func (repo *UserRepository) SignIn(email string) (model.User, error) {
 	var user []model.User
-	err := repo.DB.Select(&user, `SELECT * FROM users WHERE email = $1`, email)
+	err := repo.DB.Select(&user,
+		`SELECT id,
+    		name,
+    		birthday,
+    		description,
+    		city,
+    		sex,
+    		datepreference,
+    		isactive,
+    		is deleted
+		FROM users WHERE id = $1 WHERE email = $1`, email)
 	if err != nil {
 		return model.User{}, err
 	}

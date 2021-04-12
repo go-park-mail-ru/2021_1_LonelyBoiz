@@ -1,9 +1,9 @@
-DROP TABLE users IF EXISTS;
-DROP TABLE messages IF EXISTS;
-DROP TABLE photos IF EXISTS;
-DROP TABLE chats IF EXISTS;
-DROP TABLE feed IF EXISTS;
-DROP TABLE sessions IF EXISTS;
+DROP TABLE users;
+DROP TABLE messages;
+DROP TABLE photos;
+DROP TABLE chats;
+DROP TABLE feed;
+DROP TABLE sessions;
 
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
@@ -13,7 +13,6 @@ CREATE TABLE users (
     birthday INT,
     description varchar(250),
     city varchar(53),
-    photos varchar(500),
     sex varchar(10),
     datePreference varchar(10),
     isActive BOOLEAN NOT NULL,
