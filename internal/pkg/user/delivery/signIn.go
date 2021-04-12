@@ -21,7 +21,7 @@ func (a *UserHandler) SignIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	isCorrect, err := a.UserCase.CheckPassword(&newUser)
+	isCorrect, err := a.UserCase.CheckPassword(newUser.Password, newUser.Email)
 	if err != nil {
 		a.UserCase.Logger.Logger.Error(err)
 		model.ResponseWithJson(w, 500, nil)

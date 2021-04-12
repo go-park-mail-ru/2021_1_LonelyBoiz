@@ -29,7 +29,7 @@ func (a *UserHandler) ChangeUserInfo(w http.ResponseWriter, r *http.Request) {
 
 	if cookieId != userId {
 		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
-		response.Description["id"] = "Пытаешься удалить не себя"
+		response.Description["id"] = "Пытаешься поменять не себя"
 		model.ResponseWithJson(w, 403, response)
 		return
 	}
@@ -45,7 +45,6 @@ func (a *UserHandler) ChangeUserInfo(w http.ResponseWriter, r *http.Request) {
 	if newUser.Password != "" {
 		err := a.UserCase.ChangeUserPassword(&newUser)
 		if err != nil {
-
 			model.ResponseWithJson(w, 400, err)
 			return
 		}
