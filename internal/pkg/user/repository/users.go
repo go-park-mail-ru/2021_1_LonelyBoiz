@@ -29,7 +29,8 @@ func (repo *UserRepository) AddUser(newUser model.User) (int, error) {
 			sex,
 			datePreference,
 			isActive,
-			isDeleted
+			isDeleted,
+			instagram
 		) VALUES (
 			$1, 
 			$2,
@@ -40,7 +41,8 @@ func (repo *UserRepository) AddUser(newUser model.User) (int, error) {
 			$7,
 			$8,
 			$9,
-			$10
+			$10,
+			$11
 		) RETURNING id`,
 		newUser.Email,
 		newUser.Name,
@@ -52,6 +54,7 @@ func (repo *UserRepository) AddUser(newUser model.User) (int, error) {
 		newUser.DatePreference,
 		newUser.IsActive,
 		newUser.IsDeleted,
+		newUser.Instagram,
 	).Scan(&id)
 	if err != nil {
 		return -1, err
@@ -67,6 +70,7 @@ func (repo *UserRepository) GetUser(id int) (model.User, error) {
 			email,
     		name,
     		birthday,
+			instagram,
     		description,
     		city,
     		sex,
@@ -107,11 +111,11 @@ func (repo *UserRepository) ChangeUser(newUser model.User) error {
 		`UPDATE users 
 			SET email = $1, name = $2, birthday = $3, 
 			description = $4, city = $5, sex = $6, 
-			datePreference = $7, isActive = $8
-		WHERE id = $9`,
+			datePreference = $7, isActive = $8, instagram = &9,
+		WHERE id = $10`,
 		newUser.Email, newUser.Name, newUser.Birthday,
 		newUser.Description, newUser.City, newUser.Sex,
-		newUser.DatePreference, newUser.IsActive,
+		newUser.DatePreference, newUser.IsActive, newUser.Instagram,
 		newUser.Id,
 	)
 
@@ -157,6 +161,7 @@ func (repo *UserRepository) SignIn(email string) (model.User, error) {
     		description,
     		city,
     		sex,
+			instagram,
 			passwordhash,
     		datepreference,
     		isactive,
