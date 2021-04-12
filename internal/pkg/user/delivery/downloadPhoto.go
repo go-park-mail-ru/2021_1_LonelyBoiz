@@ -2,7 +2,6 @@ package delivery
 
 import (
 	"io"
-	"log"
 	"net/http"
 	model "server/internal/pkg/models"
 	"server/internal/pkg/user/repository"
@@ -12,11 +11,12 @@ import (
 )
 
 func (a *UserHandler) DownloadPhoto(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	userId, ok := ctx.Value(model.CtxUserId).(int)
+	userId, ok := a.Sessions.GetIdFromContext(r.Context())
 	if !ok {
-		//вернуть ошибку залогировать
-		log.Println("error: get id from context")
+		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
+		model.ResponseWithJson(w, 403, response)
+		a.UserCase.Logger.Info(response.Err)
+		return
 	}
 
 	vars := mux.Vars(r)
@@ -30,25 +30,31 @@ func (a *UserHandler) DownloadPhoto(w http.ResponseWriter, r *http.Request) {
 
 	ok, err = a.Db.CheckPhoto(photoId, userId)
 	if err != nil {
+		a.UserCase.Logger.Error(err)
 		model.ResponseWithJson(w, 500, err)
+		return
 	}
 	if !ok {
 		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
 		response.Description["image"] = "Пытаешься получить не свое фото"
 		model.ResponseWithJson(w, 403, response)
+		return
 	}
 
-	img, err := repository.SendPhoto(photoId)
+	img, err := repository.GetPhoto(photoId)
 	if err != nil {
+		a.UserCase.Logger.Error(err)
 		model.ResponseWithJson(w, 500, err)
 	}
 	_, err = io.Copy(w, img)
 	if err != nil {
+		a.UserCase.Logger.Error(err)
 		model.ResponseWithJson(w, 500, err)
 	}
 
 	fileInfo, err := img.Stat()
 	if err != nil {
+		a.UserCase.Logger.Error(err)
 		model.ResponseWithJson(w, 500, err)
 	}
 

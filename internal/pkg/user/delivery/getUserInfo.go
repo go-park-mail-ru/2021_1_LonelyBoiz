@@ -1,36 +1,32 @@
 package delivery
 
 import (
-	"github.com/gorilla/mux"
 	"net/http"
 	model "server/internal/pkg/models"
 	"strconv"
+
+	"github.com/gorilla/mux"
 )
 
 func (a *UserHandler) GetUserInfo(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	userId, err := strconv.Atoi(vars["id"])
-
-	id, ok := a.Sessions.GetIdFromContext(r.Context())
-
-	if !ok || err != nil || id != userId {
-		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
-		model.ResponseWithJson(w, 403, response)
-		a.UserCase.Logger.Info(response.Err)
+	if err != nil {
+		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Неправильные входные данные"}
+		response.Description["id"] = "Пользователя с таким id нет"
+		model.ResponseWithJson(w, 400, response)
 		return
 	}
 
-	userInfo, err := a.Db.GetUser(id)
+	userInfo, err := a.Db.GetUser(userId)
 	if err != nil {
-		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: err.Error()}
+		a.UserCase.Logger.Error(err)
+		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Неправильные входные данные"}
 		response.Description["id"] = "Пользователя с таким id нет"
-		model.ResponseWithJson(w, 500, response)
-		a.UserCase.Logger.Error(err.Error())
+		model.ResponseWithJson(w, 401, response)
 		return
 	}
 
 	userInfo.PasswordHash = nil
 	model.ResponseWithJson(w, 200, userInfo)
-
-	a.UserCase.Logger.Info("Success")
 }

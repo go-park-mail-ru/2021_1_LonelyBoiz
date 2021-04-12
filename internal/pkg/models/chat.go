@@ -9,3 +9,8 @@ type Chat struct {
 	LastMessageAuthorId int    `json:"lastMessageAuthor"`
 	Avatar              string `json:"pathToAvatar"`
 }
+
+type Like struct {
+	UserId   int    `json:"userId"`
+	Reaction string `json:"reaction"`
+}

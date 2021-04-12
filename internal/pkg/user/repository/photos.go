@@ -33,15 +33,15 @@ func SavePhoto(photoId int, file multipart.File) error {
 	return nil
 }
 
-func SendPhoto(photoId int) (*os.File, error) {
+func GetPhoto(photoId int) (*os.File, error) {
 	name := strconv.Itoa(photoId)
 	path := "./static" + name + ".png"
 
 	img, err := os.Open(path)
+	defer img.Close()
 	if err != nil {
 		return nil, err
 	}
-	defer img.Close()
 
 	return img, nil
 }

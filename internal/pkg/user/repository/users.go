@@ -1,10 +1,9 @@
 package repository
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
-	"log"
-	"github.com/jmoiron/sqlx"
 	model "server/internal/pkg/models"
 
 	"github.com/jmoiron/sqlx"
@@ -67,8 +66,13 @@ func (repo *UserRepository) GetUser(id int) (model.User, error) {
 	if err != nil {
 		return model.User{}, err
 	}
-	err = repo.DB.Select(&user[0].Photos, `SELECT * FROM photos WHERE userid = $1`, id)
+	if len(user) == 0 {
+		return model.User{}, sql.ErrNoRows
+	}
+
+	err = repo.DB.Select(&user[0].Photos, `SELECT photoId FROM photos WHERE userid = $1`, id)
 	if err != nil {
+		fmt.Println(err)
 		return model.User{}, err
 	}
 
@@ -91,11 +95,11 @@ func (repo *UserRepository) ChangeUser(newUser model.User) error {
 		`UPDATE users 
 			SET email = $1, name = $2, birthday = $3, 
 			description = $4, city = $5, sex = $6, 
-			datePreference = $7, isActive = $8,	photos = $9
-		WHERE id = $10`,
+			datePreference = $7, isActive = $8
+		WHERE id = $9`,
 		newUser.Email, newUser.Name, newUser.Birthday,
 		newUser.Description, newUser.City, newUser.Sex,
-		newUser.DatePreference, newUser.IsActive, newUser.Photos,
+		newUser.DatePreference, newUser.IsActive,
 		newUser.Id,
 	)
 

@@ -2,12 +2,13 @@ package session
 
 import (
 	"context"
-	"github.com/sirupsen/logrus"
 	"math/rand"
 	"net/http"
 	model "server/internal/pkg/models"
 	"server/internal/pkg/session/repository"
 	"time"
+
+	"github.com/sirupsen/logrus"
 )
 
 type SessionsManager struct {
@@ -33,7 +34,7 @@ func (session *SessionsManager) SetSession(w http.ResponseWriter, id int) error 
 		Value:    key,
 		Expires:  expiration,
 		SameSite: http.SameSiteNoneMode,
-		Secure:   true,
+		Secure:   false,
 		Domain:   "localhost:3000",
 		HttpOnly: true,
 	}

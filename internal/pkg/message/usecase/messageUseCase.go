@@ -2,13 +2,16 @@ package usecase
 
 import (
 	"encoding/json"
-	"github.com/sirupsen/logrus"
 	"io"
 	mesrep "server/internal/pkg/message/repository"
 	model "server/internal/pkg/models"
+
+	"github.com/gorilla/websocket"
+	"github.com/sirupsen/logrus"
 )
 
 type MessageUsecase struct {
+	Clients      *map[int]*websocket.Conn
 	Db           mesrep.MessageRepository
 	Logger       *logrus.Entry
 	messagesChan chan *model.Message

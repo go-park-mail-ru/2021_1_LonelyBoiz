@@ -2,14 +2,15 @@ package delivery
 
 import (
 	"net/http"
+	"reflect"
 	model "server/internal/pkg/models"
 )
 
 func (a *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 	newUser, err := a.UserCase.ParseJsonToUser(r.Body)
 	if err != nil {
-		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: model.UserErrorInvalidData}
-		a.UserCase.Logger.Info(model.UserErrorInvalidData)
+		a.UserCase.Logger.Logger.Error(err)
+		response := model.ErrorResponse{Err: "Не удалось прочитать тело запроса"}
 		model.ResponseWithJson(w, 400, response)
 		return
 	}
@@ -20,25 +21,29 @@ func (a *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if isSignedUp, response := a.UserCase.IsAlreadySignedUp(newUser.Email); isSignedUp {
+	isSignedUp, response := a.UserCase.IsAlreadySignedUp(newUser.Email)
+	if response != nil && reflect.TypeOf(response) != reflect.TypeOf(model.ErrorDescriptionResponse{}) {
+		a.UserCase.Logger.Logger.Error(err)
+		model.ResponseWithJson(w, 500, nil)
+		return
+	}
+	if isSignedUp {
+		a.UserCase.Logger.Info("Already Signed Up")
 		model.ResponseWithJson(w, 400, response)
-		a.UserCase.Logger.Info("Mail is already used")
 		return
 	}
 
 	err = a.UserCase.AddNewUser(&newUser)
 	if err != nil {
-		response := model.ErrorDescriptionResponse{Description: map[string]string{}}
-		model.ResponseWithJson(w, 500, response)
-		a.UserCase.Logger.Error(err.Error())
+		a.UserCase.Logger.Logger.Error(err)
+		model.ResponseWithJson(w, 500, nil)
 		return
 	}
 
 	err = a.Sessions.SetSession(w, newUser.Id)
 	if err != nil {
-		response := model.ErrorDescriptionResponse{Description: map[string]string{}}
-		model.ResponseWithJson(w, 500, response)
-		a.UserCase.Logger.Error(err.Error())
+		a.UserCase.Logger.Error(err)
+		model.ResponseWithJson(w, 500, nil)
 		return
 	}
 

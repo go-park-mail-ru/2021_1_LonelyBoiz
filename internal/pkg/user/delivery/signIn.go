@@ -7,11 +7,10 @@ import (
 
 func (a *UserHandler) SignIn(w http.ResponseWriter, r *http.Request) {
 	newUser, err := a.UserCase.ParseJsonToUser(r.Body)
-
 	if err != nil {
-		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: model.UserErrorInvalidData}
+		a.UserCase.Logger.Logger.Error(err)
+		response := model.ErrorResponse{Err: "Не удалось прочитать тело запроса"}
 		model.ResponseWithJson(w, 400, response)
-		a.UserCase.Logger.Error(model.UserErrorInvalidData)
 		return
 	}
 
@@ -22,8 +21,15 @@ func (a *UserHandler) SignIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if isCorrect := a.UserCase.CheckPassword(&newUser); !isCorrect {
-		response := model.ErrorResponse{Err: "Неверный логин или пароль"}
+	isCorrect, err := a.UserCase.CheckPassword(&newUser)
+	if err != nil {
+		a.UserCase.Logger.Logger.Error(err)
+		model.ResponseWithJson(w, 500, nil)
+		return
+	}
+	if !isCorrect {
+		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Не удлаось авторизоваться"}
+		response.Description["pass"] = "Неверный пароль"
 		model.ResponseWithJson(w, 401, response)
 		a.UserCase.Logger.Info(response.Err)
 		return
@@ -31,9 +37,8 @@ func (a *UserHandler) SignIn(w http.ResponseWriter, r *http.Request) {
 
 	err = a.Sessions.SetSession(w, newUser.Id)
 	if err != nil {
-		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: err.Error()}
-		model.ResponseWithJson(w, 500, response)
-		a.UserCase.Logger.Error(err.Error())
+		a.UserCase.Logger.Logger.Error(err)
+		model.ResponseWithJson(w, 500, nil)
 		return
 	}
 

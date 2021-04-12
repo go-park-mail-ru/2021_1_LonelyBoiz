@@ -1,7 +1,5 @@
 package repository
 
-import model "server/internal/pkg/models"
-
 func (repo *UserRepository) CreateFeed(userId int) error {
 	_, err := repo.DB.Exec(
 		`INSERT into feed (
@@ -33,25 +31,14 @@ func (repo *UserRepository) CreateFeed(userId int) error {
 	return err
 }
 
-func (repo *UserRepository) GetFeed(userId int) ([]model.User, error) {
-	var feed []model.User
+func (repo *UserRepository) GetFeed(userId int, limit int, offset int) ([]int, error) {
+	var feed []int
 	err := repo.DB.Select(&feed,
-		`SELECT users.id,
-    		users.email,
-    		users.name,
-    		users.city,
-    		users.sex,
-			users.birthday,
-    		users.datePreference,
-    		users.city,
-    		users.description,
-			users.photos,
-			users.isActive,
-			users.isDeleted
-    	FROM feed
-    		join users on userid2 = users.id
-		WHERE userid1 = $1 AND rating = 'empty' LIMIT 20`,
-		userId,
+		`SELECT users.id
+    		FROM feed
+    			join users on userid2 = users.id
+			WHERE userid1 = $1 AND rating = 'empty' LIMIT $2 OFFSET $3 `,
+		userId, limit, offset,
 	)
 	if err != nil {
 		return nil, err

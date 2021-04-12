@@ -1,16 +1,17 @@
 package usecase
 
 import (
-	"github.com/gorilla/websocket"
-	"github.com/sirupsen/logrus"
 	"server/internal/pkg/chat/repository"
 	model "server/internal/pkg/models"
+
+	"github.com/gorilla/websocket"
+	"github.com/sirupsen/logrus"
 )
 
 type ChatUsecase struct {
+	Clients   *map[int]*websocket.Conn
 	Logger    *logrus.Entry
-	Db        *repository.ChatRepository
-	Clients   map[int]*websocket.Conn
+	Db        repository.ChatRepository
 	chatsChan chan *model.Chat
 }
 
@@ -23,12 +24,12 @@ func (u *ChatUsecase) WebSocketResponse() {
 			continue
 		}
 
-		client := u.Clients[partnerId]
+		client := (*u.Clients)[partnerId]
 		err = client.WriteJSON(newMessage)
 		if err != nil {
 			u.Logger.Error(err)
 			client.Close()
-			delete(u.Clients, partnerId)
+			delete((*u.Clients), partnerId)
 		}
 	}
 }

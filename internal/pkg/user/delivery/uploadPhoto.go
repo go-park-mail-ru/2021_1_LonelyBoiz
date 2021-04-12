@@ -34,13 +34,15 @@ func (a *UserHandler) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 
 	photoId, err := a.Db.AddPhoto(id)
 	if err != nil {
-		model.ResponseWithJson(w, 500, err)
+		a.UserCase.Logger.Logger.Error(err)
+		model.ResponseWithJson(w, 500, nil)
 		return
 	}
 
 	err = repository.SavePhoto(photoId, file)
 	if err != nil {
-		model.ResponseWithJson(w, 500, err)
+		a.UserCase.Logger.Logger.Error(err)
+		model.ResponseWithJson(w, 500, nil)
 		return
 	}
 

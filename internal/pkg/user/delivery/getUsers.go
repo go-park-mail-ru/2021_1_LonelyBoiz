@@ -1,77 +1,72 @@
 package delivery
 
 import (
-	"log"
 	"net/http"
 	model "server/internal/pkg/models"
+	"strconv"
 )
 
-//func (a *App) listUsers(newUser model.User) []model.User {
-//	//var mutex = &sync.Mutex{}
-//	//mutex.Lock()
-//	//users := a.Users
-//	//mutex.Unlock()
-//
-//	var usersRet []model.User
-//
-//	for _, v := range users {
-//		if v.Id == newUser.Id {
-//			continue
-//		}
-//
-//		if (v.DatePreference == "both" || v.DatePreference == newUser.Sex) &&
-//			(newUser.DatePreference == "both" || newUser.DatePreference == v.Sex) {
-//			v.PasswordHash = nil
-//			usersRet = append(usersRet, v)
-//		}
-//
-//		if len(usersRet) == 5 {
-//			break
-//		}
-//	}
-//
-//	return usersRet
-//}
-
 func (a *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
-	newUser, err := a.UserCase.ParseJsonToUser(r.Body)
-	if err != nil {
-		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
-		model.ResponseWithJson(w, 400, response)
-		return
-	}
-
-	ctx := r.Context()
-	id, ok := ctx.Value(model.CtxUserId).(int)
+	id, ok := a.Sessions.GetIdFromContext(r.Context())
 	if !ok {
-		log.Println("error: get id from context")
-	}
-
-	if id != newUser.Id {
-		response := model.ErrorResponse{Err: "Отказано в доступе, кука устарела"}
-		model.ResponseWithJson(w, 401, response)
+		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
+		model.ResponseWithJson(w, 403, response)
 		return
 	}
 
-	if !a.UserCase.ValidateSex(newUser.Sex) {
-		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
-		response.Description["sex"] = "Неверно введен пол"
+	query := r.URL.Query()
+	limit, ok := query["limit"]
+	if !ok {
+		response := model.ErrorResponse{Err: "Не указан limit"}
+		model.ResponseWithJson(w, 400, response)
+		return
+	}
+	limitInt, err := strconv.Atoi(limit[0])
+	if err != nil {
+		response := model.ErrorResponse{Err: "Неверный формат limit"}
 		model.ResponseWithJson(w, 400, response)
 		return
 	}
 
-	if !a.UserCase.ValidateDatePreferences(newUser.DatePreference) {
-		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
-		response.Description["datePreferences"] = "Неверно введены предпочтения"
+	offset, ok := query["offset"]
+	if !ok {
+		response := model.ErrorResponse{Err: "Не указан offset"}
+		model.ResponseWithJson(w, 400, response)
+		return
+	}
+	offsetInt, err := strconv.Atoi(offset[0])
+	if err != nil {
+		response := model.ErrorResponse{Err: "Неверный формат offset"}
 		model.ResponseWithJson(w, 400, response)
 		return
 	}
 
-	//response := a.listUsers(newUser)
-	//
-	//responseWithJson(w, 200, response)
-	//
-	//
-	//log.Println("successful get user", response)
+	feed, err := a.Db.GetFeed(id, limitInt, offsetInt)
+	if err != nil {
+		a.UserCase.Logger.Logger.Error(err)
+		model.ResponseWithJson(w, 500, nil)
+		return
+	}
+	if len(feed) < limitInt {
+		err = a.Db.CreateFeed(id)
+		if err != nil {
+			a.UserCase.Logger.Logger.Error(err)
+			model.ResponseWithJson(w, 500, nil)
+			return
+		}
+		feed, err = a.Db.GetFeed(id, limitInt, offsetInt)
+		if err != nil {
+			a.UserCase.Logger.Info(err)
+			model.ResponseWithJson(w, 500, nil)
+			return
+		}
+	}
+	if len(feed) == 0 {
+		response := model.ErrorResponse{Err: "Лента закончилась"}
+		model.ResponseWithJson(w, 503, response)
+		return
+	}
+
+	model.ResponseWithJson(w, 200, feed)
 	return
 }

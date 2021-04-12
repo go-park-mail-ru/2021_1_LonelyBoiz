@@ -1,11 +1,6 @@
 package main
 
 import (
-	"fmt"
-	"github.com/gorilla/mux"
-	"github.com/jmoiron/sqlx"
-	cors2 "github.com/rs/cors"
-	"github.com/sirupsen/logrus"
 	"math/rand"
 	"net/http"
 	"os"
@@ -25,6 +20,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/gorilla/websocket"
 	"github.com/jmoiron/sqlx"
 	cors2 "github.com/rs/cors"
 	"github.com/sirupsen/logrus"
@@ -45,7 +41,7 @@ func (a *App) Start() error {
 		AllowCredentials: true,
 		AllowedMethods:   []string{"GET", "POST", "DELETE", "PATCH", "OPTIONS"},
 		AllowedHeaders:   []string{"Content-Type", "Access-Control-Allow-Headers", "Authorization", "X-Requested-With"},
-		Debug:            false,
+		Debug:            true,
 	})
 
 	corsHandler := cors.Handler(a.router)
@@ -103,20 +99,15 @@ func (a *App) InitializeRoutes(currConfig Config) {
 	messageRep := mesrep.MessageRepository{DB: a.Db}
 	chatRep := chatrep.ChatRepository{DB: a.Db}
 
+	clients := make(map[int]*websocket.Conn)
 	// init uCases & handlers
-	userUcase := usecase.UserUsecase{Db: userRep}
+	userUcase := usecase.UserUsecase{Db: userRep, Clients: &clients}
 	sessionManager := session.SessionsManager{DB: sessionRep}
-
-	chatUcase := usecase2.ChatUsecase{
-		Db:      &chatRep,
-		Clients: make(map[int]*websocket.Conn),
-	}
-
-	messUcase := usecase3.MessageUsecase{
-		Db: messageRep,
-	}
+	chatUcase := usecase2.ChatUsecase{Db: chatRep, Clients: &clients}
+	messUcase := usecase3.MessageUsecase{Db: messageRep, Clients: &clients}
 
 	chatHandler := delivery.ChatHandler{
+		Db:       chatRep,
 		Sessions: &sessionManager,
 		Usecase:  &chatUcase,
 	}
@@ -129,7 +120,7 @@ func (a *App) InitializeRoutes(currConfig Config) {
 
 	userHandler := handler.UserHandler{
 		Db:       userRep,
-		UserCase: userUcase,
+		UserCase: &userUcase,
 		Sessions: &sessionManager,
 	}
 
@@ -150,7 +141,7 @@ func (a *App) InitializeRoutes(currConfig Config) {
 	subRouter.Use(checkcookiem.Middleware)
 
 	subRouter.HandleFunc("/users/{id:[0-9]+}", userHandler.GetUserInfo).Methods("GET")
-	//subRouter.HandleFunc("/users", userHandler.GetUsers).Methods("GET")
+	subRouter.HandleFunc("/feed", userHandler.GetUsers).Methods("GET")
 	subRouter.HandleFunc("/auth", userHandler.GetLogin).Methods("GET")
 	subRouter.HandleFunc("/users/{id:[0-9]+}", userHandler.DeleteUser).Methods("DELETE")
 	subRouter.HandleFunc("/users/{id:[0-9]+}", userHandler.ChangeUserInfo).Methods("PATCH")

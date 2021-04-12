@@ -1,10 +1,8 @@
 package delivery
 
 import (
-	"encoding/json"
-	"log"
-	"github.com/gorilla/mux"
 	"net/http"
+	"reflect"
 	model "server/internal/pkg/models"
 	"strconv"
 
@@ -12,32 +10,47 @@ import (
 )
 
 func (a *UserHandler) ChangeUserInfo(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	userId, err := strconv.Atoi(vars["id"])
-
-	id, ok := a.Sessions.GetIdFromContext(r.Context())
-
-	if !ok || err != nil || id != userId {
+	cookieId, ok := a.Sessions.GetIdFromContext(r.Context())
+	if !ok {
 		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
 		model.ResponseWithJson(w, 403, response)
 		a.UserCase.Logger.Info(response.Err)
 		return
 	}
 
-	newUser, err := a.UserCase.ParseJsonToUser(r.Body)
+	vars := mux.Vars(r)
+	userId, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: model.UserErrorInvalidData}
+		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
+		response.Description["id"] = "Юзера с таким id нет"
 		model.ResponseWithJson(w, 400, response)
-		a.UserCase.Logger.Info(response.Err)
 		return
 	}
 
-	var response error
+	if cookieId != userId {
+		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
+		response.Description["id"] = "Пытаешься удалить не себя"
+		model.ResponseWithJson(w, 403, response)
+		return
+	}
+
+	newUser, err := a.UserCase.ParseJsonToUser(r.Body)
+	if err != nil {
+		a.UserCase.Logger.Logger.Error(err)
+		response := model.ErrorResponse{Err: "Не удалось прочитать тело запроса"}
+		model.ResponseWithJson(w, 400, response)
+		return
+	}
+
 	if newUser.Password != "" {
-		response = a.UserCase.ChangeUserPassword(&newUser)
-		if response != nil {
-			model.ResponseWithJson(w, 400, response)
-			a.UserCase.Logger.Info(response.Error())
+		err := a.UserCase.ChangeUserPassword(&newUser)
+		if err != nil {
+			if reflect.TypeOf(err) != reflect.TypeOf(model.ErrorDescriptionResponse{}) {
+				a.UserCase.Logger.Logger.Error(err)
+				model.ResponseWithJson(w, 500, nil)
+				return
+			}
+			model.ResponseWithJson(w, 400, err)
 			return
 		}
 		newUser.Password = ""
@@ -46,13 +59,18 @@ func (a *UserHandler) ChangeUserInfo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	newUser.Id = userId
-	response = a.UserCase.ChangeUserProperties(&newUser)
-	if response != nil {
-		model.ResponseWithJson(w, 400, response)
-		a.UserCase.Logger.Info(response.Error())
+	err = a.UserCase.ChangeUserProperties(&newUser)
+	if err != nil {
+		if reflect.TypeOf(err) != reflect.TypeOf(model.ErrorDescriptionResponse{}) {
+			a.UserCase.Logger.Logger.Error(err)
+			model.ResponseWithJson(w, 500, nil)
+			return
+		}
+		model.ResponseWithJson(w, 400, err)
 		return
 	}
 
+	newUser.PasswordHash = nil
 	model.ResponseWithJson(w, 200, newUser)
 
 	a.UserCase.Logger.Info("Success Change User Info")

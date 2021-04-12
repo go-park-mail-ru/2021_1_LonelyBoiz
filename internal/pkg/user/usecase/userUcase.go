@@ -1,22 +1,22 @@
 package usecase
 
 import (
-	model "server/internal/pkg/models"
-	"server/internal/pkg/user/repository"
-
 	"encoding/json"
-	"github.com/asaskevich/govalidator"
-	"github.com/sirupsen/logrus"
-	"golang.org/x/crypto/bcrypt"
-	"golang.org/x/crypto/sha3"
 	"io"
 	model "server/internal/pkg/models"
 	"server/internal/pkg/user/repository"
+
+	"github.com/asaskevich/govalidator"
+	"github.com/gorilla/websocket"
+	"github.com/sirupsen/logrus"
+	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/crypto/sha3"
 )
 
 type UserUsecase struct {
-	Db     repository.UserRepository
-	Logger *logrus.Entry
+	Clients *map[int]*websocket.Conn
+	Db      repository.UserRepository
+	Logger  *logrus.Entry
 }
 
 func (u *UserUsecase) ValidateSex(sex string) bool {
@@ -35,34 +35,31 @@ func (u *UserUsecase) ValidateDatePreferences(pref string) bool {
 	return true
 }
 
-func (u *UserUsecase) checkPasswordForCHanging(newUser model.User) bool {
+func (u *UserUsecase) checkPasswordForCHanging(newUser model.User) (bool, error) {
 	oldUserPass, err := u.Db.GetPass(newUser.Id)
 	if err != nil {
-		return false
+		return false, err
 	}
 
 	pass := sha3.New512()
 	pass.Write([]byte(newUser.OldPassword))
 	err = bcrypt.CompareHashAndPassword(oldUserPass, pass.Sum(nil))
 	if err != nil {
-		return false
+		return false, err
 	}
 
-	return true
+	return true, err
 }
 
 func (u *UserUsecase) ChangeUserProperties(newUser *model.User) error {
-
 	bufUser, err := u.Db.GetUser(newUser.Id)
 	if err != nil {
-		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: err.Error()}
-		response.Description["id"] = "Пользователя с таким id нет"
-		return response
+		return err
 	}
 
 	if newUser.Email != "" {
 		if !govalidator.IsEmail(newUser.Email) {
-			response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
+			response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Не удалось поменять данные"}
 			response.Description["mail"] = "Почта не прошла валидацию"
 			return response
 		}
@@ -110,8 +107,7 @@ func (u *UserUsecase) ChangeUserProperties(newUser *model.User) error {
 
 	err = u.Db.ChangeUser(bufUser)
 	if err != nil {
-		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: err.Error()}
-		return response
+		return err
 	}
 
 	*newUser = bufUser
@@ -132,7 +128,11 @@ func (u *UserUsecase) ChangeUserPassword(newUser *model.User) error {
 		return response
 	}
 
-	if !u.checkPasswordForCHanging(*newUser) {
+	ok, err := u.checkPasswordForCHanging(*newUser)
+	if err != nil {
+		return err
+	}
+	if !ok {
 		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
 		response.Description["password"] = "Неверный пароль"
 		return response
@@ -140,16 +140,12 @@ func (u *UserUsecase) ChangeUserPassword(newUser *model.User) error {
 
 	hash, err := u.HashPassword(newUser.Password)
 	if err != nil {
-		response.Err = err.Error()
-		response.Description["password"] = "Не удалось поменять пароль"
-		return response
+		return err
 	}
 
 	err = u.Db.ChangePassword(newUser.Id, hash)
 	if err != nil {
-		response.Err = err.Error()
-		response.Description["password"] = "Не удалось поменять пароль"
-		return response
+		return err
 	}
 
 	return nil
@@ -175,22 +171,22 @@ func (u *UserUsecase) ValidateSignInData(newUser model.User) (bool, error) {
 	return true, nil
 }
 
-func (u *UserUsecase) CheckPassword(newUser *model.User) bool {
+func (u *UserUsecase) CheckPassword(newUser *model.User) (bool, error) {
 	user, err := u.Db.SignIn(newUser.Email)
 	if err != nil || user.IsDeleted == true {
-		return false
+		return false, err
 	}
 
 	pass := sha3.New512()
 	pass.Write([]byte(newUser.Password))
 	err = bcrypt.CompareHashAndPassword(user.PasswordHash, pass.Sum(nil))
 	if err != nil {
-		return false
+		return false, err
 	}
 
 	*newUser = user
 
-	return true
+	return true, nil
 }
 
 func (u *UserUsecase) ValidateSignUpData(newUser model.User) error {
@@ -218,9 +214,7 @@ func (u *UserUsecase) ValidateSignUpData(newUser model.User) error {
 func (u *UserUsecase) IsAlreadySignedUp(newEmail string) (bool, error) {
 	isSignUp, err := u.Db.CheckMail(newEmail)
 	if err != nil {
-		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: err.Error()}
-		response.Description["mail"] = "Ошибка при поиске почты"
-		return true, response
+		return true, err
 	}
 	if isSignUp == true {
 		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Не удалось зарегистрироваться"}
@@ -235,7 +229,11 @@ func (u *UserUsecase) HashPassword(pass string) ([]byte, error) {
 	firstHash := sha3.New512()
 	firstHash.Write([]byte(pass))
 	secondHash, err := bcrypt.GenerateFromPassword(firstHash.Sum(nil), 14)
-	return secondHash, err
+	if err != nil {
+		return nil, err
+	}
+
+	return secondHash, nil
 }
 
 func isActive(newUser *model.User) {
@@ -260,8 +258,7 @@ func (u *UserUsecase) AddNewUser(newUser *model.User) error {
 
 	id, err := u.Db.AddUser(*newUser)
 	if err != nil {
-		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: err.Error()}
-		return response
+		return err
 	}
 
 	newUser.Id = id

@@ -15,7 +15,7 @@ type User struct {
 	SecondPassword string `json:"passwordRepeat,omitempty" valid:"length(8|64)"`
 	PasswordHash   []byte `json:",omitempty"`
 	OldPassword    string `json:"passwordOld,omitempty"`
-	Name           string `json:"name"` // Введите имя
+	Name           string `json:"name"`
 	Birthday       int64  `json:"birthday" valid:"ageValid~Вам должно быть 18!"`
 	Description    string `json:"description"`
 	City           string `json:"city"`

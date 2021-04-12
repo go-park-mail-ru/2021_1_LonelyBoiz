@@ -8,6 +8,6 @@ import (
 
 type UserHandler struct {
 	Db       repository.UserRepository
-	UserCase usecase.UserUsecase
+	UserCase *usecase.UserUsecase
 	Sessions *session.SessionsManager
 }

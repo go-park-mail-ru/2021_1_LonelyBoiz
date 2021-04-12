@@ -8,16 +8,17 @@ import (
 func (a *UserHandler) LogOut(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("token")
 	if err != nil {
-		model.ResponseWithJson(w, 400, err)
+		a.UserCase.Logger.Logger.Error(err)
+		response := model.ErrorResponse{Err: "Не удалось взять куку"}
+		model.ResponseWithJson(w, 400, response)
 		return
 	}
 
 	err = a.Sessions.DeleteSession(cookie)
 	http.SetCookie(w, cookie)
 	if err != nil {
-		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: err.Error()}
-		model.ResponseWithJson(w, 500, response)
-		a.UserCase.Logger.Error(err.Error())
+		a.UserCase.Logger.Logger.Error(err)
+		model.ResponseWithJson(w, 500, nil)
 		return
 	}
 

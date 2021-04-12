@@ -16,6 +16,7 @@ func (a *UserHandler) GetLogin(w http.ResponseWriter, r *http.Request) {
 
 	userInfo, err := a.Db.GetUser(id)
 	if err != nil {
+		a.UserCase.Logger.Error(err)
 		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: err.Error()}
 		response.Description["id"] = "Пользователя с таким id нет"
 		model.ResponseWithJson(w, 401, response)
