@@ -150,6 +150,7 @@ func (repo *UserRepository) SignIn(email string) (model.User, error) {
     		description,
     		city,
     		sex,
+			passwordhash,
     		datepreference,
     		isactive,
     		isdeleted
