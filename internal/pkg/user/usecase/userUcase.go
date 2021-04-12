@@ -63,6 +63,16 @@ func (u *UserUsecase) ChangeUserProperties(newUser *model.User) error {
 			response.Description["mail"] = "Почта не прошла валидацию"
 			return response
 		}
+		isSignedUp, response := u.IsAlreadySignedUp(newUser.Email)
+		if response != nil {
+			return response
+		}
+		if isSignedUp {
+			response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Не удалось поменять данные"}
+			response.Description["mail"] = "Почта занята"
+			return response
+		}
+
 		bufUser.Email = newUser.Email
 	}
 
