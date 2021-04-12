@@ -36,7 +36,7 @@ func (u *UserUsecase) ValidateDatePreferences(pref string) bool {
 }
 
 func (u *UserUsecase) checkPasswordForCHanging(newUser model.User) (bool, error) {
-	oldUserPass, err := u.Db.GetPass(newUser.Id)
+	oldUserPass, err := u.Db.GetPass(newUser.Email)
 	if err != nil {
 		return false, err
 	}
