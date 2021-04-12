@@ -153,7 +153,7 @@ func (repo *UserRepository) SignIn(email string) (model.User, error) {
     		datepreference,
     		isactive,
     		isdeleted
-		FROM users WHERE id = $1 WHERE email = $1`, email)
+		FROM users WHERE email = $1`, email)
 	if err != nil {
 		return model.User{}, err
 	}
