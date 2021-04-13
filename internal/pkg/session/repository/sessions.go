@@ -26,6 +26,9 @@ func (repo *SessionRepository) GetCookie(token string) (int, error) {
 	if err != nil {
 		return -1, err
 	}
+	if len(id) == 0 {
+		return -1, nil
+	}
 
 	return id[0], nil
 }

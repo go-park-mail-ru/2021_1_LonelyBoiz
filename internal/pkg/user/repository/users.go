@@ -224,6 +224,9 @@ func (repo *UserRepository) GetPhoto(photoId int) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	if len(image) == 0 {
+		return "", nil
+	}
 
 	return image[0], nil
 }
@@ -295,6 +298,9 @@ func (repo *UserRepository) GetNewChatById(chatId int, userId int) (model.Chat, 
 	if err != nil {
 		return model.Chat{}, err
 	}
+	if len(chats) == 0 {
+		return model.Chat{}, nil
+	}
 
 	err = repo.DB.Select(&chats[0].Photos, `SELECT photoId FROM photos WHERE userid = $1`, chats[0].PartnerId)
 	if err != nil {
@@ -335,6 +341,9 @@ func (repo *UserRepository) GetChatById(chatId int, userId int) (model.Chat, err
 	)
 	if err != nil {
 		return model.Chat{}, err
+	}
+	if len(chats) == 0 {
+		return model.Chat{}, nil
 	}
 
 	err = repo.DB.Select(&chats[0].Photos, `SELECT photoId FROM photos WHERE userid = $1`, chats[0].PartnerId)
