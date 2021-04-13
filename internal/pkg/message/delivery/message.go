@@ -86,6 +86,9 @@ func (m *MessageHandler) GetMessages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if len(messages) == 0 {
+		messages = make([]model.Message, 0)
+	}
 	model.ResponseWithJson(w, 200, messages)
 }
 

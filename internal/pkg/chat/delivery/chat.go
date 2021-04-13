@@ -75,5 +75,8 @@ func (c *ChatHandler) GetChats(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if len(chats) == 0 {
+		chats = make([]model.Chat, 0)
+	}
 	model.ResponseWithJson(w, 200, chats)
 }
