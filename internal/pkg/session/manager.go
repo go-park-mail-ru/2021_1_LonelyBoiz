@@ -33,7 +33,7 @@ func (session *SessionsManager) SetSession(w http.ResponseWriter, id int) error 
 		Name:     "token",
 		Value:    key,
 		Expires:  expiration,
-		SameSite: http.SameSiteNoneMode,
+		SameSite: http.SameSiteLaxMode,
 		Secure:   false,
 		Domain:   "localhost:8000",
 		HttpOnly: true,

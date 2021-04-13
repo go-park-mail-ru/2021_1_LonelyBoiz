@@ -29,19 +29,6 @@ func (a *UserHandler) DownloadPhoto(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ok, err = a.Db.CheckPhoto(photoId, userId)
-	if err != nil {
-		a.UserCase.Logger.Error(err)
-		model.ResponseWithJson(w, 500, err)
-		return
-	}
-	if !ok {
-		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
-		response.Description["image"] = "Пытаешься получить не свое фото"
-		model.ResponseWithJson(w, 403, response)
-		return
-	}
-
 	res, err := a.Db.GetPhoto(userId, photoId)
 	if err != nil {
 		a.UserCase.Logger.Error(err)
