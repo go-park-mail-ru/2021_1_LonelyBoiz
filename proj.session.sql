@@ -15,6 +15,7 @@ CREATE TABLE users (
     description varchar(250),
     city varchar(50),
     sex varchar(10),
+    instagram varchar(70),
     datePreference varchar(10),
     isActive BOOLEAN NOT NULL,
     isDeleted BOOLEAN NOT NULL
