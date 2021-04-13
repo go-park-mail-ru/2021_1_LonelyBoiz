@@ -218,7 +218,7 @@ func (repo *UserRepository) AddPhoto(userId int, image string) (int, error) {
 func (repo *UserRepository) GetPhoto(photoId int) (string, error) {
 	var image []string
 	err := repo.DB.Select(&image,
-		`SELECT value FROM photos WHERE and photoId = $1`,
+		`SELECT value FROM photos WHERE photoId = $1`,
 		photoId,
 	)
 	if err != nil {
