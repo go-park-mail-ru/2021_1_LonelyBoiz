@@ -193,6 +193,10 @@ func (repo *UserRepository) SignIn(email string) (model.User, error) {
 	if len(user) == 0 {
 		return model.User{}, errors.New("пользователь не найден")
 	}
+	err = repo.DB.Select(&user[0].Photos, `SELECT photoId FROM photos WHERE userid = $1`, user[0].Id)
+	if err != nil {
+		return model.User{}, err
+	}
 
 	return user[0], nil
 }
@@ -298,7 +302,6 @@ func (repo *UserRepository) GetChatById(chatId int, userId int) (model.Chat, err
 
 	err = repo.DB.Select(&chats[0].Photos, `SELECT photoId FROM photos WHERE userid = $1`, chats[0].PartnerId)
 	if err != nil {
-		fmt.Println(err)
 		return model.Chat{}, err
 	}
 

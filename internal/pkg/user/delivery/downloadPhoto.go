@@ -1,9 +1,12 @@
 package delivery
 
 import (
+	"encoding/base64"
+	"fmt"
 	"net/http"
 	model "server/internal/pkg/models"
 	"strconv"
+	"strings"
 
 	"github.com/gorilla/mux"
 )
@@ -46,7 +49,20 @@ func (a *UserHandler) DownloadPhoto(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	model.ResponseWithJson(w, 200, res)
+	res = res[strings.IndexByte(res, ',')+1:]
+	res = res[0 : len(res)-1]
+	bytes, err := base64.StdEncoding.DecodeString(res)
+	if err != nil {
+		fmt.Println(err)
+		fmt.Println("Decode error")
+	}
+	w.Header().Set("Content-Type", "image/*")
+	_, err = w.Write(bytes)
+	if err != nil {
+		fmt.Println("Bytes error")
+	}
+
+	//model.ResponseWithJson(w, 200, res)
 
 	/*img, err := repository.GetPhoto(photoId)
 	if err != nil {

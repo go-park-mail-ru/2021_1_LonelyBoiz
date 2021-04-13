@@ -48,6 +48,10 @@ func (a *UserHandler) SignIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if len(newUser.Photos) == 0 {
+		newUser.Photos = make([]int, 0)
+	}
+
 	newUser.PasswordHash = nil
 	model.ResponseWithJson(w, 200, newUser)
 

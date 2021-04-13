@@ -50,6 +50,10 @@ func (a *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 	newUser.Password = ""
 	newUser.SecondPassword = ""
 	newUser.PasswordHash = nil
+	if len(newUser.Photos) == 0 {
+		newUser.Photos = make([]int, 0)
+	}
+
 	model.ResponseWithJson(w, 200, newUser)
 	a.UserCase.Logger.Info("Success SignUp")
 }
