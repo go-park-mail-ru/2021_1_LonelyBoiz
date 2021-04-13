@@ -53,7 +53,6 @@ func (a *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 	if len(newUser.Photos) == 0 {
 		newUser.Photos = make([]int, 0)
 	}
-
 	model.ResponseWithJson(w, 200, newUser)
 	a.UserCase.Logger.Info("Success SignUp")
 }

@@ -18,7 +18,7 @@ func (a *UserHandler) GetUserInfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userInfo, err := a.Db.GetUser(userId)
+	userInfo, err := a.UserCase.Db.GetUser(userId)
 	if err != nil {
 		a.UserCase.Logger.Error(err)
 		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Неправильные входные данные"}

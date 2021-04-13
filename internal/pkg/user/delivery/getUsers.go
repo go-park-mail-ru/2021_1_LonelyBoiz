@@ -28,20 +28,20 @@ func (a *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	feed, err := a.Db.GetFeed(id, limitInt)
+	feed, err := a.UserCase.Db.GetFeed(id, limitInt)
 	if err != nil {
 		a.UserCase.Logger.Logger.Error(err)
 		model.ResponseWithJson(w, 500, nil)
 		return
 	}
 	if len(feed) < limitInt {
-		err = a.Db.CreateFeed(id)
+		err = a.UserCase.Db.CreateFeed(id)
 		if err != nil {
 			a.UserCase.Logger.Logger.Error(err)
 			model.ResponseWithJson(w, 500, nil)
 			return
 		}
-		feed, err = a.Db.GetFeed(id, limitInt)
+		feed, err = a.UserCase.Db.GetFeed(id, limitInt)
 		if err != nil {
 			a.UserCase.Logger.Info(err)
 			model.ResponseWithJson(w, 500, nil)

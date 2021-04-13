@@ -33,7 +33,7 @@ func (a *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = a.Db.DeleteUser(userId)
+	err = a.UserCase.Db.DeleteUser(userId)
 	if err != nil {
 		a.UserCase.Logger.Error(err)
 		model.ResponseWithJson(w, 500, nil)

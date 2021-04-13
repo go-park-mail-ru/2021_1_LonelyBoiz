@@ -31,12 +31,12 @@ func (logger *LoggerMiddleware) Middleware(next http.Handler) http.Handler {
 			"remote_addr": r.RemoteAddr,
 			"user_agent":  r.UserAgent(),
 			"work_time":   time.Since(start),
+			"time":        time.Now(),
 		})
 
 		logger.User.Sessions.Logger = logger.User.UserCase.Logger
 		logger.Chat.Usecase.Logger = logger.User.UserCase.Logger
 		logger.Message.Usecase.Logger = logger.User.UserCase.Logger
-
 		logger.User.UserCase.Logger.Info("Entry")
 
 		next.ServeHTTP(w, r)

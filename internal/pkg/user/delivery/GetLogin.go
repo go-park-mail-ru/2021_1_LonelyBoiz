@@ -14,7 +14,7 @@ func (a *UserHandler) GetLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userInfo, err := a.Db.GetUser(id)
+	userInfo, err := a.UserCase.Db.GetUser(id)
 	if err != nil {
 		a.UserCase.Logger.Error(err)
 		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: err.Error()}
