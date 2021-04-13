@@ -34,8 +34,8 @@ func (session *SessionsManager) SetSession(w http.ResponseWriter, id int) error 
 		Value:    key,
 		Expires:  expiration,
 		SameSite: http.SameSiteNoneMode,
-		Secure:   false,
-		Domain:   "95.163.213.222:8000",
+		Secure:   true,
+		Domain:   "p1ckle.herokuapp.com",
 		HttpOnly: true,
 	}
 

@@ -1,10 +1,8 @@
 package delivery
 
 import (
-	"io"
 	"net/http"
 	model "server/internal/pkg/models"
-	"server/internal/pkg/user/repository"
 	"strconv"
 
 	"github.com/gorilla/mux"
@@ -41,7 +39,16 @@ func (a *UserHandler) DownloadPhoto(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	img, err := repository.GetPhoto(photoId)
+	res, err := a.Db.GetPhoto(userId, photoId)
+	if err != nil {
+		a.UserCase.Logger.Error(err)
+		model.ResponseWithJson(w, 500, err)
+		return
+	}
+
+	model.ResponseWithJson(w, 200, res)
+
+	/*img, err := repository.GetPhoto(photoId)
 	if err != nil {
 		a.UserCase.Logger.Error(err)
 		model.ResponseWithJson(w, 500, err)
@@ -60,5 +67,6 @@ func (a *UserHandler) DownloadPhoto(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "image/png")
 	w.Header().Set("Content-Length", strconv.Itoa(int(fileInfo.Size())))
-	w.WriteHeader(200)
+	w.WriteHeader(200)*/
+
 }

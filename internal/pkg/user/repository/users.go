@@ -197,18 +197,32 @@ func (repo *UserRepository) SignIn(email string) (model.User, error) {
 	return user[0], nil
 }
 
-func (repo *UserRepository) AddPhoto(userId int) (int, error) {
+func (repo *UserRepository) AddPhoto(userId int, image string) (int, error) {
 	var photoId int
 
 	err := repo.DB.QueryRowx(
-		`INSERT INTO photos (userid) VALUES ($1) RETURNING photoId;`,
-		userId,
+		`INSERT INTO photos (userid, value) VALUES ($1, $2) RETURNING photoId;`,
+		userId, image,
 	).Scan(&photoId)
 	if err != nil {
 		return -1, err
 	}
 
 	return photoId, nil
+}
+
+func (repo *UserRepository) GetPhoto(userId int, photoId int) (string, error) {
+	var image string
+
+	err := repo.DB.Select(&image,
+		`SELECT value FROM photos WHERE userid = $1 and photoId = $2`,
+		userId, photoId,
+	)
+	if err != nil {
+		return "", err
+	}
+
+	return image, nil
 }
 
 func (repo *UserRepository) CheckPhoto(photoId int, userId int) (bool, error) {
