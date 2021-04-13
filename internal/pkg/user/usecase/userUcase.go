@@ -135,7 +135,10 @@ func (u *UserUsecase) ChangeUserProperties(newUser *model.User) error {
 		bufUser.DatePreference = newUser.DatePreference
 	}
 
-	isActive(&bufUser)
+	err = u.isActive(&bufUser)
+	if err != nil {
+		return err
+	}
 
 	err = u.Db.ChangeUser(bufUser)
 	if err != nil {
@@ -250,13 +253,19 @@ func (u *UserUsecase) HashPassword(pass string) ([]byte, error) {
 	return secondHash, nil
 }
 
-func isActive(newUser *model.User) {
-	if len(newUser.Name) != 0 && len(newUser.DatePreference) != 0 && len(newUser.Sex) != 0 {
+func (u *UserUsecase) isActive(newUser *model.User) error {
+	photos, err := u.Db.GetPhotos(newUser.Id)
+	if err != nil {
+		return err
+	}
+
+	if len(newUser.Name) != 0 && len(newUser.DatePreference) != 0 && len(newUser.Sex) != 0 && len(photos) != 0 {
 		newUser.IsActive = true
-		return
+		return nil
 	}
 
 	newUser.IsActive = false
+	return nil
 }
 
 func (u *UserUsecase) AddNewUser(newUser *model.User) error {
@@ -268,7 +277,10 @@ func (u *UserUsecase) AddNewUser(newUser *model.User) error {
 	newUser.Password = ""
 	newUser.SecondPassword = ""
 
-	isActive(newUser)
+	err = u.isActive(newUser)
+	if err != nil {
+		return err
+	}
 
 	id, err := u.Db.AddUser(*newUser)
 	if err != nil {
