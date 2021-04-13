@@ -48,6 +48,7 @@ func (a *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	// очистить ленту
 
 	if len(feed) == 0 {
 		feed = make([]int, 0)

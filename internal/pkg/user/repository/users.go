@@ -270,7 +270,7 @@ func (repo *UserRepository) CreateChat(userId1 int, userId2 int) (int, error) {
 			VALUES (
         	$1,
         	$2
-    	) RETURNING chatid`,
+    	) RETURNING id`,
 		userId1, userId2,
 	).Scan(&chatId)
 	if err != nil {
@@ -278,6 +278,31 @@ func (repo *UserRepository) CreateChat(userId1 int, userId2 int) (int, error) {
 	}
 
 	return chatId, err
+}
+
+func (repo *UserRepository) GetNewChatById(chatId int, userId int) (model.Chat, error) {
+	var chats []model.Chat
+	err := repo.DB.Select(&chats,
+		`SELECT chats.id AS chatId,
+    		users.id AS partnerId,
+    		users.name AS partnerName,
+		FROM chats
+    		JOIN users ON (users.id <> $1 AND (users.id = chats.userid2 OR users.id = chats.userid1))
+		WHERE chats.userid1 = $1 OR chats.userid2 = $1
+		ORDER BY lastMessageTime`,
+		chatId, userId,
+	)
+	if err != nil {
+		return model.Chat{}, err
+	}
+
+	err = repo.DB.Select(&chats[0].Photos, `SELECT photoId FROM photos WHERE userid = $1`, chats[0].PartnerId)
+	if err != nil {
+		return model.Chat{}, err
+	}
+
+	return chats[0], nil
+
 }
 
 func (repo *UserRepository) GetChatById(chatId int, userId int) (model.Chat, error) {
