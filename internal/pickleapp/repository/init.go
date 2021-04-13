@@ -8,7 +8,7 @@ import (
 )
 
 func getPostgres() *sql.DB {
-	dsn := "postgresql://localhost/database_name"
+	dsn := "user=ubuntu dbname=tinder host=127.0.0.1 port=5432 sslmode=disable"
 	db, err := sql.Open("pgx", dsn)
 	if err != nil {
 		fmt.Println("cant parse config", err)
