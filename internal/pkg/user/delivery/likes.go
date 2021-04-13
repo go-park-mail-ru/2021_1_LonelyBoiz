@@ -52,7 +52,7 @@ func (a *UserHandler) LikesHandler(w http.ResponseWriter, r *http.Request) {
 		model.ResponseWithJson(w, 500, nil)
 		return
 	}
-	if reciprocity == false {
+	if reciprocity == false || like.Reaction == "skip" {
 		w.WriteHeader(204)
 		return
 	}
@@ -89,8 +89,6 @@ func (a *UserHandler) WebSocketChatResponse() {
 		client, ok := (*a.UserCase.Clients)[newChat.PartnerId]
 		if !ok {
 			a.UserCase.Logger.Info("Пользователь с id = ", newChat.PartnerId, " не в сети")
-			client.Close()
-			delete(*a.UserCase.Clients, newChat.PartnerId)
 			continue
 		}
 
