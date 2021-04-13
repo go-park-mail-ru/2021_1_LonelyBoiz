@@ -228,6 +228,19 @@ func (repo *UserRepository) GetPhoto(photoId int) (string, error) {
 	return image[0], nil
 }
 
+func (repo *UserRepository) GetPhotos(userId int) ([]int, error) {
+	var photos []int
+	err := repo.DB.Select(&photos, `SELECT photoId FROM photos WHERE userId = $1`, userId)
+	if err != nil {
+		return nil, err
+	}
+	if len(photos) == 0 {
+		return make([]int, 0), nil
+	}
+
+	return photos, nil
+}
+
 func (repo *UserRepository) CheckPhoto(photoId int, userId int) (bool, error) {
 	var idFromDB []int
 	err := repo.DB.Select(&idFromDB, `SELECT userId FROM photos WHERE photoId = $1`, photoId)

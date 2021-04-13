@@ -41,7 +41,7 @@ func (a *App) Start() error {
 		AllowCredentials: true,
 		AllowedMethods:   []string{"GET", "POST", "DELETE", "PATCH", "OPTIONS"},
 		AllowedHeaders:   []string{"Content-Type", "Access-Control-Allow-Headers", "Authorization", "X-Requested-With"},
-		Debug:            true,
+		Debug:            false,
 	})
 
 	corsHandler := cors.Handler(a.router)

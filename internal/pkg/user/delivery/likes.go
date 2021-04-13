@@ -66,6 +66,13 @@ func (a *UserHandler) LikesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	newChat.PartnerId = like.UserId
+	newChat.Photos, err = a.Db.GetPhotos(newChat.PartnerId)
+	if err != nil {
+		a.UserCase.Logger.Error(err)
+		model.ResponseWithJson(w, 500, nil)
+		return
+	}
+
 	go chatsWriter(&newChat)
 
 	model.ResponseWithJson(w, 200, newChat)
@@ -91,6 +98,10 @@ func (a *UserHandler) WebSocketChatResponse() {
 		if err != nil {
 			a.UserCase.Logger.Error("Пользователь с id = ", newChat.PartnerId, " не найден")
 			continue
+		}
+
+		if len(newChatToSend.Photos) == 0 {
+			newChatToSend.Photos = make([]int, 0)
 		}
 
 		response := model.WebsocketReesponse{ResponseType: "chat", Object: newChatToSend}
