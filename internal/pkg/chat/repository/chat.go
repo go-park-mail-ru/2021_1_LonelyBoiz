@@ -52,6 +52,9 @@ func (repo *ChatRepository) GetChats(userId int, limit int, offset int) ([]model
 			fmt.Println(err)
 			return nil, err
 		}
+		if len(chats[i].Photos) == 0 {
+			chats[i].Photos = make([]int, 0)
+		}
 	}
 	return chats, nil
 }

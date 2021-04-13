@@ -49,6 +49,9 @@ func (a *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	if len(feed) == 0 {
+		feed = make([]int, 0)
+	}
 	model.ResponseWithJson(w, 200, feed)
 	return
 }

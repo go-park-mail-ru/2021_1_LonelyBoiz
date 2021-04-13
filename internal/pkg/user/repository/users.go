@@ -91,6 +91,9 @@ func (repo *UserRepository) GetUser(id int) (model.User, error) {
 		fmt.Println(err)
 		return model.User{}, err
 	}
+	if len(user[0].Photos) == 0 {
+		user[0].Photos = make([]int, 0)
+	}
 
 	return user[0], nil
 }
