@@ -296,8 +296,7 @@ func (u *UserUsecase) AddNewUser(newUser *model.User) error {
 
 func (u *UserUsecase) ParseJsonToUser(body io.ReadCloser) (model.User, error) {
 	var newUser model.User
-	cleanBody := u.Sanitizer.SanitizeReader(body)
-	decoder := json.NewDecoder(cleanBody)
+	decoder := json.NewDecoder(body)
 	err := decoder.Decode(&newUser)
 	defer body.Close()
 	return newUser, err

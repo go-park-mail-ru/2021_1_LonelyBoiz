@@ -21,8 +21,7 @@ type MessageUsecase struct {
 
 func (m MessageUsecase) ParseJsonToMessage(body io.ReadCloser) (model.Message, error) {
 	var message model.Message
-	cleanBody := m.Sanitizer.SanitizeReader(body)
-	decoder := json.NewDecoder(cleanBody)
+	decoder := json.NewDecoder(body)
 	err := decoder.Decode(&message)
 	defer body.Close()
 	return message, err
