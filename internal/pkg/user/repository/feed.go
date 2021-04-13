@@ -1,5 +1,14 @@
 package repository
 
+func (repo *UserRepository) ClearFeed(userId int) error {
+	_, err := repo.DB.Exec(
+		`UPDATE feed SET rating = 'empty' WHERE userid1 = $1 AND rating = 'skip'`,
+		userId,
+	)
+
+	return err
+}
+
 func (repo *UserRepository) CreateFeed(userId int) error {
 	_, err := repo.DB.Exec(
 		`INSERT into feed (
