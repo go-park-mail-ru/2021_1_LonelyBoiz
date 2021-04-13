@@ -2,7 +2,7 @@ package repository
 
 func (repo *UserRepository) ClearFeed(userId int) error {
 	_, err := repo.DB.Exec(
-		`UPDATE feed SET reaction = 'empty' WHERE id = $1`,
+		`UPDATE feed SET reaction = 'empty' WHERE userid1 = $1 AND reaction = 'skip`,
 		userId,
 	)
 
