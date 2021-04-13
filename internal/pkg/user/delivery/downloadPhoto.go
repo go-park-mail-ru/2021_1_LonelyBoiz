@@ -12,7 +12,7 @@ import (
 )
 
 func (a *UserHandler) DownloadPhoto(w http.ResponseWriter, r *http.Request) {
-	userId, ok := a.Sessions.GetIdFromContext(r.Context())
+	_, ok := a.Sessions.GetIdFromContext(r.Context())
 	if !ok {
 		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
 		model.ResponseWithJson(w, 403, response)
