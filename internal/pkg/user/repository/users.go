@@ -201,7 +201,7 @@ func (repo *UserRepository) AddPhoto(userId int) (int, error) {
 	var photoId int
 
 	err := repo.DB.QueryRowx(
-		`INSERT INTO photos (userid) VALUES (&1) RETURNING photoId;`,
+		`INSERT INTO photos (userid) VALUES ($1) RETURNING photoId;`,
 		userId,
 	).Scan(&photoId)
 	if err != nil {
