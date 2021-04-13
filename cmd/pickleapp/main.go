@@ -160,6 +160,9 @@ func (a *App) InitializeRoutes(currConfig Config) {
 	// удалить фотку
 	//subRouter.HandleFunc("/images/{id:[0-9]+}", userHandler.DeletePhoto).Methods("DELETE")
 
+	// получить смайлики
+	subRouter.HandleFunc("/smiles", userHandler.GetSmiles).Methods("GET")
+
 	// валидация всех данных, без кук
 	// регистрация
 	a.router.HandleFunc("/users", userHandler.SignUp).Methods("POST")

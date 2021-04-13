@@ -48,7 +48,20 @@ func (a *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	// очистить ленту
+	if len(feed) == 0 {
+		err := a.Db.ClearFeed(id)
+		if err != nil {
+			a.UserCase.Logger.Info(err)
+			model.ResponseWithJson(w, 500, nil)
+			return
+		}
+		feed, err = a.Db.GetFeed(id, limitInt)
+		if err != nil {
+			a.UserCase.Logger.Info(err)
+			model.ResponseWithJson(w, 500, nil)
+			return
+		}
+	}
 
 	if len(feed) == 0 {
 		feed = make([]int, 0)
