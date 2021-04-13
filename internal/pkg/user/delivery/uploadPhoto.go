@@ -1,7 +1,7 @@
 package delivery
 
 import (
-	"encoding/json"
+	"io/ioutil"
 	"log"
 	"net/http"
 	model "server/internal/pkg/models"
@@ -14,16 +14,11 @@ func (a *UserHandler) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 		log.Println("error: get id from context")
 	}
 
-	var image string
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&image)
-	defer r.Body.Close()
+	bodyBytes, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		a.UserCase.Logger.Logger.Error(err)
-		response := model.ErrorResponse{Err: "Не удалось прочитать тело запроса"}
-		model.ResponseWithJson(w, 400, response)
-		return
+		log.Fatal(err)
 	}
+	image := string(bodyBytes)
 
 	/*
 		//парсит картинку
