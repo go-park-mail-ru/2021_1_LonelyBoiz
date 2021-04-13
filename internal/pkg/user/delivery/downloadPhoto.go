@@ -29,7 +29,7 @@ func (a *UserHandler) DownloadPhoto(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := a.Db.GetPhoto(photoId)
+	res, err := a.UserCase.Db.GetPhoto(photoId)
 	if err != nil {
 		a.UserCase.Logger.Error(err)
 		model.ResponseWithJson(w, 500, err)

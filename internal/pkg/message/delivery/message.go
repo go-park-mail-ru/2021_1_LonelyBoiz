@@ -1,7 +1,6 @@
 package delivery
 
 import (
-	"encoding/json"
 	"net/http"
 	mesrep "server/internal/pkg/message/repository"
 	"server/internal/pkg/message/usecase"
@@ -110,10 +109,7 @@ func (m *MessageHandler) SendMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var newMessage model.Message
-	decoder := json.NewDecoder(r.Body)
-	err = decoder.Decode(&newMessage)
-	defer r.Body.Close()
+	newMessage, err := m.Usecase.ParseJsonToMessage(r.Body)
 	if err != nil {
 		response := model.ErrorResponse{Err: "Не удалось прочитать тело запроса"}
 		model.ResponseWithJson(w, 400, response)
@@ -204,10 +200,7 @@ func (m *MessageHandler) ChangeMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var newMessage model.Message
-	decoder := json.NewDecoder(r.Body)
-	err = decoder.Decode(&newMessage)
-	defer r.Body.Close()
+	newMessage, err := m.Usecase.ParseJsonToMessage(r.Body)
 	if err != nil {
 		response := model.ErrorResponse{Err: "Не удалось прочитать тело запроса"}
 		model.ResponseWithJson(w, 400, response)

@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"encoding/json"
+	"github.com/microcosm-cc/bluemonday"
 	"io"
 	model "server/internal/pkg/models"
 	"server/internal/pkg/user/repository"
@@ -14,9 +15,10 @@ import (
 )
 
 type UserUsecase struct {
-	Clients *map[int]*websocket.Conn
-	Db      repository.UserRepository
-	Logger  *logrus.Entry
+	Clients   *map[int]*websocket.Conn
+	Db        repository.UserRepository
+	Logger    *logrus.Entry
+	Sanitizer *bluemonday.Policy
 }
 
 func (u *UserUsecase) ValidateSex(sex string) bool {
@@ -294,7 +296,8 @@ func (u *UserUsecase) AddNewUser(newUser *model.User) error {
 
 func (u *UserUsecase) ParseJsonToUser(body io.ReadCloser) (model.User, error) {
 	var newUser model.User
-	decoder := json.NewDecoder(body)
+	cleanBody := u.Sanitizer.SanitizeReader(body)
+	decoder := json.NewDecoder(cleanBody)
 	err := decoder.Decode(&newUser)
 	defer body.Close()
 	return newUser, err
