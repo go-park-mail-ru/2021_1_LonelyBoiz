@@ -33,7 +33,7 @@ func (a *UserHandler) LikesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rowsAffected, err := a.Db.Rating(userId, like.UserId, like.Reaction)
+	rowsAffected, err := a.UserCase.Db.Rating(userId, like.UserId, like.Reaction)
 	if err != nil {
 		a.UserCase.Logger.Error(err)
 		model.ResponseWithJson(w, 500, nil)
@@ -46,7 +46,7 @@ func (a *UserHandler) LikesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	reciprocity, err := a.Db.CheckReciprocity(like.UserId, userId)
+	reciprocity, err := a.UserCase.Db.CheckReciprocity(like.UserId, userId)
 	if err != nil {
 		a.UserCase.Logger.Error(err)
 		model.ResponseWithJson(w, 500, nil)
@@ -58,7 +58,7 @@ func (a *UserHandler) LikesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var newChat model.Chat
-	newChat.ChatId, err = a.Db.CreateChat(userId, like.UserId)
+	newChat.ChatId, err = a.UserCase.Db.CreateChat(userId, like.UserId)
 	if err != nil {
 		a.UserCase.Logger.Error(err)
 		model.ResponseWithJson(w, 500, nil)
@@ -66,7 +66,7 @@ func (a *UserHandler) LikesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	newChat.PartnerId = like.UserId
-	newChat.Photos, err = a.Db.GetPhotos(newChat.PartnerId)
+	newChat.Photos, err = a.UserCase.Db.GetPhotos(newChat.PartnerId)
 	if err != nil {
 		a.UserCase.Logger.Error(err)
 		model.ResponseWithJson(w, 500, nil)
@@ -92,7 +92,8 @@ func (a *UserHandler) WebSocketChatResponse() {
 			continue
 		}
 
-		newChatToSend, err := a.Db.GetNewChatById(newChat.ChatId, newChat.PartnerId)
+		newChatToSend, err := a.UserCase.Db.GetChatById(newChat.ChatId, newChat.PartnerId)
+
 		if err != nil {
 			a.UserCase.Logger.Error("Не удалось составить чат", err)
 			continue
