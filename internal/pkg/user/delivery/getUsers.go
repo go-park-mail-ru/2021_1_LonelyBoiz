@@ -49,13 +49,13 @@ func (a *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if len(feed) == 0 {
-		err := a.Db.ClearFeed(id)
+		err := a.UserCase.Db.ClearFeed(id)
 		if err != nil {
 			a.UserCase.Logger.Info(err)
 			model.ResponseWithJson(w, 500, nil)
 			return
 		}
-		feed, err = a.Db.GetFeed(id, limitInt)
+		feed, err = a.UserCase.Db.GetFeed(id, limitInt)
 		if err != nil {
 			a.UserCase.Logger.Info(err)
 			model.ResponseWithJson(w, 500, nil)
