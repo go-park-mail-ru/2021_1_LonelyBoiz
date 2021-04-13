@@ -92,7 +92,7 @@ func (a *UserHandler) WebSocketChatResponse() {
 			continue
 		}
 
-		newChatToSend, err := a.UserCase.Db.GetChatById(newChat.ChatId, newChat.PartnerId)
+		newChatToSend, err := a.UserCase.Db.GetNewChatById(newChat.ChatId, newChat.PartnerId)
 
 		if err != nil {
 			a.UserCase.Logger.Error("Не удалось составить чат", err)
