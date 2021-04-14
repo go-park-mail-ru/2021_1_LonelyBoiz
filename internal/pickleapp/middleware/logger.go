@@ -42,7 +42,7 @@ func (logger *LoggerMiddleware) Middleware(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r)
 
-		if r.Response.StatusCode == 500 {
+		if r.Response.StatusCode >= 500 {
 			logger.Logger.Error(w)
 		}
 	})
