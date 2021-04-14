@@ -25,8 +25,7 @@ func (repo *ChatRepository) GetChats(userId int, limit int, offset int) ([]model
 		`SELECT chats.id AS chatId,
     		users.id AS partnerId,
     		users.name AS partnerName,
-    		CASE WHEN lastMessage.text = NULL THEN ''
-				 ELSE lastMessage.text AS lastMessage,
+    		COALESCE(lastMessage.text, '') AS lastMessage,
     		lastMessage.time AS lastMessageTime,
     		lastMessage.authorid AS lastMessageAuthorid
 		FROM chats
