@@ -2,10 +2,11 @@ package usecase
 
 import (
 	"encoding/json"
-	"github.com/microcosm-cc/bluemonday"
 	"io"
 	model "server/internal/pkg/models"
 	"server/internal/pkg/user/repository"
+
+	"github.com/microcosm-cc/bluemonday"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/gorilla/websocket"
