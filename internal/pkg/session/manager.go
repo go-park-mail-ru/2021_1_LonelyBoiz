@@ -35,7 +35,7 @@ func (session *SessionsManager) SetSession(w http.ResponseWriter, id int) error 
 		Expires:  expiration,
 		SameSite: http.SameSiteNoneMode,
 		Secure:   true,
-		Domain:   "localhost:8000",
+		Domain:   "lepick.herokuapp.com",
 		HttpOnly: true,
 	}
 
