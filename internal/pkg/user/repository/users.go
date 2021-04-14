@@ -148,9 +148,6 @@ func (repo *UserRepository) GetPassWithEmail(email string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	if len(pass) == 0 {
-		return nil, nil
-	}
 
 	return pass[0], nil
 }
