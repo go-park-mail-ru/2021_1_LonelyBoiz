@@ -301,14 +301,11 @@ func (u *UserUsecase) ParseJsonToUser(body io.ReadCloser) (model.User, error) {
 	err := decoder.Decode(&newUser)
 	defer body.Close()
 
-	u.Logger.Info(newUser)
-
-	u.Logger.Info(body)
-
-	newUser.Name = u.Sanitizer.Sanitize(newUser.Email)
-	newUser.Name = u.Sanitizer.Sanitize(newUser.City)
-	newUser.Name = u.Sanitizer.Sanitize(newUser.Instagram)
-	newUser.Name = u.Sanitizer.Sanitize(newUser.Description)
+	newUser.Email = u.Sanitizer.Sanitize(newUser.Email)
+	newUser.Name = u.Sanitizer.Sanitize(newUser.Name)
+	newUser.City = u.Sanitizer.Sanitize(newUser.City)
+	newUser.Instagram = u.Sanitizer.Sanitize(newUser.Instagram)
+	newUser.Description = u.Sanitizer.Sanitize(newUser.Description)
 
 	return newUser, err
 }

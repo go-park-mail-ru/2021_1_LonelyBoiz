@@ -41,7 +41,6 @@ func (a *UserHandler) ChangeUserInfo(w http.ResponseWriter, r *http.Request) {
 		model.ResponseWithJson(w, 400, response)
 		return
 	}
-	a.UserCase.Logger.Info(newUser, "после чтения")
 
 	newUser.Id = userId
 
@@ -67,8 +66,6 @@ func (a *UserHandler) ChangeUserInfo(w http.ResponseWriter, r *http.Request) {
 		model.ResponseWithJson(w, 400, err)
 		return
 	}
-
-	a.UserCase.Logger.Info(newUser, "после обновления")
 
 	newUser.PasswordHash = nil
 	model.ResponseWithJson(w, 200, newUser)
