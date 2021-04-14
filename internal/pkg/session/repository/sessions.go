@@ -22,7 +22,7 @@ func (repo *SessionRepository) AddCookie(id int, token string) error {
 
 func (repo *SessionRepository) GetCookie(token string) (int, error) {
 	var id []int
-	err := repo.DB.Select(&id, `SELECT userId FROM sessions WHERE token=$1`, token)
+	err := repo.DB.Select(&id, `SELECT userId FROM sessions WHERE token = $1`, token)
 	if err != nil {
 		return -1, err
 	}

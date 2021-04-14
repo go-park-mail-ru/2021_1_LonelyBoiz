@@ -1,13 +1,14 @@
 package middleware
 
 import (
-	"github.com/sirupsen/logrus"
 	"math/rand"
 	"net/http"
 	delivery2 "server/internal/pkg/chat/delivery"
 	delivery3 "server/internal/pkg/message/delivery"
 	"server/internal/pkg/user/delivery"
 	"time"
+
+	"github.com/sirupsen/logrus"
 )
 
 type LoggerMiddleware struct {
@@ -40,5 +41,9 @@ func (logger *LoggerMiddleware) Middleware(next http.Handler) http.Handler {
 		logger.User.UserCase.Logger.Info("Entry")
 
 		next.ServeHTTP(w, r)
+
+		if r.Response.StatusCode == 500 {
+			logger.Logger.Error(w)
+		}
 	})
 }

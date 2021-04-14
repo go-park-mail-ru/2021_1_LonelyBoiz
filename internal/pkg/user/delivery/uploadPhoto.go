@@ -41,7 +41,7 @@ func (a *UserHandler) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 
 	photoId, err := a.UserCase.Db.AddPhoto(id, image)
 	if err != nil {
-		a.UserCase.Logger.Logger.Error(err)
+		a.UserCase.Logger.Error(err)
 		model.ResponseWithJson(w, 500, nil)
 		return
 	}
