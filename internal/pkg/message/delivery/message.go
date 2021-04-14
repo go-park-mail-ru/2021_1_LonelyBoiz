@@ -117,12 +117,7 @@ func (m *MessageHandler) SendMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if chatId != newMessage.ChatId {
-		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
-		response.Description["chatId"] = "Пытаешься отправить сообщение не в тот чат"
-		model.ResponseWithJson(w, 403, response)
-		return
-	}
+	newMessage.ChatId = chatId
 
 	if id != newMessage.AuthorId {
 		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
