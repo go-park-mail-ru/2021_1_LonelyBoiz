@@ -26,7 +26,7 @@ func (repo *ChatRepository) GetChats(userId int, limit int, offset int) ([]model
     		users.id AS partnerId,
     		users.name AS partnerName,
     		COALESCE(lastMessage.text, '') AS lastMessage,
-    		COALESCE(lastMessage.time, 0) lastMessage.time AS lastMessageTime,
+    		COALESCE(lastMessage.time, 0) AS lastMessageTime,
     		COALESCE(lastMessage.authorid, -1) AS lastMessageAuthorid
 		FROM chats
     		JOIN users ON (users.id <> $1 AND (users.id = chats.userid2 OR users.id = chats.userid1))
