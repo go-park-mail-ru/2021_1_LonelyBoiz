@@ -53,6 +53,10 @@ func (repo *ChatRepository) GetChats(userId int, limit int, offset int) ([]model
 	if err != nil {
 		return nil, err
 	}
+	if len(chats) == 0 {
+		chats = make([]model.Chat, 0)
+		return chats, nil
+	}
 
 	for i, _ := range chats {
 		err = repo.DB.Select(&chats[i].Photos, `SELECT photoId FROM photos WHERE userid = $1`, chats[i].PartnerId)
