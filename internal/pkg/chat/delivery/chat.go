@@ -27,10 +27,10 @@ func (c *ChatHandler) GetChats(w http.ResponseWriter, r *http.Request) {
 	}
 
 	vars := mux.Vars(r)
-	userId, err := strconv.Atoi(vars["chatId"])
+	userId, err := strconv.Atoi(vars["userId"])
 	if err != nil {
 		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
-		response.Description["messageId"] = "Сообщения с таким id нет"
+		response.Description["userId"] = "Юзера с таким id нет"
 		model.ResponseWithJson(w, 400, response)
 		return
 	}
