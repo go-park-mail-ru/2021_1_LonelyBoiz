@@ -20,6 +20,12 @@ type LoggerMiddleware struct {
 
 func (logger *LoggerMiddleware) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if err := recover(); err != nil {
+				logger.Logger.Error(w)
+			}
+		}()
+
 		start := time.Now()
 
 		rand.Seed(time.Now().UnixNano())
@@ -42,8 +48,5 @@ func (logger *LoggerMiddleware) Middleware(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r)
 
-		if r.Response.StatusCode >= 500 {
-			logger.Logger.Error(w)
-		}
 	})
 }

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/microcosm-cc/bluemonday"
 	"math/rand"
 	"net/http"
 	"os"
@@ -103,11 +102,9 @@ func (a *App) InitializeRoutes(currConfig Config) {
 	clients := make(map[int]*websocket.Conn)
 	// init uCases & handlers
 
-	sanitizer := bluemonday.UGCPolicy()
-
-	userUcase := usecase.UserUsecase{Db: userRep, Clients: &clients, Sanitizer: sanitizer}
+	userUcase := usecase.UserUsecase{Db: userRep, Clients: &clients}
 	chatUcase := usecase2.ChatUsecase{Db: chatRep, Clients: &clients}
-	messUcase := usecase3.MessageUsecase{Db: messageRep, Clients: &clients, Sanitizer: sanitizer}
+	messUcase := usecase3.MessageUsecase{Db: messageRep, Clients: &clients}
 	sessionManager := session.SessionsManager{DB: sessionRep}
 
 	chatHandler := delivery.ChatHandler{
