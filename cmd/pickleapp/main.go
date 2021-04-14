@@ -22,6 +22,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/jmoiron/sqlx"
+	"github.com/microcosm-cc/bluemonday"
 	cors2 "github.com/rs/cors"
 	"github.com/sirupsen/logrus"
 )
@@ -102,9 +103,11 @@ func (a *App) InitializeRoutes(currConfig Config) {
 	clients := make(map[int]*websocket.Conn)
 	// init uCases & handlers
 
-	userUcase := usecase.UserUsecase{Db: userRep, Clients: &clients}
+	sanitizer := bluemonday.UGCPolicy()
+
+	userUcase := usecase.UserUsecase{Db: userRep, Clients: &clients, Sanitizer: sanitizer}
 	chatUcase := usecase2.ChatUsecase{Db: chatRep, Clients: &clients}
-	messUcase := usecase3.MessageUsecase{Db: messageRep, Clients: &clients}
+	messUcase := usecase3.MessageUsecase{Db: messageRep, Clients: &clients, Sanitizer: sanitizer}
 	sessionManager := session.SessionsManager{DB: sessionRep}
 
 	chatHandler := delivery.ChatHandler{

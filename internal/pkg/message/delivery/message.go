@@ -104,7 +104,7 @@ func (m *MessageHandler) SendMessage(w http.ResponseWriter, r *http.Request) {
 	id, ok := m.Sessions.GetIdFromContext(r.Context())
 	if !ok {
 		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
-		model.ResponseWithJson(w, 403, response)
+		model.ResponseWithJson(w, 401, response)
 		m.Usecase.Logger.Error(response.Err)
 		return
 	}

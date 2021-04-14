@@ -131,13 +131,21 @@ func (repo *MessageRepository) DeleteMessage(messageId int) error {
 	return err
 }
 
+func reverseMessages(messages []model.Message) []model.Message {
+	newMessages := make([]model.Message, 0, len(messages))
+	for i := len(messages) - 1; i >= 0; i-- {
+		newMessages = append(newMessages, messages[i])
+	}
+	return newMessages
+}
+
 func (repo *MessageRepository) GetMessages(chatId int, limit int, offset int) ([]model.Message, error) {
 	var messages []model.Message
 	err := repo.DB.Select(&messages,
 		`SELECT * FROM messages
 			WHERE messages.chatid = $1
-			ORDER BY messages.messageorder
-			LIMIT $2 OFFSET $3;`,
+			ORDER BY messages.messageorder DESC
+			LIMIT $2 OFFSET $3`,
 		chatId,
 		limit,
 		offset,
@@ -146,5 +154,5 @@ func (repo *MessageRepository) GetMessages(chatId int, limit int, offset int) ([
 		return nil, err
 	}
 
-	return messages, nil
+	return reverseMessages(messages), nil
 }

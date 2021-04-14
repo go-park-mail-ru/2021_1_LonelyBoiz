@@ -300,5 +300,12 @@ func (u *UserUsecase) ParseJsonToUser(body io.ReadCloser) (model.User, error) {
 	decoder := json.NewDecoder(body)
 	err := decoder.Decode(&newUser)
 	defer body.Close()
+
+	newUser.Name = u.Sanitizer.Sanitize(newUser.Email)
+	newUser.Name = u.Sanitizer.Sanitize(newUser.Name)
+	newUser.Name = u.Sanitizer.Sanitize(newUser.City)
+	newUser.Name = u.Sanitizer.Sanitize(newUser.Instagram)
+	newUser.Name = u.Sanitizer.Sanitize(newUser.Description)
+
 	return newUser, err
 }

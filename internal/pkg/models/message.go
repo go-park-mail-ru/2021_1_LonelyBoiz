@@ -15,6 +15,4 @@ type WebsocketReesponse struct {
 	Object       interface{} `json:"obj"`
 }
 
-//var Emojis = map[int][]byte{0: "1F60D", 1: 😏, 2: 😡, 3: 💩, 4: 👎, 5: ❤️}
-
 var MessagesChan = make(chan *Message)

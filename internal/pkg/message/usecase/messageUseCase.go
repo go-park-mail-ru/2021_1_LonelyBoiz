@@ -2,10 +2,11 @@ package usecase
 
 import (
 	"encoding/json"
-	"github.com/microcosm-cc/bluemonday"
 	"io"
 	mesrep "server/internal/pkg/message/repository"
 	model "server/internal/pkg/models"
+
+	"github.com/microcosm-cc/bluemonday"
 
 	"github.com/gorilla/websocket"
 	"github.com/sirupsen/logrus"
@@ -24,6 +25,9 @@ func (m MessageUsecase) ParseJsonToMessage(body io.ReadCloser) (model.Message, e
 	decoder := json.NewDecoder(body)
 	err := decoder.Decode(&message)
 	defer body.Close()
+
+	message.Text = m.Sanitizer.Sanitize(message.Text)
+
 	return message, err
 }
 
