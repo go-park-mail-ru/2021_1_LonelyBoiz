@@ -6,7 +6,6 @@ import (
 )
 
 func (a *UserHandler) SignIn(w http.ResponseWriter, r *http.Request) {
-	a.UserCase.Logger.Logger.Info("попал в логин")
 	newUser, err := a.UserCase.ParseJsonToUser(r.Body)
 	if err != nil {
 		a.UserCase.Logger.Logger.Error(err)
@@ -15,7 +14,6 @@ func (a *UserHandler) SignIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	a.UserCase.Logger.Logger.Info("прочитал тело")
 	isValid, response := a.UserCase.ValidateSignInData(newUser)
 	if !isValid {
 		model.ResponseWithJson(w, 400, response)
@@ -23,7 +21,6 @@ func (a *UserHandler) SignIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	a.UserCase.Logger.Logger.Info("провалидирвоал данные юзера")
 	isCorrect, err := a.UserCase.CheckPasswordWithEmail(newUser.Password, newUser.Email)
 	if err != nil {
 		a.UserCase.Logger.Error(err)
@@ -37,7 +34,6 @@ func (a *UserHandler) SignIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	a.UserCase.Logger.Logger.Info("проверил данные юзера")
 	newUser, err = a.UserCase.Db.SignIn(newUser.Email)
 	if err != nil {
 		a.UserCase.Logger.Error(err)
@@ -45,7 +41,6 @@ func (a *UserHandler) SignIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	a.UserCase.Logger.Logger.Info("взял данные юзера")
 	err = a.Sessions.SetSession(w, newUser.Id)
 	if err != nil {
 		a.UserCase.Logger.Error(err)
@@ -53,7 +48,6 @@ func (a *UserHandler) SignIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	a.UserCase.Logger.Logger.Info("установил сессию")
 	if len(newUser.Photos) == 0 {
 		newUser.Photos = make([]int, 0)
 	}
