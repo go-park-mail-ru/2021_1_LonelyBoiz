@@ -169,7 +169,6 @@ func (repo *UserRepository) GetPassWithId(id int) ([]byte, error) {
 }
 
 func (repo *UserRepository) SignIn(email string) (model.User, error) {
-	fmt.Println("Здесь")
 	var user []model.User
 	err := repo.DB.Select(&user,
 		`SELECT id,
