@@ -37,7 +37,7 @@ func (c *ChatHandler) GetChats(w http.ResponseWriter, r *http.Request) {
 
 	if userId != cookieId {
 		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
-		response.Description["messageId"] = "Пытаешься взять не свои чаты"
+		response.Description["userId"] = "Пытаешься взять не свои чаты"
 		model.ResponseWithJson(w, 403, response)
 		return
 	}
