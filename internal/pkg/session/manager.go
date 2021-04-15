@@ -29,17 +29,31 @@ func (session *SessionsManager) SetSession(w http.ResponseWriter, id int) error 
 	key := session.KeyGen()
 	expiration := time.Now().Add(24 * time.Hour)
 
+	logrus.Println(id)
+
+	//cookie := http.Cookie{
+	//	Name:     "token",
+	//	Value:    key,
+	//	Expires:  expiration,
+	//	SameSite: http.SameSiteNoneMode,
+	//	Secure:   true,
+	//	//Domain:   "p1ckle.herokuapp.com", // TODO:: поменять перед пушем
+	//	HttpOnly: true,
+	//}
+
 	cookie := http.Cookie{
 		Name:     "token",
 		Value:    key,
 		Expires:  expiration,
-		SameSite: http.SameSiteNoneMode,
-		Secure:   true,
-		Domain:   "p1ckle.herokuapp.com",
+		SameSite: http.SameSiteLaxMode,
+		Secure:   false,
+		Domain:   "localhost:8000",
 		HttpOnly: true,
 	}
 
 	http.SetCookie(w, &cookie)
+
+	logrus.Println(cookie)
 
 	err := session.DB.AddCookie(id, key)
 	if err != nil {

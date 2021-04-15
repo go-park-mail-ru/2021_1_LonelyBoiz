@@ -3,6 +3,7 @@ package usecase
 import (
 	"encoding/json"
 	"io"
+	"reflect"
 	model "server/internal/pkg/models"
 	"server/internal/pkg/user/repository"
 
@@ -15,11 +16,196 @@ import (
 	"golang.org/x/crypto/sha3"
 )
 
+type UserUsecaseInterface interface {
+	ValidateSex(sex string) bool
+	ValidateDatePreferences(pref string) bool
+	CheckPasswordWithId(passToCheck string, id int) (bool, error)
+	CheckPasswordWithEmail(passToCheck string, email string) (bool, error)
+	ChangeUserProperties(newUser *model.User) error
+	ChangeUserPassword(newUser *model.User) error
+	ValidatePassword(password string) bool
+	ValidateSignInData(newUser model.User) (bool, error)
+	ValidateSignUpData(newUser model.User) error
+	IsAlreadySignedUp(newEmail string) (bool, error)
+	HashPassword(pass string) ([]byte, error)
+	isActive(newUser *model.User) error
+	AddNewUser(newUser *model.User) error
+	ParseJsonToUser(body io.ReadCloser) (model.User, error)
+
+	LogInfo(body interface{})
+	LogError(body interface{})
+
+	Login(newUser *model.User) (code int, body interface{})
+	SignUp(newUser *model.User) (code int, body interface{})
+	UserInfo(id int) (model.User, error)
+	DeleteUser(id int) error
+	CreateFeed(id int, limitInt int) (code int, body interface{})
+	AddPhoto(id int, image string) (int, error)
+	GetPhoto(id int) (string, error)
+	ChangeUserInfo(newUser *model.User) (code int, body interface{})
+}
+
 type UserUsecase struct {
 	Clients   *map[int]*websocket.Conn
-	Db        repository.UserRepository
+	Db        repository.UserRepositoryInterface
 	Logger    *logrus.Entry
 	Sanitizer *bluemonday.Policy
+}
+
+func (u *UserUsecase) ChangeUserInfo(newUser *model.User) (code int, body interface{}) {
+	if newUser.Password != "" {
+		err := u.ChangeUserPassword(newUser)
+		if err != nil {
+			return 400, err
+		}
+		newUser.Password = ""
+		newUser.OldPassword = ""
+		newUser.SecondPassword = ""
+	}
+
+	err := u.ChangeUserProperties(newUser)
+	if err != nil {
+		if reflect.TypeOf(err) != reflect.TypeOf(model.ErrorDescriptionResponse{}) {
+			u.LogError(err)
+			return 500, nil
+		}
+		return 400, nil
+	}
+
+	newUser.PasswordHash = nil
+	return 200, newUser
+}
+
+func (u *UserUsecase) GetPhoto(id int) (string, error) {
+	return u.Db.GetPhoto(id)
+}
+
+func (u *UserUsecase) AddPhoto(id int, image string) (int, error) {
+	return u.Db.AddPhoto(id, image)
+}
+
+func (u *UserUsecase) UserInfo(id int) (model.User, error) {
+	userInfo, err := u.Db.GetUser(id)
+	return userInfo, err
+}
+
+func (u *UserUsecase) DeleteUser(id int) error {
+	return u.Db.DeleteUser(id)
+}
+
+func (u *UserUsecase) CreateFeed(id int, limitInt int) (code int, body interface{}) {
+	feed, err := u.Db.GetFeed(id, limitInt)
+	if err != nil {
+		u.LogError(err)
+		return 500, nil
+	}
+
+	if len(feed) < limitInt {
+		err = u.Db.CreateFeed(id)
+		if err != nil {
+			u.LogError(err)
+			return 500, nil
+		}
+
+		feed, err = u.Db.GetFeed(id, limitInt)
+		if err != nil {
+			u.LogError(err)
+			return 500, nil
+		}
+	}
+
+	if len(feed) == 0 {
+		err := u.Db.ClearFeed(id)
+		if err != nil {
+			u.LogError(err)
+			return 500, nil
+		}
+
+		feed, err = u.Db.GetFeed(id, limitInt)
+		if err != nil {
+			u.LogError(err)
+			return 500, nil
+		}
+	}
+
+	if len(feed) == 0 {
+		feed = make([]int, 0)
+	}
+	return 200, feed
+}
+
+func (u *UserUsecase) Login(newUser *model.User) (code int, body interface{}) {
+	isValid, response := u.ValidateSignInData(*newUser)
+	if !isValid {
+		u.LogError(response)
+		return 400, response
+	}
+
+	isCorrect, err := u.CheckPasswordWithEmail(newUser.Password, newUser.Email)
+	if err != nil {
+		u.LogError(response)
+		return 500, nil
+	}
+
+	if !isCorrect {
+		response := model.ErrorResponse{Err: "Неверный логин или пароль"}
+		u.LogError(err)
+		return 401, response
+	}
+
+	*newUser, err = u.Db.SignIn(newUser.Email)
+	if err != nil {
+		u.LogError(response)
+		return 500, nil
+	}
+
+	if len(newUser.Photos) == 0 {
+		newUser.Photos = make([]int, 0)
+	}
+
+	newUser.PasswordHash = nil
+	return 200, newUser
+}
+
+func (u *UserUsecase) SignUp(newUser *model.User) (code int, body interface{}) {
+	if response := u.ValidateSignUpData(*newUser); response != nil {
+		u.LogInfo(model.UserErrorInvalidData)
+		return 400, response
+	}
+
+	isSignedUp, response := u.IsAlreadySignedUp(newUser.Email)
+	if response != nil && reflect.TypeOf(response) != reflect.TypeOf(model.ErrorDescriptionResponse{}) {
+		u.LogError(response)
+		return 500, nil
+	}
+
+	if isSignedUp {
+		u.LogError("Already Signed Up")
+		return 400, response
+	}
+
+	err := u.AddNewUser(newUser)
+	if err != nil {
+		u.LogError(err)
+		return 500, nil
+	}
+
+	newUser.Password = ""
+	newUser.SecondPassword = ""
+	newUser.PasswordHash = nil
+	if len(newUser.Photos) == 0 {
+		newUser.Photos = make([]int, 0)
+	}
+
+	return 200, newUser
+}
+
+func (u UserUsecase) LogInfo(body interface{}) {
+	u.Logger.Info(body)
+}
+
+func (u UserUsecase) LogError(body interface{}) {
+	u.Logger.Error(body)
 }
 
 func (u *UserUsecase) ValidateSex(sex string) bool {

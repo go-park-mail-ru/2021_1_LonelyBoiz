@@ -2,7 +2,6 @@ package delivery
 
 import (
 	"net/http"
-	"reflect"
 	model "server/internal/pkg/models"
 	"strconv"
 
@@ -14,7 +13,7 @@ func (a *UserHandler) ChangeUserInfo(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
 		model.ResponseWithJson(w, 403, response)
-		a.UserCase.Logger.Info(response.Err)
+		a.UserCase.LogInfo(response.Err)
 		return
 	}
 
@@ -33,42 +32,16 @@ func (a *UserHandler) ChangeUserInfo(w http.ResponseWriter, r *http.Request) {
 		model.ResponseWithJson(w, 403, response)
 		return
 	}
-
 	newUser, err := a.UserCase.ParseJsonToUser(r.Body)
 	if err != nil {
-		a.UserCase.Logger.Logger.Error(err)
+		a.UserCase.LogError(err)
 		response := model.ErrorResponse{Err: "Не удалось прочитать тело запроса"}
 		model.ResponseWithJson(w, 400, response)
 		return
 	}
 
-	newUser.Id = userId
+	code, response := a.UserCase.ChangeUserInfo(&newUser)
+	model.ResponseWithJson(w, code, response)
 
-	if newUser.Password != "" {
-		err := a.UserCase.ChangeUserPassword(&newUser)
-		if err != nil {
-			model.ResponseWithJson(w, 400, err)
-			return
-		}
-		newUser.Password = ""
-		newUser.OldPassword = ""
-		newUser.SecondPassword = ""
-	}
-
-	newUser.Id = userId
-	err = a.UserCase.ChangeUserProperties(&newUser)
-	if err != nil {
-		if reflect.TypeOf(err) != reflect.TypeOf(model.ErrorDescriptionResponse{}) {
-			a.UserCase.Logger.Logger.Error(err)
-			model.ResponseWithJson(w, 500, nil)
-			return
-		}
-		model.ResponseWithJson(w, 400, err)
-		return
-	}
-
-	newUser.PasswordHash = nil
-	model.ResponseWithJson(w, 200, newUser)
-
-	a.UserCase.Logger.Info("Success Change User Info")
+	a.UserCase.LogInfo("Success Change User Info")
 }

@@ -18,12 +18,23 @@ func (a *UserHandler) GetUserInfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userInfo, err := a.UserCase.Db.GetUser(userId)
+	id, ok := a.Sessions.GetIdFromContext(r.Context())
+	if !ok {
+		a.UserCase.LogInfo("GetIdFromContext error")
+	}
+
+	if id != userId {
+		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Пытаетесь получить доступ к чужому аккаунту"}
+		model.ResponseWithJson(w, 401, response)
+		return
+	}
+
+	userInfo, err := a.UserCase.UserInfo(userId)
 	if err != nil {
-		a.UserCase.Logger.Error(err)
+		a.UserCase.LogError(err)
 		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Неправильные входные данные"}
 		response.Description["id"] = "Пользователя с таким id нет"
-		model.ResponseWithJson(w, 401, response)
+		model.ResponseWithJson(w, 400, response)
 		return
 	}
 

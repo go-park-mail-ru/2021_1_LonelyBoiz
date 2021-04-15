@@ -6,6 +6,6 @@ import (
 )
 
 type UserHandler struct {
-	UserCase *usecase.UserUsecase
+	UserCase usecase.UserUsecaseInterface
 	Sessions *session.SessionsManager
 }

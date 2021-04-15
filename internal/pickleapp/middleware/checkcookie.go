@@ -16,6 +16,7 @@ func (m *ValidateCookieMiddleware) Middleware(next http.Handler) http.Handler {
 		token, err := r.Cookie("token")
 		if err != nil {
 			response := model.ErrorResponse{Err: "Вы не авторизованы"}
+			m.Session.Logger.Info(err)
 			model.ResponseWithJson(w, 401, response)
 			return
 		}

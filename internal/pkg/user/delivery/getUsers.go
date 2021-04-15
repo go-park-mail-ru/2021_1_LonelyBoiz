@@ -28,44 +28,7 @@ func (a *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	feed, err := a.UserCase.Db.GetFeed(id, limitInt)
-	if err != nil {
-		a.UserCase.Logger.Logger.Error(err)
-		model.ResponseWithJson(w, 500, nil)
-		return
-	}
-	if len(feed) < limitInt {
-		err = a.UserCase.Db.CreateFeed(id)
-		if err != nil {
-			a.UserCase.Logger.Logger.Error(err)
-			model.ResponseWithJson(w, 500, nil)
-			return
-		}
-		feed, err = a.UserCase.Db.GetFeed(id, limitInt)
-		if err != nil {
-			a.UserCase.Logger.Info(err)
-			model.ResponseWithJson(w, 500, nil)
-			return
-		}
-	}
-	if len(feed) == 0 {
-		err := a.UserCase.Db.ClearFeed(id)
-		if err != nil {
-			a.UserCase.Logger.Info(err)
-			model.ResponseWithJson(w, 500, nil)
-			return
-		}
-		feed, err = a.UserCase.Db.GetFeed(id, limitInt)
-		if err != nil {
-			a.UserCase.Logger.Info(err)
-			model.ResponseWithJson(w, 500, nil)
-			return
-		}
-	}
-
-	if len(feed) == 0 {
-		feed = make([]int, 0)
-	}
-	model.ResponseWithJson(w, 200, feed)
+	code, response := a.UserCase.CreateFeed(id, limitInt)
+	model.ResponseWithJson(w, code, response)
 	return
 }

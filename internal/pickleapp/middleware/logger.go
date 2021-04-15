@@ -5,7 +5,8 @@ import (
 	"net/http"
 	delivery2 "server/internal/pkg/chat/delivery"
 	delivery3 "server/internal/pkg/message/delivery"
-	"server/internal/pkg/user/delivery"
+	"server/internal/pkg/session"
+	"server/internal/pkg/user/usecase"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -13,9 +14,10 @@ import (
 
 type LoggerMiddleware struct {
 	Logger  *logrus.Logger
-	User    *delivery.UserHandler
 	Chat    *delivery2.ChatHandler
 	Message *delivery3.MessageHandler
+	Session *session.SessionsManager
+	User    *usecase.UserUsecase
 }
 
 func (logger *LoggerMiddleware) Middleware(next http.Handler) http.Handler {
@@ -31,7 +33,7 @@ func (logger *LoggerMiddleware) Middleware(next http.Handler) http.Handler {
 		rand.Seed(time.Now().UnixNano())
 		reqId := rand.Int63()
 
-		logger.User.UserCase.Logger = logger.Logger.WithFields(logrus.Fields{
+		logger.User.Logger = logger.Logger.WithFields(logrus.Fields{
 			"requestId":   reqId,
 			"method":      r.Method,
 			"url":         r.URL.Path,
@@ -41,11 +43,10 @@ func (logger *LoggerMiddleware) Middleware(next http.Handler) http.Handler {
 			"time":        time.Now(),
 		})
 
-		logger.User.Sessions.Logger = logger.User.UserCase.Logger
-		logger.Chat.Usecase.Logger = logger.User.UserCase.Logger
-		logger.Message.Usecase.Logger = logger.User.UserCase.Logger
-		logger.User.UserCase.Logger.Info("Entry")
-
+		logger.Session.Logger = logger.User.Logger
+		logger.Chat.Usecase.Logger = logger.User.Logger
+		logger.Message.Usecase.Logger = logger.User.Logger
+		logger.User.Logger.Info("Entry")
 		next.ServeHTTP(w, r)
 
 	})

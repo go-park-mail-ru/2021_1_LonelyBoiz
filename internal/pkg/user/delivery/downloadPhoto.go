@@ -16,7 +16,7 @@ func (a *UserHandler) DownloadPhoto(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
 		model.ResponseWithJson(w, 403, response)
-		a.UserCase.Logger.Info(response.Err)
+		a.UserCase.LogInfo(response.Err)
 		return
 	}
 
@@ -29,9 +29,9 @@ func (a *UserHandler) DownloadPhoto(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := a.UserCase.Db.GetPhoto(photoId)
+	res, err := a.UserCase.GetPhoto(photoId)
 	if err != nil {
-		a.UserCase.Logger.Error(err)
+		a.UserCase.LogError(err)
 		model.ResponseWithJson(w, 500, err)
 		return
 	}

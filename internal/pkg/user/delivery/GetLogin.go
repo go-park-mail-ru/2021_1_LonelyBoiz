@@ -10,13 +10,13 @@ func (a *UserHandler) GetLogin(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
 		model.ResponseWithJson(w, 403, response)
-		a.UserCase.Logger.Info(response.Err)
+		a.UserCase.LogInfo(response.Err)
 		return
 	}
 
-	userInfo, err := a.UserCase.Db.GetUser(id)
+	userInfo, err := a.UserCase.UserInfo(id)
 	if err != nil {
-		a.UserCase.Logger.Error(err)
+		a.UserCase.LogError(err)
 		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: err.Error()}
 		response.Description["id"] = "Пользователя с таким id нет"
 		model.ResponseWithJson(w, 401, response)
