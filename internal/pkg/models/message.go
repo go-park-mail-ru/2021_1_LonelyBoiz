@@ -15,4 +15,9 @@ type WebsocketReesponse struct {
 	Object       interface{} `json:"obj"`
 }
 
+type EditedMessage struct {
+	Reaction  int `json:"reactionId"`
+	MessageId int `json:"messageId"`
+}
+
 var MessagesChan = make(chan *Message)

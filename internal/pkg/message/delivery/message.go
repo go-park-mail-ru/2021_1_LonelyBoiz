@@ -211,6 +211,8 @@ func (m *MessageHandler) ChangeMessage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	model.ResponseWithJson(w, 204, nil)
+
+	go messagesWriter(&newMessage)
 }
 
 func (m *MessageHandler) WebSocketMessageResponse() {
@@ -226,9 +228,19 @@ func (m *MessageHandler) WebSocketMessageResponse() {
 			continue
 		}
 
-		m.Usecase.Logger.Error("Текущие подключиения к вэбсокету", (*m.Usecase.Clients))
+		var response model.WebsocketReesponse
 
-		response := model.WebsocketReesponse{ResponseType: "message", Object: newMessage}
+		if newMessage.Reaction != -1 {
+			var editedMessage model.EditedMessage
+			editedMessage.MessageId = newMessage.MessageId
+			editedMessage.Reaction = newMessage.Reaction
+			response.ResponseType = "editMessage"
+			response.Object = editedMessage
+		} else {
+			response.ResponseType = "message"
+			response.Object = newMessage
+		}
+
 		client, ok := (*m.Usecase.Clients)[partnerId]
 		if !ok {
 			m.Usecase.Logger.Info("Пользователь с id = ", partnerId, " не в сети")
