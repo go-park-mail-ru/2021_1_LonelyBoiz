@@ -1,80 +1,42 @@
 package delivery
 
 import (
+	"encoding/json"
 	"net/http"
 	model "server/internal/pkg/models"
 )
 
 func (a *UserHandler) LikesHandler(w http.ResponseWriter, r *http.Request) {
-	//userId, ok := a.Sessions.GetIdFromContext(r.Context())
-	//if !ok {
-	//	response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
-	//	model.ResponseWithJson(w, 403, response)
-	//	a.UserCase.Logger.Info(response.Err)
-	//	return
-	//}
-	//
-	//var like model.Like
-	//decoder := json.NewDecoder(r.Body)
-	//err := decoder.Decode(&like)
-	//defer r.Body.Close()
-	//if err != nil {
-	//	response := model.ErrorResponse{Err: "Не удалось прочитать тело запроса"}
-	//	model.ResponseWithJson(w, 400, response)
-	//	a.UserCase.Logger.Error(err)
-	//	return
-	//}
-	//
-	//if like.Reaction != "like" && like.Reaction != "skip" {
-	//	response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
-	//	response.Description["like"] = "неправильный формат реацкции, ожидается skip или like"
-	//	model.ResponseWithJson(w, 400, response)
-	//	return
-	//}
-	//
-	//rowsAffected, err := a.UserCase.Db.Rating(userId, like.UserId, like.Reaction)
-	//if err != nil {
-	//	a.UserCase.Logger.Error(err)
-	//	model.ResponseWithJson(w, 500, nil)
-	//	return
-	//}
-	//if rowsAffected != 1 {
-	//	response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
-	//	response.Description["userID"] = "Пытаешься поставить лайк человеку не со своей ленты"
-	//	model.ResponseWithJson(w, 403, response)
-	//	return
-	//}
-	//
-	//reciprocity, err := a.UserCase.Db.CheckReciprocity(like.UserId, userId)
-	//if err != nil {
-	//	a.UserCase.Logger.Error(err)
-	//	model.ResponseWithJson(w, 500, nil)
-	//	return
-	//}
-	//if reciprocity == false || like.Reaction == "skip" {
-	//	w.WriteHeader(204)
-	//	return
-	//}
-	//
-	//var newChat model.Chat
-	//newChat.ChatId, err = a.UserCase.Db.CreateChat(userId, like.UserId)
-	//if err != nil {
-	//	a.UserCase.Logger.Error(err)
-	//	model.ResponseWithJson(w, 500, nil)
-	//	return
-	//}
-	//
-	//newChat.PartnerId = like.UserId
-	//newChat.Photos, err = a.UserCase.Db.GetPhotos(newChat.PartnerId)
-	//if err != nil {
-	//	a.UserCase.Logger.Error(err)
-	//	model.ResponseWithJson(w, 500, nil)
-	//	return
-	//}
-	//
-	//go chatsWriter(&newChat)
-	//
-	//model.ResponseWithJson(w, 200, newChat)
+	userId, ok := a.Sessions.GetIdFromContext(r.Context())
+	if !ok {
+		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
+		model.ResponseWithJson(w, 403, response)
+		a.UserCase.LogInfo(response.Err)
+		return
+	}
+
+	var like model.Like
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&like)
+	defer r.Body.Close()
+	if err != nil {
+		response := model.ErrorResponse{Err: "Не удалось прочитать тело запроса"}
+		model.ResponseWithJson(w, 400, response)
+		a.UserCase.LogError(err)
+		return
+	}
+
+	chat, code, err := a.UserCase.SetLike(like, userId)
+
+	switch code {
+	case 200:
+		go chatsWriter(&chat)
+		model.ResponseWithJson(w, 200, chat)
+	case 204:
+		w.WriteHeader(204)
+	default:
+		model.ResponseWithJson(w, code, err)
+	}
 }
 
 func chatsWriter(newChat *model.Chat) {

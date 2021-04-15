@@ -43,6 +43,7 @@ type UserUsecaseInterface interface {
 	AddPhoto(id int, image string) (int, error)
 	GetPhoto(id int) (string, error)
 	ChangeUserInfo(newUser *model.User) (code int, body interface{})
+	SetLike(like model.Like, userId int) (model.Chat, int, error)
 }
 
 type UserUsecase struct {
@@ -50,6 +51,54 @@ type UserUsecase struct {
 	Db        repository.UserRepositoryInterface
 	Logger    *logrus.Entry
 	Sanitizer *bluemonday.Policy
+}
+
+func (u *UserUsecase) SetLike(like model.Like, userId int) (model.Chat, int, error) {
+	if like.Reaction != "like" && like.Reaction != "skip" {
+		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
+		response.Description["like"] = "неправильный формат реакции, ожидается skip или like"
+		u.LogInfo(response.Err)
+		return model.Chat{}, 400, response
+	}
+
+	rowsAffected, err := u.Db.Rating(userId, like.UserId, like.Reaction)
+	if err != nil {
+		u.LogError(err)
+		return model.Chat{}, 500, nil
+	}
+
+	if rowsAffected != 1 {
+		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
+		response.Description["userID"] = "Пытаешься поставить лайк человеку не со своей ленты"
+		u.LogInfo(response.Err)
+		return model.Chat{}, 403, response
+	}
+
+	reciprocity, err := u.Db.CheckReciprocity(like.UserId, userId)
+	if err != nil {
+		u.LogError(err)
+		return model.Chat{}, 500, nil
+	}
+
+	if reciprocity == false || like.Reaction == "skip" {
+		return model.Chat{}, 204, nil
+	}
+
+	var newChat model.Chat
+	newChat.ChatId, err = u.Db.CreateChat(userId, like.UserId)
+	if err != nil {
+		u.LogError(err)
+		return model.Chat{}, 500, nil
+	}
+
+	newChat.PartnerId = like.UserId
+	newChat.Photos, err = u.Db.GetPhotos(newChat.PartnerId)
+	if err != nil {
+		u.LogError(err)
+		return model.Chat{}, 500, nil
+	}
+
+	return newChat, 200, nil
 }
 
 func (u *UserUsecase) ChangeUserInfo(newUser *model.User) (code int, body interface{}) {
