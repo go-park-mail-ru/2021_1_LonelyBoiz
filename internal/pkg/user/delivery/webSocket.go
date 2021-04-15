@@ -24,7 +24,7 @@ func (a *UserHandler) WsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	a.UserCase.Logger.Debug("Новое подключение по вэбсокету с id = ", id)
+	a.UserCase.Logger.Error("Новое подключение по вэбсокету с id = ", id)
 
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -34,5 +34,5 @@ func (a *UserHandler) WsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	(*a.UserCase.Clients)[id] = ws
-	a.UserCase.Logger.Debug("Текущие подключиения к вэбсокету", (*a.UserCase.Clients))
+	a.UserCase.Logger.Error("Текущие подключиения к вэбсокету", (*a.UserCase.Clients))
 }
