@@ -86,18 +86,22 @@ func (repo *MessageRepository) AddMessage(authorId int, chatId int, text string)
 func (repo *MessageRepository) GetPartnerId(chatId int, userId int) (int, error) {
 	var users []int
 	err := repo.DB.Select(&users,
-		`SELECT userid1, userid2 FROM chats WHERE id = $1`,
-		chatId,
+		`select case
+				when (userid1 = $1) then userid2
+				when (userid2 = $1) then userid1
+			end
+			from chats
+			where id = $1`,
+		userId, chatId,
 	)
 	if err != nil {
 		return -1, err
 	}
-
-	if users[0] != userId {
-		return users[0], nil
+	if len(users) == 0 {
+		return -1, nil
 	}
 
-	return users[1], nil
+	return users[0], nil
 }
 
 func (repo *MessageRepository) ChangeMessageText(messageId int, text string) error {
