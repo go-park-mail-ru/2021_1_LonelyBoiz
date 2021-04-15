@@ -172,7 +172,7 @@ func (a *App) InitializeRoutes(currConfig Config) {
 	a.router.HandleFunc("/login", userHandler.LogOut).Methods("DELETE")
 
 	// открытие вэсокетного соединения
-	subRouter.HandleFunc("/ws", userHandler.WsHandler).Methods("GET")
+	subRouter.HandleFunc("wss://p1ckle.herokuapp.com/ws", userHandler.WsHandler).Methods("GET")
 
 	// получить чаты юзера
 	subRouter.HandleFunc("/users/{userId:[0-9]+}/chats", chatHandler.GetChats).Methods("GET")
