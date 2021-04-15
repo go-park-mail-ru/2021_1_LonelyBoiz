@@ -219,10 +219,11 @@ func (m *MessageHandler) WebSocketMessageResponse() {
 		partnerId, err := m.Db.GetPartnerId(newMessage.ChatId, newMessage.AuthorId)
 		if err != nil {
 			m.Usecase.Logger.Error("Пользователь с id = ", newMessage.AuthorId, " не найден")
+			m.Usecase.Logger.Error("Текущие подключиения к вэбсокету", (*m.Usecase.Clients))
 			continue
 		}
 
-		m.Usecase.Logger.Debug("Текущие подключиения к вэбсокету", (*m.Usecase.Clients))
+		m.Usecase.Logger.Error("Текущие подключиения к вэбсокету", (*m.Usecase.Clients))
 
 		response := model.WebsocketReesponse{ResponseType: "message", Object: newMessage}
 		client, ok := (*m.Usecase.Clients)[partnerId]
