@@ -91,7 +91,7 @@ func (repo *MessageRepository) GetPartnerId(chatId int, userId int) (int, error)
 				when (userid2 = $1) then userid1
 			end
 			from chats
-			where id = $1`,
+			where id = $2`,
 		userId, chatId,
 	)
 	if err != nil {
