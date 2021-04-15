@@ -211,6 +211,8 @@ func (m *MessageHandler) ChangeMessage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	model.ResponseWithJson(w, 204, nil)
+
+	go messagesWriter(&newMessage)
 }
 
 func (m *MessageHandler) WebSocketMessageResponse() {
@@ -219,23 +221,36 @@ func (m *MessageHandler) WebSocketMessageResponse() {
 		partnerId, err := m.Db.GetPartnerId(newMessage.ChatId, newMessage.AuthorId)
 		if err != nil {
 			m.Usecase.Logger.Error("Пользователь с id = ", newMessage.AuthorId, " не найден")
+			m.Usecase.Logger.Error(err)
+			continue
+		}
+		if partnerId == -1 {
 			continue
 		}
 
-		response := model.WebsocketReesponse{ResponseType: "message", Object: newMessage}
+		var response model.WebsocketReesponse
+
+		if newMessage.Reaction != -1 {
+			var editedMessage model.EditedMessage
+			editedMessage.MessageId = newMessage.MessageId
+			editedMessage.Reaction = newMessage.Reaction
+			editedMessage.ChatId = newMessage.ChatId
+			response.ResponseType = "editMessage"
+			response.Object = editedMessage
+		} else {
+			response.ResponseType = "message"
+			response.Object = newMessage
+		}
+
 		client, ok := (*m.Usecase.Clients)[partnerId]
 		if !ok {
 			m.Usecase.Logger.Info("Пользователь с id = ", partnerId, " не в сети")
-			client.Close()
-			delete(*m.Usecase.Clients, partnerId)
 			continue
 		}
 
 		err = client.WriteJSON(response)
 		if err != nil {
 			m.Usecase.Logger.Error("Не удалось отправить сообщение")
-			client.Close()
-			delete(*m.Usecase.Clients, partnerId)
 			continue
 		}
 	}

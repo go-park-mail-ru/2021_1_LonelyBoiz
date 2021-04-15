@@ -313,7 +313,7 @@ func (repo *UserRepository) GetNewChatById(chatId int, userId int) (model.Chat, 
 	err := repo.DB.Select(&chats,
 		`SELECT chats.id AS chatId,
     		users.id AS partnerId,
-    		users.name AS partnerName,
+    		users.name AS partnerName
 		FROM chats
     		JOIN users ON (users.id <> $1 AND (users.id = chats.userid2 OR users.id = chats.userid1))
 		WHERE chats.userid1 = $1 OR chats.userid2 = $1
