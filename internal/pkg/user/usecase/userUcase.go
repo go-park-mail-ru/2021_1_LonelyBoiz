@@ -6,6 +6,7 @@ import (
 	"reflect"
 	model "server/internal/pkg/models"
 	"server/internal/pkg/user/repository"
+	"strconv"
 
 	"github.com/microcosm-cc/bluemonday"
 
@@ -44,6 +45,9 @@ type UserUsecaseInterface interface {
 	GetPhoto(id int) (string, error)
 	ChangeUserInfo(newUser *model.User) (code int, body interface{})
 	SetLike(like model.Like, userId int) (model.Chat, int, error)
+
+	AddWebSocketToUser(id int, ws *websocket.Conn)
+	ChatResponse(newChat *model.Chat)
 }
 
 type UserUsecase struct {
@@ -51,6 +55,38 @@ type UserUsecase struct {
 	Db        repository.UserRepositoryInterface
 	Logger    *logrus.Entry
 	Sanitizer *bluemonday.Policy
+}
+
+func (u *UserUsecase) AddWebSocketToUser(id int, ws *websocket.Conn) {
+	(*u.Clients)[id] = ws
+}
+
+func (u *UserUsecase) ChatResponse(newChat *model.Chat) {
+	client, ok := (*u.Clients)[newChat.PartnerId]
+	if !ok {
+		u.LogInfo("Пользователь с id = " + strconv.Itoa(newChat.PartnerId) + " не в сети")
+		return
+	}
+
+	newChatToSend, err := u.Db.GetNewChatById(newChat.ChatId, newChat.PartnerId)
+
+	if err != nil {
+		u.LogError("Не удалось составить чат" + err.Error())
+		return
+	}
+
+	if len(newChatToSend.Photos) == 0 {
+		newChatToSend.Photos = make([]int, 0)
+	}
+
+	response := model.WebsocketReesponse{ResponseType: "chat", Object: newChatToSend}
+
+	err = client.WriteJSON(response)
+	if err != nil {
+		u.LogError("Не удалось отправить сообщение")
+		client.Close()
+		delete(*u.Clients, newChat.PartnerId)
+	}
 }
 
 func (u *UserUsecase) SetLike(like model.Like, userId int) (model.Chat, int, error) {

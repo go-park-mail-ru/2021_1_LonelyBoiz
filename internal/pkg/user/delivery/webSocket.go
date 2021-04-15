@@ -14,7 +14,7 @@ var upgrader = websocket.Upgrader{
 }
 
 func (a *UserHandler) WsHandler(w http.ResponseWriter, r *http.Request) {
-	_, ok := a.Sessions.GetIdFromContext(r.Context()) //id
+	id, ok := a.Sessions.GetIdFromContext(r.Context()) //id
 	if !ok {
 		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
 		model.ResponseWithJson(w, 403, response)
@@ -22,12 +22,12 @@ func (a *UserHandler) WsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err := upgrader.Upgrade(w, r, nil) //ws
+	ws, err := upgrader.Upgrade(w, r, nil) //ws
 	if err != nil {
 		model.ResponseWithJson(w, 500, nil)
 		a.UserCase.LogError(err)
 		return
 	}
 
-	//(*a.UserCase.Clients)[id] = ws TODO:: поменять срочно!
+	a.UserCase.AddWebSocketToUser(id, ws)
 }
