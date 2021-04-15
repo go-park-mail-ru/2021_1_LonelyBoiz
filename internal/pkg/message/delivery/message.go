@@ -222,6 +222,8 @@ func (m *MessageHandler) WebSocketMessageResponse() {
 			continue
 		}
 
+		m.Usecase.Logger.Debug("Текущие подключиения к вэбсокету", (*m.Usecase.Clients))
+
 		response := model.WebsocketReesponse{ResponseType: "message", Object: newMessage}
 		client, ok := (*m.Usecase.Clients)[partnerId]
 		if !ok {
