@@ -232,16 +232,12 @@ func (m *MessageHandler) WebSocketMessageResponse() {
 		client, ok := (*m.Usecase.Clients)[partnerId]
 		if !ok {
 			m.Usecase.Logger.Info("Пользователь с id = ", partnerId, " не в сети")
-			client.Close()
-			delete(*m.Usecase.Clients, partnerId)
 			continue
 		}
 
 		err = client.WriteJSON(response)
 		if err != nil {
 			m.Usecase.Logger.Error("Не удалось отправить сообщение")
-			client.Close()
-			delete(*m.Usecase.Clients, partnerId)
 			continue
 		}
 	}
