@@ -14,6 +14,8 @@ var upgrader = websocket.Upgrader{
 }
 
 func (a *UserHandler) WsHandler(w http.ResponseWriter, r *http.Request) {
+	a.UserCase.Logger.Debug("Enter ws handler")
+
 	id, ok := a.Sessions.GetIdFromContext(r.Context())
 	if !ok {
 		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
