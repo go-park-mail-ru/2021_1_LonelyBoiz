@@ -234,6 +234,7 @@ func (m *MessageHandler) WebSocketMessageResponse() {
 			var editedMessage model.EditedMessage
 			editedMessage.MessageId = newMessage.MessageId
 			editedMessage.Reaction = newMessage.Reaction
+			editedMessage.ChatId = newMessage.ChatId
 			response.ResponseType = "editMessage"
 			response.Object = editedMessage
 		} else {

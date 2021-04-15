@@ -18,6 +18,7 @@ type WebsocketReesponse struct {
 type EditedMessage struct {
 	Reaction  int `json:"reactionId"`
 	MessageId int `json:"messageId"`
+	ChatId    int `json:"chatId"`
 }
 
 var MessagesChan = make(chan *Message)
