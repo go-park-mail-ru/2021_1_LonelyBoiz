@@ -71,5 +71,4 @@ func (a *UserHandler) DownloadPhoto(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "image/png")
 	w.Header().Set("Content-Length", strconv.Itoa(int(fileInfo.Size())))
 	w.WriteHeader(200)*/
-
 }
