@@ -8,6 +8,13 @@ import (
 	"github.com/asaskevich/govalidator"
 )
 
+type GoogleCaptcha struct {
+	Success      bool
+	Challenge_ts int64
+	Hostname     string
+	ErrorCodes   []string
+}
+
 type User struct {
 	Id             int    `json:"id"`
 	Email          string `json:"mail" valid:"email~Почта не прошла валидацию"`
@@ -25,6 +32,7 @@ type User struct {
 	IsDeleted      bool   `json:"isDeleted"`
 	IsActive       bool   `json:"isActive"`
 	Photos         []int  `json:"photos"`
+	CaptchaToken   string `json:"captchaToken"`
 }
 
 type Like struct {
