@@ -9,10 +9,10 @@ import (
 )
 
 type GoogleCaptcha struct {
-	Success      bool
-	Challenge_ts int64
-	Hostname     string
-	ErrorCodes   []string
+	Success     bool     `json:"success"`
+	ChallengeTs int64    `json:"challengeTs"`
+	Hostname    string   `json:"hostname"`
+	ErrorCodes  []string `json:"error-codes"`
 }
 
 type User struct {

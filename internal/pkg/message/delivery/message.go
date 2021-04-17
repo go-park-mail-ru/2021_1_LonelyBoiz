@@ -231,7 +231,6 @@ func (m *MessageHandler) WebSocketMessageResponse() {
 		var response model.WebsocketReesponse
 
 		if newMessage.Reaction != -1 {
-			partnerId = newMessage.AuthorId
 			var editedMessage model.EditedMessage
 			editedMessage.MessageId = newMessage.MessageId
 			editedMessage.Reaction = newMessage.Reaction
