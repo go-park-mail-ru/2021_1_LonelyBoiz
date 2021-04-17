@@ -4,13 +4,15 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"reflect"
 	"server/internal/pkg/models"
 	model "server/internal/pkg/models"
 )
 
+var googleCaptchaSecret string = os.Getenv("DATABASE_URL")
+
 func captchCheck(response string) (bool, error) {
-	googleCaptchaSecret := "6LdIzK0aAAAAAPFpnVtQTL_r6gm7NnNhxZ5frVJq"
 	url := "https://www.google.com/recaptcha/api/siteverify"
 
 	client := &http.Client{}

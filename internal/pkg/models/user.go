@@ -10,7 +10,7 @@ import (
 
 type GoogleCaptcha struct {
 	Success     bool     `json:"success"`
-	ChallengeTs int64    `json:"challengeTs"`
+	ChallengeTs int64    `json:"challenge_ts"`
 	Hostname    string   `json:"hostname"`
 	ErrorCodes  []string `json:"error-codes"`
 }
