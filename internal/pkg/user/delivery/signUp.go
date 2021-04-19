@@ -20,7 +20,7 @@ func (a *UserHandler) captchCheck(response string) (bool, error) {
 	}
 
 	q := req.URL.Query()
-	q.Add("secret", os.Getenv("DATABASE_URL"))
+	q.Add("secret", os.Getenv("CAPTCHA"))
 	q.Add("response", response)
 	req.URL.RawQuery = q.Encode()
 
@@ -40,7 +40,7 @@ func (a *UserHandler) captchCheck(response string) (bool, error) {
 		return false, err
 	}
 
-	a.UserCase.Logger.Info("Мой секретный ключ ", os.Getenv("DATABASE_URL"))
+	a.UserCase.Logger.Info("Мой секретный ключ ", os.Getenv("CAPTCHA"))
 	a.UserCase.Logger.Info("Тело от клиента ", response)
 	a.UserCase.Logger.Info("Тело от гугла ", googleResponse)
 	if googleResponse.ErrorCodes != nil {
