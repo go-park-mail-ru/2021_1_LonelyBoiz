@@ -42,6 +42,7 @@ func (a *UserHandler) captchCheck(response string) (bool, error) {
 		return false, err
 	}
 
+	a.UserCase.Logger.Info(response)
 	a.UserCase.Logger.Info(googleResponse)
 	if googleResponse.ErrorCodes != nil {
 		a.UserCase.Logger.Error(googleResponse.ErrorCodes)
