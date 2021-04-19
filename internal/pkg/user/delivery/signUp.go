@@ -10,8 +10,6 @@ import (
 	model "server/internal/pkg/models"
 )
 
-var googleCaptchaSecret string = os.Getenv("DATABASE_URL")
-
 func (a *UserHandler) captchCheck(response string) (bool, error) {
 	url := "https://www.google.com/recaptcha/api/siteverify"
 
@@ -22,7 +20,7 @@ func (a *UserHandler) captchCheck(response string) (bool, error) {
 	}
 
 	q := req.URL.Query()
-	q.Add("secret", googleCaptchaSecret)
+	q.Add("secret", os.Getenv("DATABASE_URL"))
 	q.Add("response", response)
 	req.URL.RawQuery = q.Encode()
 
@@ -42,8 +40,8 @@ func (a *UserHandler) captchCheck(response string) (bool, error) {
 		return false, err
 	}
 
-	a.UserCase.Logger.Info(response)
-	a.UserCase.Logger.Info(googleResponse)
+	a.UserCase.Logger.Info("Тело от клиента", response)
+	a.UserCase.Logger.Info("Тело от гугла", googleResponse)
 	if googleResponse.ErrorCodes != nil {
 		a.UserCase.Logger.Error(googleResponse.ErrorCodes)
 	}
