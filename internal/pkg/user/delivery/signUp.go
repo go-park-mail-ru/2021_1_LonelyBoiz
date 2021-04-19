@@ -12,7 +12,7 @@ import (
 
 var googleCaptchaSecret string = os.Getenv("DATABASE_URL")
 
-func captchCheck(response string) (bool, error) {
+func (a *UserHandler) captchCheck(response string) (bool, error) {
 	url := "https://www.google.com/recaptcha/api/siteverify"
 
 	client := &http.Client{}
@@ -32,7 +32,6 @@ func captchCheck(response string) (bool, error) {
 	}
 	defer resp.Body.Close()
 
-	// unmarshall the response into a GoogleResponse
 	var googleResponse models.GoogleCaptcha
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -43,11 +42,11 @@ func captchCheck(response string) (bool, error) {
 		return false, err
 	}
 
-	if googleResponse.Success == false {
-		return false, nil
+	if googleResponse.ErrorCodes != nil {
+		a.UserCase.Logger.Error(googleResponse.ErrorCodes)
 	}
 
-	return true, nil
+	return googleResponse.Success, nil
 }
 
 func (a *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
@@ -59,7 +58,7 @@ func (a *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ok, err := captchCheck(newUser.CaptchaToken)
+	ok, err := a.captchCheck(newUser.CaptchaToken)
 	if err != nil {
 		a.UserCase.Logger.Logger.Error(err)
 		model.ResponseWithJson(w, 500, nil)
