@@ -22,9 +22,9 @@ CREATE TABLE users (
 
 CREATE TABLE photos(
     photoId SERIAL PRIMARY KEY,
+    photoUuid UNIQUE NOT NULL,
     userId INT,
     FOREIGN KEY (userId) REFERENCES users (id),
-    value BYTEA
 );
 
 CREATE TABLE chats (

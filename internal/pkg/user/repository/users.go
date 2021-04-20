@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	model "server/internal/pkg/models"
 
 	"github.com/jmoiron/sqlx"
@@ -86,13 +87,13 @@ func (repo *UserRepository) GetUser(id int) (model.User, error) {
 		return model.User{}, sql.ErrNoRows
 	}
 
-	err = repo.DB.Select(&user[0].Photos, `SELECT photoId FROM photos WHERE userid = $1`, id)
+	err = repo.DB.Select(&user[0].Photos, `SELECT photoUuid FROM photos WHERE userid = $1`, id)
 	if err != nil {
 		fmt.Println(err)
 		return model.User{}, err
 	}
 	if len(user[0].Photos) == 0 {
-		user[0].Photos = make([]int, 0)
+		user[0].Photos = make([]uuid.UUID, 0)
 	}
 
 	return user[0], nil
@@ -193,7 +194,7 @@ func (repo *UserRepository) SignIn(email string) (model.User, error) {
 	if len(user) == 0 {
 		return model.User{}, errors.New("пользователь не найден")
 	}
-	err = repo.DB.Select(&user[0].Photos, `SELECT photoId FROM photos WHERE userid = $1`, user[0].Id)
+	err = repo.DB.Select(&user[0].Photos, `SELECT photoUuid FROM photos WHERE userid = $1`, user[0].Id)
 	if err != nil {
 		return model.User{}, err
 	}
@@ -231,22 +232,22 @@ func (repo *UserRepository) GetPhoto(photoId int) (string, error) {
 	return image[0], nil
 }
 
-func (repo *UserRepository) GetPhotos(userId int) ([]int, error) {
-	var photos []int
-	err := repo.DB.Select(&photos, `SELECT photoId FROM photos WHERE userId = $1`, userId)
+func (repo *UserRepository) GetPhotos(userId int) ([]uuid.UUID, error) {
+	var photos []uuid.UUID
+	err := repo.DB.Select(&photos, `SELECT photoUuid FROM photos WHERE userId = $1`, userId)
 	if err != nil {
 		return nil, err
 	}
 	if len(photos) == 0 {
-		return make([]int, 0), nil
+		return make([]uuid.UUID, 0), nil
 	}
 
 	return photos, nil
 }
 
-func (repo *UserRepository) CheckPhoto(photoId int, userId int) (bool, error) {
+func (repo *UserRepository) CheckPhoto(photoUuid uuid.UUID, userId int) (bool, error) {
 	var idFromDB []int
-	err := repo.DB.Select(&idFromDB, `SELECT userId FROM photos WHERE photoId = $1`, photoId)
+	err := repo.DB.Select(&idFromDB, `SELECT userId FROM photos WHERE photoUuid = $1`, photoUuid)
 	if err != nil {
 		return false, err
 	}
@@ -302,7 +303,7 @@ func (repo *UserRepository) GetNewChatById(chatId int, userId int) (model.Chat, 
 		return model.Chat{}, nil
 	}
 
-	err = repo.DB.Select(&chats[0].Photos, `SELECT photoId FROM photos WHERE userid = $1`, chats[0].PartnerId)
+	err = repo.DB.Select(&chats[0].Photos, `SELECT photoUuid FROM photos WHERE userid = $1`, chats[0].PartnerId)
 	if err != nil {
 		return model.Chat{}, err
 	}
@@ -346,7 +347,7 @@ func (repo *UserRepository) GetChatById(chatId int, userId int) (model.Chat, err
 		return model.Chat{}, nil
 	}
 
-	err = repo.DB.Select(&chats[0].Photos, `SELECT photoId FROM photos WHERE userid = $1`, chats[0].PartnerId)
+	err = repo.DB.Select(&chats[0].Photos, `SELECT photoUuid FROM photos WHERE userid = $1`, chats[0].PartnerId)
 	if err != nil {
 		return model.Chat{}, err
 	}

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/asaskevich/govalidator"
+	"github.com/google/uuid"
 )
 
 type GoogleCaptcha struct {
@@ -31,7 +32,7 @@ type User struct {
 	DatePreference string `json:"datePreference"`
 	IsDeleted      bool   `json:"isDeleted"`
 	IsActive       bool   `json:"isActive"`
-	Photos         []int  `json:"photos"`
+	Photos         []uuid.UUID  `json:"photos"`
 	CaptchaToken   string `json:"captchaToken"`
 }
 
