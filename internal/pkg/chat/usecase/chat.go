@@ -10,6 +10,7 @@ import (
 type ChatUsecaseInterface interface {
 	model.LoggerInterface
 	chatsWriter(newChat *model.Chat)
+	GetChat(userId, limitInt, offsetInt int) ([]model.Chat, error)
 }
 
 type ChatUsecase struct {
@@ -17,6 +18,10 @@ type ChatUsecase struct {
 	model.LoggerInterface
 	Db        repository.ChatRepositoryInterface
 	chatsChan chan *model.Chat
+}
+
+func (u *ChatUsecase) GetChat(userId, limitInt, offsetInt int) ([]model.Chat, error) {
+	return u.Db.GetChats(userId, limitInt, offsetInt)
 }
 
 func (u *ChatUsecase) chatsWriter(newChat *model.Chat) {

@@ -3,7 +3,6 @@ package delivery
 import (
 	"github.com/gorilla/mux"
 	"net/http"
-	chatrep "server/internal/pkg/chat/repository"
 	"server/internal/pkg/chat/usecase"
 	model "server/internal/pkg/models"
 	"server/internal/pkg/session"
@@ -16,7 +15,6 @@ type ChatHandlerInterface interface {
 }
 
 type ChatHandler struct {
-	Db       chatrep.ChatRepositoryInterface
 	Sessions session.SessionManagerInterface
 	Usecase  usecase.ChatUsecaseInterface
 }
@@ -55,7 +53,7 @@ func (c *ChatHandler) GetChats(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	chats, err := c.Db.GetChats(userId, limitInt, offsetInt)
+	chats, err := c.Usecase.GetChat(userId, limitInt, offsetInt)
 	if err != nil {
 		model.Process(model.NewLogFunc(err, c.Usecase.LogError), model.NewResponseFunc(w, 500, nil))
 		return
