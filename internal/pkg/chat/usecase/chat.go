@@ -5,13 +5,17 @@ import (
 	model "server/internal/pkg/models"
 
 	"github.com/gorilla/websocket"
-	"github.com/sirupsen/logrus"
 )
 
+type ChatUsecaseInterface interface {
+	model.LoggerInterface
+	chatsWriter(newChat *model.Chat)
+}
+
 type ChatUsecase struct {
-	Clients   *map[int]*websocket.Conn
-	Logger    *logrus.Entry
-	Db        repository.ChatRepository
+	Clients *map[int]*websocket.Conn
+	model.LoggerInterface
+	Db        repository.ChatRepositoryInterface
 	chatsChan chan *model.Chat
 }
 

@@ -7,6 +7,17 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+type MessageRepositoryInterface interface {
+	CheckMessageForReacting(userId int, messageId int) (int, error)
+	CheckChat(userId int, chatId int) (bool, error)
+	AddMessage(authorId int, chatId int, text string) (model.Message, error)
+	GetPartnerId(chatId int, userId int) (int, error)
+	ChangeMessageText(messageId int, text string) error
+	ChangeMessageReaction(messageId int, reaction int) error
+	DeleteMessage(messageId int) error
+	GetMessages(chatId int, limit int, offset int) ([]model.Message, error)
+}
+
 type MessageRepository struct {
 	DB *sqlx.DB
 }

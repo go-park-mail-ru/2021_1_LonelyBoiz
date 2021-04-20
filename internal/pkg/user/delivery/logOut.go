@@ -8,20 +8,17 @@ import (
 func (a *UserHandler) LogOut(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("token")
 	if err != nil {
-		a.UserCase.Logger.Logger.Error(err)
 		response := model.ErrorResponse{Err: "Не удалось взять куку"}
-		model.ResponseWithJson(w, 400, response)
+		model.Process(model.NewLogFunc(response.Err, a.UserCase.LogError), model.NewResponseFunc(w, 400, response))
 		return
 	}
 
 	err = a.Sessions.DeleteSession(cookie)
 	http.SetCookie(w, cookie)
 	if err != nil {
-		a.UserCase.Logger.Logger.Error(err)
-		model.ResponseWithJson(w, 500, nil)
+		model.Process(model.NewLogFunc(err.Error(), a.UserCase.LogError), model.NewResponseFunc(w, 500, nil))
 		return
 	}
 
-	model.ResponseWithJson(w, 200, nil)
-	a.UserCase.Logger.Info("Success LogOut")
+	model.Process(model.NewLogFunc("Success LogOut", a.UserCase.LogInfo), model.NewResponseFunc(w, 200, nil))
 }

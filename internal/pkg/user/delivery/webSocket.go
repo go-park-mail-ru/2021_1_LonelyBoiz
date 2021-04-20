@@ -17,18 +17,17 @@ func (a *UserHandler) WsHandler(w http.ResponseWriter, r *http.Request) {
 	id, ok := a.Sessions.GetIdFromContext(r.Context())
 	if !ok {
 		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
-		model.ResponseWithJson(w, 403, response)
-		a.UserCase.Logger.Info(response.Err)
+
+		model.Process(model.NewLogFunc(response.Err, a.UserCase.LogInfo), model.NewResponseFunc(w, 403, response))
 		return
 	}
 
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		model.ResponseWithJson(w, 500, nil)
-		a.UserCase.Logger.Error(err)
+		model.Process(model.NewLogFunc(err.Error(), a.UserCase.LogError), model.NewResponseFunc(w, 500, nil))
 		return
 	}
 
-	(*a.UserCase.Clients)[id] = ws
-	a.UserCase.Logger.Error("Текущие подключиения к вэбсокету", (*a.UserCase.Clients))
+	a.UserCase.SetChat(ws, id)
+	a.UserCase.LogError("Set Websocket connection")
 }

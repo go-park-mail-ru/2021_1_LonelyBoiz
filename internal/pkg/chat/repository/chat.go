@@ -7,11 +7,15 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+type ChatRepositoryInterface interface {
+	GetChats(userId int, limit int, offset int) ([]model.Chat, error)
+}
+
 type ChatRepository struct {
 	DB *sqlx.DB
 }
 
-func reverseChats(chats []model.Chat) []model.Chat {
+func (repo *ChatRepository) reverseChats(chats []model.Chat) []model.Chat {
 	newChats := make([]model.Chat, 0, len(chats))
 	for i := len(chats) - 1; i >= 0; i-- {
 		newChats = append(newChats, chats[i])
@@ -69,5 +73,5 @@ func (repo *ChatRepository) GetChats(userId int, limit int, offset int) ([]model
 		}
 	}
 
-	return reverseChats(chats), nil
+	return repo.reverseChats(chats), nil
 }

@@ -10,7 +10,8 @@ func (a *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 	id, ok := a.Sessions.GetIdFromContext(r.Context())
 	if !ok {
 		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
-		model.ResponseWithJson(w, 403, response)
+
+		model.Process(model.NewLogFunc(response.Err, a.UserCase.LogInfo), model.NewResponseFunc(w, 403, response))
 		return
 	}
 
@@ -18,54 +19,28 @@ func (a *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 	limit, ok := query["count"]
 	if !ok {
 		response := model.ErrorResponse{Err: "Не указан count"}
-		model.ResponseWithJson(w, 400, response)
+
+		model.Process(model.NewLogFunc(response.Err, a.UserCase.LogInfo), model.NewResponseFunc(w, 400, response))
 		return
 	}
+
 	limitInt, err := strconv.Atoi(limit[0])
+
 	if err != nil {
 		response := model.ErrorResponse{Err: "Неверный формат count"}
-		model.ResponseWithJson(w, 400, response)
+		model.Process(model.NewLogFunc(response.Err, a.UserCase.LogError), model.NewResponseFunc(w, 400, response))
 		return
 	}
 
-	feed, err := a.UserCase.Db.GetFeed(id, limitInt)
-	if err != nil {
-		a.UserCase.Logger.Logger.Error(err)
-		model.ResponseWithJson(w, 500, nil)
-		return
-	}
-	if len(feed) < limitInt {
-		err = a.UserCase.Db.CreateFeed(id)
-		if err != nil {
-			a.UserCase.Logger.Logger.Error(err)
-			model.ResponseWithJson(w, 500, nil)
-			return
-		}
-		feed, err = a.UserCase.Db.GetFeed(id, limitInt)
-		if err != nil {
-			a.UserCase.Logger.Info(err)
-			model.ResponseWithJson(w, 500, nil)
-			return
-		}
-	}
-	if len(feed) == 0 {
-		err := a.UserCase.Db.ClearFeed(id)
-		if err != nil {
-			a.UserCase.Logger.Info(err)
-			model.ResponseWithJson(w, 500, nil)
-			return
-		}
-		feed, err = a.UserCase.Db.GetFeed(id, limitInt)
-		if err != nil {
-			a.UserCase.Logger.Info(err)
-			model.ResponseWithJson(w, 500, nil)
-			return
-		}
+	feed, code, err := a.UserCase.CreateFeed(id, limitInt)
+	switch code {
+	case 200:
+		model.Process(model.NewLogFunc("Create Feed", a.UserCase.LogInfo), model.NewResponseFunc(w, code, feed))
+	case 500:
+		model.Process(model.NewLogFunc(err, a.UserCase.LogError), model.NewResponseFunc(w, code, err))
+	default:
+		model.Process(model.NewLogFunc(err, a.UserCase.LogInfo), model.NewResponseFunc(w, code, err))
 	}
 
-	if len(feed) == 0 {
-		feed = make([]int, 0)
-	}
-	model.ResponseWithJson(w, 200, feed)
 	return
 }

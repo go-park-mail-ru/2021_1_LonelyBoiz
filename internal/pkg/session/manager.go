@@ -7,16 +7,20 @@ import (
 	model "server/internal/pkg/models"
 	"server/internal/pkg/session/repository"
 	"time"
-
-	"github.com/sirupsen/logrus"
 )
 
-type SessionsManager struct {
-	DB     repository.SessionRepository
-	Logger *logrus.Entry
+type SessionManagerInterface interface {
+	SetSession(w http.ResponseWriter, id int) error
+	DeleteSession(cookie *http.Cookie) error
+	GetIdFromContext(ctx context.Context) (int, bool)
 }
 
-func (session *SessionsManager) KeyGen() string {
+type SessionsManager struct {
+	DB     repository.SessionRepositoryInterface
+	Logger model.LoggerInterface
+}
+
+func (session *SessionsManager) keyGen() string {
 	b := make([]byte, 40)
 	for i := range b {
 		b[i] = model.CharSet[rand.Intn(len(model.CharSet))]
@@ -26,7 +30,7 @@ func (session *SessionsManager) KeyGen() string {
 }
 
 func (session *SessionsManager) SetSession(w http.ResponseWriter, id int) error {
-	key := session.KeyGen()
+	key := session.keyGen()
 	expiration := time.Now().Add(24 * time.Hour)
 
 	cookie := http.Cookie{
@@ -34,9 +38,7 @@ func (session *SessionsManager) SetSession(w http.ResponseWriter, id int) error 
 		Value:    key,
 		Expires:  expiration,
 		SameSite: http.SameSiteNoneMode,
-		Secure:   true,
-		Domain:   "p1ckle.herokuapp.com",
-		HttpOnly: true,
+		Domain:   "localhos2t:8000",
 	}
 
 	http.SetCookie(w, &cookie)
@@ -46,7 +48,7 @@ func (session *SessionsManager) SetSession(w http.ResponseWriter, id int) error 
 		return err
 	}
 
-	session.Logger.Info("Success Set Cookie")
+	session.Logger.LogInfo("Success Set Cookie")
 	return nil
 }
 
@@ -54,11 +56,11 @@ func (session *SessionsManager) DeleteSession(cookie *http.Cookie) error {
 	key := cookie.Value
 	cookie.Expires = time.Now().AddDate(0, 0, -1)
 	if err := session.DB.DeleteCookie(0, key); err != nil {
-		session.Logger.Info("Delete Cookie : " + err.Error())
+		session.Logger.LogInfo("Delete Cookie : " + err.Error())
 		return err
 	}
 
-	session.Logger.Info("Success Delete Cookie")
+	session.Logger.LogInfo("Success Delete Cookie")
 	return nil
 }
 

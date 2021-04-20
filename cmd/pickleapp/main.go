@@ -12,6 +12,9 @@ import (
 	delivery2 "server/internal/pkg/message/delivery"
 	mesrep "server/internal/pkg/message/repository"
 	usecase3 "server/internal/pkg/message/usecase"
+	"server/internal/pkg/models"
+	delivery3 "server/internal/pkg/photo/delivery"
+	usecase4 "server/internal/pkg/photo/usecase"
 	"server/internal/pkg/session"
 	sesrep "server/internal/pkg/session/repository"
 	handler "server/internal/pkg/user/delivery"
@@ -106,18 +109,17 @@ func (a *App) InitializeRoutes(currConfig Config) {
 	sanitizer := bluemonday.UGCPolicy()
 
 	userUcase := usecase.UserUsecase{Db: userRep, Clients: &clients, Sanitizer: sanitizer}
-	chatUcase := usecase2.ChatUsecase{Db: chatRep, Clients: &clients}
-	messUcase := usecase3.MessageUsecase{Db: messageRep, Clients: &clients, Sanitizer: sanitizer}
-	sessionManager := session.SessionsManager{DB: sessionRep}
+	chatUcase := usecase2.ChatUsecase{Db: &chatRep, Clients: &clients}
+	messUcase := usecase3.MessageUsecase{Db: &messageRep, Clients: &clients, Sanitizer: sanitizer}
+	sessionManager := session.SessionsManager{DB: &sessionRep}
 
 	chatHandler := delivery.ChatHandler{
-		Db:       chatRep,
+		Db:       &chatRep,
 		Sessions: &sessionManager,
 		Usecase:  &chatUcase,
 	}
 
 	messHandler := delivery2.MessageHandler{
-		Db:       messageRep,
 		Sessions: &sessionManager,
 		Usecase:  &messUcase,
 	}
@@ -127,13 +129,19 @@ func (a *App) InitializeRoutes(currConfig Config) {
 		Sessions: &sessionManager,
 	}
 
+	photousecase := usecase4.PhotoUseCase{
+		Db: &userRep,
+	}
+
 	// init middlewares
 	loggerm := middleware.LoggerMiddleware{
-		Logger:  contextLogger,
-		User:    &userHandler,
-		Chat:    &chatHandler,
-		Message: &messHandler,
+		Logger:  &models.Logger{Logger: logrus.NewEntry(a.Logger)},
+		User:    &userUcase,
+		Photo:   &photousecase,
+		Session: &sessionManager,
 	}
+
+	photohandler := delivery3.PhotoHandler{Sessions: &sessionManager, Usecase: photousecase}
 
 	checkcookiem := middleware.ValidateCookieMiddleware{Session: &sessionManager}
 
@@ -143,51 +151,11 @@ func (a *App) InitializeRoutes(currConfig Config) {
 	subRouter := a.router.NewRoute().Subrouter()
 	subRouter.Use(checkcookiem.Middleware)
 
-	// получить информацию о пользователе
-	subRouter.HandleFunc("/users/{id:[0-9]+}", userHandler.GetUserInfo).Methods("GET")
-	// получить ленту
-	subRouter.HandleFunc("/feed", userHandler.GetUsers).Methods("GET")
-	// првоерить куку
-	subRouter.HandleFunc("/auth", userHandler.GetLogin).Methods("GET")
-	// удалить юзера
-	subRouter.HandleFunc("/users/{id:[0-9]+}", userHandler.DeleteUser).Methods("DELETE")
-	// изменить информацию о юзере
-	subRouter.HandleFunc("/users/{id:[0-9]+}", userHandler.ChangeUserInfo).Methods("PATCH")
-	// поставить оценку юзеру из ленты
-	subRouter.HandleFunc("/likes", userHandler.LikesHandler).Methods("POST")
-
-	// загрузить новую фотку на сервер
-	subRouter.HandleFunc("/images", userHandler.UploadPhoto).Methods("POST")
-	// выгрузить фотку с сервера
-	subRouter.HandleFunc("/images/{id:[0-9]+}", userHandler.DownloadPhoto).Methods("GET")
-	// удалить фотку
-	//subRouter.HandleFunc("/images/{id:[0-9]+}", userHandler.DeletePhoto).Methods("DELETE")
-
-	// валидация всех данных, без кук
-	// регистрация
-	a.router.HandleFunc("/users", userHandler.SignUp).Methods("POST")
-	// логин
-	a.router.HandleFunc("/login", userHandler.SignIn).Methods("POST")
-	// логаут
-	a.router.HandleFunc("/login", userHandler.LogOut).Methods("DELETE")
-
-	// открытие вэсокетного соединения
-	subRouter.HandleFunc("/ws", userHandler.WsHandler).Methods("GET")
-
-	// получить чаты юзера
-	subRouter.HandleFunc("/users/{userId:[0-9]+}/chats", chatHandler.GetChats).Methods("GET")
-
-	// получить сообщения из чата
-	subRouter.HandleFunc("/chats/{chatId:[0-9]+}/messages", messHandler.GetMessages).Methods("GET")
-	// отправка нового сообщения
-	subRouter.HandleFunc("/chats/{chatId:[0-9]+}/messages", messHandler.SendMessage).Methods("POST")
-	// реакция
-	subRouter.HandleFunc("/messages/{messageId:[0-9]+}", messHandler.ChangeMessage).Methods("PATCH")
-	// отправка сообщения по вэбсокету собеседнику
-	go messHandler.WebSocketMessageResponse()
-
-	// отправка оповещения о новом чате
-	go userHandler.WebSocketChatResponse()
+	userHandler.SetHandlersWithCheckCookie(subRouter)
+	userHandler.SetHandlersWithoutCheckCookie(a.router)
+	photohandler.SetPhotoHandlers(subRouter)
+	messHandler.SetMessageHandlers(subRouter)
+	chatHandler.SetChatHandlers(subRouter)
 }
 
 func main() {

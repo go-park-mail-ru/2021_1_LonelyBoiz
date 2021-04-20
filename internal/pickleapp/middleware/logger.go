@@ -1,28 +1,28 @@
 package middleware
 
 import (
+	"github.com/sirupsen/logrus"
 	"math/rand"
 	"net/http"
-	delivery2 "server/internal/pkg/chat/delivery"
-	delivery3 "server/internal/pkg/message/delivery"
-	"server/internal/pkg/user/delivery"
+	"server/internal/pkg/models"
+	usecase2 "server/internal/pkg/photo/usecase"
+	"server/internal/pkg/session"
+	"server/internal/pkg/user/usecase"
 	"time"
-
-	"github.com/sirupsen/logrus"
 )
 
 type LoggerMiddleware struct {
-	Logger  *logrus.Logger
-	User    *delivery.UserHandler
-	Chat    *delivery2.ChatHandler
-	Message *delivery3.MessageHandler
+	Logger  *models.Logger
+	User    *usecase.UserUsecase
+	Photo   *usecase2.PhotoUseCase
+	Session *session.SessionsManager
 }
 
 func (logger *LoggerMiddleware) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
-				logger.Logger.Error(err)
+				logger.Logger.LogError(err)
 			}
 		}()
 
@@ -31,7 +31,7 @@ func (logger *LoggerMiddleware) Middleware(next http.Handler) http.Handler {
 		rand.Seed(time.Now().UnixNano())
 		reqId := rand.Int63()
 
-		logger.User.UserCase.Logger = logger.Logger.WithFields(logrus.Fields{
+		logger.Logger.Logger = logger.Logger.Logger.WithFields(logrus.Fields{
 			"requestId":   reqId,
 			"method":      r.Method,
 			"url":         r.URL.Path,
@@ -41,12 +41,11 @@ func (logger *LoggerMiddleware) Middleware(next http.Handler) http.Handler {
 			"time":        time.Now(),
 		})
 
-		logger.User.Sessions.Logger = logger.User.UserCase.Logger
-		logger.Chat.Usecase.Logger = logger.User.UserCase.Logger
-		logger.Message.Usecase.Logger = logger.User.UserCase.Logger
-		logger.User.UserCase.Logger.Info("Entry")
+		logger.Logger.LogInfo("Entry Point - Logger Middleware")
+		logger.User.LoggerInterface = logger.Logger
+		logger.Photo.LoggerInterface = logger.Logger
+		logger.Session.Logger = logger.Logger
 
 		next.ServeHTTP(w, r)
-
 	})
 }

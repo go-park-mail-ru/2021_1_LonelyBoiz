@@ -8,6 +8,12 @@ import (
 	_ "github.com/jackc/pgx/stdlib"
 )
 
+type SessionRepositoryInterface interface {
+	AddCookie(id int, token string) error
+	GetCookie(token string) (int, error)
+	DeleteCookie(id int, token string) error
+}
+
 type SessionRepository struct {
 	DB *sqlx.DB
 }
