@@ -4,6 +4,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"math/rand"
 	"net/http"
+	usecase3 "server/internal/pkg/chat/usecase"
 	"server/internal/pkg/models"
 	usecase2 "server/internal/pkg/photo/usecase"
 	"server/internal/pkg/session"
@@ -15,6 +16,7 @@ type LoggerMiddleware struct {
 	Logger  *models.Logger
 	User    *usecase.UserUsecase
 	Photo   *usecase2.PhotoUseCase
+	Chat    *usecase3.ChatUsecase
 	Session *session.SessionsManager
 }
 
@@ -45,6 +47,7 @@ func (logger *LoggerMiddleware) Middleware(next http.Handler) http.Handler {
 		logger.User.LoggerInterface = logger.Logger
 		logger.Photo.LoggerInterface = logger.Logger
 		logger.Session.Logger = logger.Logger
+		logger.Chat.LoggerInterface = logger.Logger
 
 		next.ServeHTTP(w, r)
 	})

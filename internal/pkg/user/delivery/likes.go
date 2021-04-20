@@ -10,7 +10,7 @@ func (a *UserHandler) LikesHandler(w http.ResponseWriter, r *http.Request) {
 	userId, ok := a.Sessions.GetIdFromContext(r.Context())
 	if !ok {
 		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
-		model.Process(model.NewLogFunc(response.Err, a.UserCase.LogError), model.NewResponseFunc(w, 403, response))
+		model.Process(model.LoggerFunc(response.Err, a.UserCase.LogError), model.ResponseFunc(w, 403, response))
 		return
 	}
 
@@ -21,23 +21,23 @@ func (a *UserHandler) LikesHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		response := model.ErrorResponse{Err: "Не удалось прочитать тело запроса"}
 
-		model.Process(model.NewLogFunc(response.Err, a.UserCase.LogError), model.NewResponseFunc(w, 400, response))
+		model.Process(model.LoggerFunc(response.Err, a.UserCase.LogError), model.ResponseFunc(w, 400, response))
 		return
 	}
 
 	newChat, code, err := a.UserCase.CreateChat(userId, like)
 	switch code {
 	case 200:
-		model.Process(model.NewLogFunc("Create Feed", a.UserCase.LogError), model.NewResponseFunc(w, code, newChat))
+		model.Process(model.LoggerFunc("Create Feed", a.UserCase.LogError), model.ResponseFunc(w, code, newChat))
 	case 204:
 		w.WriteHeader(204)
-		model.Process(model.NewLogFunc("Return 204 header", a.UserCase.LogInfo), model.NewResponseFunc(w, code, nil))
+		model.Process(model.LoggerFunc("Return 204 header", a.UserCase.LogInfo), model.ResponseFunc(w, code, nil))
 		return
 	case 500:
-		model.Process(model.NewLogFunc(err, a.UserCase.LogError), model.NewResponseFunc(w, code, err))
+		model.Process(model.LoggerFunc(err, a.UserCase.LogError), model.ResponseFunc(w, code, err))
 		return
 	default:
-		model.Process(model.NewLogFunc(err, a.UserCase.LogInfo), model.NewResponseFunc(w, code, err))
+		model.Process(model.LoggerFunc(err, a.UserCase.LogInfo), model.ResponseFunc(w, code, err))
 		return
 	}
 

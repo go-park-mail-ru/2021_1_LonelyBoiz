@@ -10,19 +10,19 @@ func (a *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 	newUser, err := a.UserCase.ParseJsonToUser(r.Body)
 	if err != nil {
 		response := model.ErrorResponse{Err: "Не удалось прочитать тело запроса"}
-		models.Process(models.NewLogFunc(response.Err, a.UserCase.LogInfo), models.NewResponseFunc(w, 400, response))
+		models.Process(models.LoggerFunc(response.Err, a.UserCase.LogInfo), models.ResponseFunc(w, 400, response))
 		return
 	}
 
 	ok, err := a.UserCase.CheckCaptch(newUser.CaptchaToken)
 	if err != nil {
-		models.Process(models.NewLogFunc(err.Error(), a.UserCase.LogError), models.NewResponseFunc(w, 500, nil))
+		models.Process(models.LoggerFunc(err.Error(), a.UserCase.LogError), models.ResponseFunc(w, 500, nil))
 		return
 	}
 
-	if !ok {
+	if ok {
 		response := model.ErrorResponse{Err: "Не удалось пройти капчу"}
-		models.Process(models.NewLogFunc(response.Err, a.UserCase.LogInfo), models.NewResponseFunc(w, 400, response))
+		models.Process(models.LoggerFunc(response.Err, a.UserCase.LogInfo), models.ResponseFunc(w, 400, response))
 		return
 	}
 
@@ -30,18 +30,18 @@ func (a *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 	switch code {
 	case 200:
 	case 500:
-		models.Process(models.NewLogFunc(err, a.UserCase.LogError), models.NewResponseFunc(w, code, err))
+		models.Process(models.LoggerFunc(err, a.UserCase.LogError), models.ResponseFunc(w, code, err))
 		return
 	default:
-		models.Process(models.NewLogFunc(err, a.UserCase.LogInfo), models.NewResponseFunc(w, code, err))
+		models.Process(models.LoggerFunc(err, a.UserCase.LogInfo), models.ResponseFunc(w, code, err))
 		return
 	}
 
 	err = a.Sessions.SetSession(w, newUser.Id)
 	if err != nil {
-		models.Process(models.NewLogFunc(err, a.UserCase.LogError), models.NewResponseFunc(w, 500, nil))
+		models.Process(models.LoggerFunc(err, a.UserCase.LogError), models.ResponseFunc(w, 500, nil))
 		return
 	}
 
-	models.Process(models.NewLogFunc("Success SignUp", a.UserCase.LogInfo), models.NewResponseFunc(w, 200, newUser))
+	models.Process(models.LoggerFunc("Success SignUp", a.UserCase.LogInfo), models.ResponseFunc(w, 200, newUser))
 }

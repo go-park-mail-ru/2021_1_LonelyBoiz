@@ -11,7 +11,7 @@ func (a *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
 
-		model.Process(model.NewLogFunc(response.Err, a.UserCase.LogInfo), model.NewResponseFunc(w, 403, response))
+		model.Process(model.LoggerFunc(response.Err, a.UserCase.LogInfo), model.ResponseFunc(w, 403, response))
 		return
 	}
 
@@ -20,7 +20,7 @@ func (a *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		response := model.ErrorResponse{Err: "Не указан count"}
 
-		model.Process(model.NewLogFunc(response.Err, a.UserCase.LogInfo), model.NewResponseFunc(w, 400, response))
+		model.Process(model.LoggerFunc(response.Err, a.UserCase.LogInfo), model.ResponseFunc(w, 400, response))
 		return
 	}
 
@@ -28,18 +28,18 @@ func (a *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		response := model.ErrorResponse{Err: "Неверный формат count"}
-		model.Process(model.NewLogFunc(response.Err, a.UserCase.LogError), model.NewResponseFunc(w, 400, response))
+		model.Process(model.LoggerFunc(response.Err, a.UserCase.LogError), model.ResponseFunc(w, 400, response))
 		return
 	}
 
 	feed, code, err := a.UserCase.CreateFeed(id, limitInt)
 	switch code {
 	case 200:
-		model.Process(model.NewLogFunc("Create Feed", a.UserCase.LogInfo), model.NewResponseFunc(w, code, feed))
+		model.Process(model.LoggerFunc("Create Feed", a.UserCase.LogInfo), model.ResponseFunc(w, code, feed))
 	case 500:
-		model.Process(model.NewLogFunc(err, a.UserCase.LogError), model.NewResponseFunc(w, code, err))
+		model.Process(model.LoggerFunc(err, a.UserCase.LogError), model.ResponseFunc(w, code, err))
 	default:
-		model.Process(model.NewLogFunc(err, a.UserCase.LogInfo), model.NewResponseFunc(w, code, err))
+		model.Process(model.LoggerFunc(err, a.UserCase.LogInfo), model.ResponseFunc(w, code, err))
 	}
 
 	return

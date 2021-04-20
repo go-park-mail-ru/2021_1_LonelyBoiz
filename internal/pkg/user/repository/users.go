@@ -3,7 +3,6 @@ package repository
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	model "server/internal/pkg/models"
 
 	"github.com/jmoiron/sqlx"
@@ -120,7 +119,6 @@ func (repo *UserRepository) GetUser(id int) (model.User, error) {
 
 	err = repo.DB.Select(&user[0].Photos, `SELECT photoId FROM photos WHERE userid = $1`, id)
 	if err != nil {
-		fmt.Println(err)
 		return model.User{}, err
 	}
 	if len(user[0].Photos) == 0 {
@@ -160,7 +158,6 @@ func (repo *UserRepository) ChangeUser(newUser model.User) error {
 func (repo *UserRepository) CheckMail(email string) (bool, error) {
 	var emails []string
 	err := repo.DB.Select(&emails, `SELECT email FROM users WHERE email = $1`, email)
-	fmt.Println(err, emails)
 	if err != nil {
 		return true, err
 	}

@@ -114,7 +114,6 @@ func (a *App) InitializeRoutes(currConfig Config) {
 	sessionManager := session.SessionsManager{DB: &sessionRep}
 
 	chatHandler := delivery.ChatHandler{
-		Db:       &chatRep,
 		Sessions: &sessionManager,
 		Usecase:  &chatUcase,
 	}
@@ -139,6 +138,7 @@ func (a *App) InitializeRoutes(currConfig Config) {
 		User:    &userUcase,
 		Photo:   &photousecase,
 		Session: &sessionManager,
+		Chat:    &chatUcase,
 	}
 
 	photohandler := delivery3.PhotoHandler{Sessions: &sessionManager, Usecase: photousecase}

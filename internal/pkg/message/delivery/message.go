@@ -36,7 +36,7 @@ func (m *MessageHandler) GetMessages(w http.ResponseWriter, r *http.Request) {
 	userId, ok := m.Sessions.GetIdFromContext(r.Context())
 	if !ok {
 		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
-		model.Process(model.NewLogFunc(response.Err, m.Usecase.LogError), model.NewResponseFunc(w, 403, response))
+		model.Process(model.LoggerFunc(response.Err, m.Usecase.LogError), model.ResponseFunc(w, 403, response))
 		return
 	}
 
@@ -45,7 +45,7 @@ func (m *MessageHandler) GetMessages(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
 		response.Description["messageId"] = "Сообщения с таким id нет"
-		model.Process(model.NewLogFunc(response.Err, m.Usecase.LogInfo), model.NewResponseFunc(w, 400, response))
+		model.Process(model.LoggerFunc(response.Err, m.Usecase.LogInfo), model.ResponseFunc(w, 400, response))
 		return
 	}
 
@@ -53,36 +53,36 @@ func (m *MessageHandler) GetMessages(w http.ResponseWriter, r *http.Request) {
 	limit, ok := query["count"]
 	if !ok {
 		response := model.ErrorResponse{Err: "Не указан count"}
-		model.Process(model.NewLogFunc(response.Err, m.Usecase.LogInfo), model.NewResponseFunc(w, 400, response))
+		model.Process(model.LoggerFunc(response.Err, m.Usecase.LogInfo), model.ResponseFunc(w, 400, response))
 		return
 	}
 	limitInt, err := strconv.Atoi(limit[0])
 	if err != nil {
 		response := model.ErrorResponse{Err: "Неверный формат count"}
-		model.Process(model.NewLogFunc(response.Err, m.Usecase.LogInfo), model.NewResponseFunc(w, 400, response))
+		model.Process(model.LoggerFunc(response.Err, m.Usecase.LogInfo), model.ResponseFunc(w, 400, response))
 		return
 	}
 	offset, ok := query["offset"]
 	if !ok {
 		response := model.ErrorResponse{Err: "Не указан offset"}
-		model.Process(model.NewLogFunc(response.Err, m.Usecase.LogInfo), model.NewResponseFunc(w, 400, response))
+		model.Process(model.LoggerFunc(response.Err, m.Usecase.LogInfo), model.ResponseFunc(w, 400, response))
 		return
 	}
 	offsetInt, err := strconv.Atoi(offset[0])
 	if err != nil {
 		response := model.ErrorResponse{Err: "Неверный формат offset"}
-		model.Process(model.NewLogFunc(response.Err, m.Usecase.LogInfo), model.NewResponseFunc(w, 400, response))
+		model.Process(model.LoggerFunc(response.Err, m.Usecase.LogInfo), model.ResponseFunc(w, 400, response))
 		return
 	}
 
 	messages, code, err := m.Usecase.ManageMessage(userId, chatId, limitInt, offsetInt)
 	switch code {
 	case 200:
-		model.Process(model.NewLogFunc("Success: Get Messages", m.Usecase.LogInfo), model.NewResponseFunc(w, code, messages))
+		model.Process(model.LoggerFunc("Success: Get Messages", m.Usecase.LogInfo), model.ResponseFunc(w, code, messages))
 	case 500:
-		model.Process(model.NewLogFunc(err, m.Usecase.LogError), model.NewResponseFunc(w, code, nil))
+		model.Process(model.LoggerFunc(err, m.Usecase.LogError), model.ResponseFunc(w, code, nil))
 	default:
-		model.Process(model.NewLogFunc(err, m.Usecase.LogInfo), model.NewResponseFunc(w, code, err))
+		model.Process(model.LoggerFunc(err, m.Usecase.LogInfo), model.ResponseFunc(w, code, err))
 	}
 }
 
@@ -92,21 +92,21 @@ func (m *MessageHandler) SendMessage(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
 		response.Description["chatId"] = "Чата с таким id нет"
-		model.Process(model.NewLogFunc(err, m.Usecase.LogInfo), model.NewResponseFunc(w, 400, response))
+		model.Process(model.LoggerFunc(err, m.Usecase.LogInfo), model.ResponseFunc(w, 400, response))
 		return
 	}
 
 	id, ok := m.Sessions.GetIdFromContext(r.Context())
 	if !ok {
 		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
-		model.Process(model.NewLogFunc(response.Err, m.Usecase.LogError), model.NewResponseFunc(w, 401, response))
+		model.Process(model.LoggerFunc(response.Err, m.Usecase.LogError), model.ResponseFunc(w, 401, response))
 		return
 	}
 
 	newMessage, err := m.Usecase.ParseJsonToMessage(r.Body)
 	if err != nil {
 		response := model.ErrorResponse{Err: "Не удалось прочитать тело запроса"}
-		model.Process(model.NewLogFunc(err, m.Usecase.LogInfo), model.NewResponseFunc(w, 400, response))
+		model.Process(model.LoggerFunc(err, m.Usecase.LogInfo), model.ResponseFunc(w, 400, response))
 		return
 	}
 
@@ -114,23 +114,23 @@ func (m *MessageHandler) SendMessage(w http.ResponseWriter, r *http.Request) {
 	switch code {
 	case 200:
 	case 500:
-		model.Process(model.NewLogFunc(err, m.Usecase.LogError), model.NewResponseFunc(w, 500, nil))
+		model.Process(model.LoggerFunc(err, m.Usecase.LogError), model.ResponseFunc(w, 500, nil))
 		return
 	default:
-		model.Process(model.NewLogFunc(err, m.Usecase.LogInfo), model.NewResponseFunc(w, code, err))
+		model.Process(model.LoggerFunc(err, m.Usecase.LogInfo), model.ResponseFunc(w, code, err))
 		return
 	}
 
 	go messagesWriter(&newMessage)
 
-	model.Process(model.NewLogFunc("Success Create Message", m.Usecase.LogInfo), model.NewResponseFunc(w, 200, newMessage))
+	model.Process(model.LoggerFunc("Success Create Message", m.Usecase.LogInfo), model.ResponseFunc(w, 200, newMessage))
 }
 
 func (m *MessageHandler) ChangeMessage(w http.ResponseWriter, r *http.Request) {
 	userId, ok := m.Sessions.GetIdFromContext(r.Context())
 	if !ok {
 		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
-		model.Process(model.NewLogFunc(response.Err, m.Usecase.LogInfo), model.NewResponseFunc(w, 403, response))
+		model.Process(model.LoggerFunc(response.Err, m.Usecase.LogInfo), model.ResponseFunc(w, 403, response))
 		return
 	}
 
@@ -139,14 +139,14 @@ func (m *MessageHandler) ChangeMessage(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
 		response.Description["messageId"] = "Сообщения с таким id нет"
-		model.Process(model.NewLogFunc(response.Err, m.Usecase.LogInfo), model.NewResponseFunc(w, 400, response))
+		model.Process(model.LoggerFunc(response.Err, m.Usecase.LogInfo), model.ResponseFunc(w, 400, response))
 		return
 	}
 
 	newMessage, err := m.Usecase.ParseJsonToMessage(r.Body)
 	if err != nil {
 		response := model.ErrorResponse{Err: "Не удалось прочитать тело запроса"}
-		model.Process(model.NewLogFunc(response.Err, m.Usecase.LogInfo), model.NewResponseFunc(w, 400, response))
+		model.Process(model.LoggerFunc(response.Err, m.Usecase.LogInfo), model.ResponseFunc(w, 400, response))
 		return
 	}
 
@@ -154,14 +154,14 @@ func (m *MessageHandler) ChangeMessage(w http.ResponseWriter, r *http.Request) {
 	switch code {
 	case 204:
 	case 500:
-		model.Process(model.NewLogFunc(err, m.Usecase.LogError), model.NewResponseFunc(w, code, nil))
+		model.Process(model.LoggerFunc(err, m.Usecase.LogError), model.ResponseFunc(w, code, nil))
 		return
 	default:
-		model.Process(model.NewLogFunc(err, m.Usecase.LogInfo), model.NewResponseFunc(w, code, err))
+		model.Process(model.LoggerFunc(err, m.Usecase.LogInfo), model.ResponseFunc(w, code, err))
 		return
 	}
 
-	model.Process(model.NewLogFunc("New message", m.Usecase.LogInfo), model.NewResponseFunc(w, 204, err))
+	model.Process(model.LoggerFunc("New message", m.Usecase.LogInfo), model.ResponseFunc(w, 204, err))
 
 	go messagesWriter(&newMessage)
 }

@@ -10,19 +10,19 @@ func (a *UserHandler) SignIn(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		a.UserCase.LogError(err.Error())
 		response := models.ErrorResponse{Err: "Не удалось прочитать тело запроса"}
-		models.Process(models.NewLogFunc(response.Err, a.UserCase.LogInfo), models.NewResponseFunc(w, 401, response))
+		models.Process(models.LoggerFunc(response.Err, a.UserCase.LogInfo), models.ResponseFunc(w, 401, response))
 		return
 	}
 
 	newUser, code, err := a.UserCase.SignIn(newUser)
 	if code != 200 {
-		models.Process(models.NewLogFunc(err.Error(), a.UserCase.LogError), models.NewResponseFunc(w, code, err))
+		models.Process(models.LoggerFunc(err.Error(), a.UserCase.LogError), models.ResponseFunc(w, code, err))
 		return
 	}
 
 	err = a.Sessions.SetSession(w, newUser.Id)
 	if err != nil {
-		models.Process(models.NewLogFunc(err.Error(), a.UserCase.LogError), models.NewResponseFunc(w, 500, nil))
+		models.Process(models.LoggerFunc(err.Error(), a.UserCase.LogError), models.ResponseFunc(w, 500, nil))
 		return
 	}
 
@@ -32,5 +32,5 @@ func (a *UserHandler) SignIn(w http.ResponseWriter, r *http.Request) {
 
 	newUser.PasswordHash = nil
 
-	models.Process(models.NewLogFunc("Success LogIn", a.UserCase.LogInfo), models.NewResponseFunc(w, 200, newUser))
+	models.Process(models.LoggerFunc("Success LogIn", a.UserCase.LogInfo), models.ResponseFunc(w, 200, newUser))
 }

@@ -36,16 +36,15 @@ type (
 	responsefunc func()
 )
 
-func NewLogFunc(body interface{}, logfunc func(string2 interface{})) logfunc {
+func LoggerFunc(body interface{}, logfunc func(string2 interface{})) logfunc {
 	return func() {
 		logfunc(body)
 	}
 }
 
-func NewResponseFunc(w http.ResponseWriter, code int, body interface{}) responsefunc {
+func ResponseFunc(w http.ResponseWriter, code int, body interface{}) responsefunc {
 	return func() {
-		w.WriteHeader(code)
-		json.NewEncoder(w).Encode(body)
+		ResponseWithJson(w, code, body)
 	}
 }
 

@@ -37,8 +37,8 @@ func (session *SessionsManager) SetSession(w http.ResponseWriter, id int) error 
 		Name:     "token",
 		Value:    key,
 		Expires:  expiration,
-		SameSite: http.SameSiteNoneMode,
-		Domain:   "localhos2t:8000",
+		SameSite: http.SameSiteLaxMode,
+		Domain:   "localhost:3000",
 	}
 
 	http.SetCookie(w, &cookie)

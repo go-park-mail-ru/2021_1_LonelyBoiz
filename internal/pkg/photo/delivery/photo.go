@@ -38,7 +38,7 @@ func (a *PhotoHandler) DownloadPhoto(w http.ResponseWriter, r *http.Request) {
 
 	if !ok {
 		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
-		model.Process(model.NewLogFunc(response.Err, a.Usecase.LogInfo), model.NewResponseFunc(w, 403, response))
+		model.Process(model.LoggerFunc(response.Err, a.Usecase.LogInfo), model.ResponseFunc(w, 403, response))
 		return
 	}
 
@@ -49,7 +49,7 @@ func (a *PhotoHandler) DownloadPhoto(w http.ResponseWriter, r *http.Request) {
 		response.Description["id"] = "Фото с таким id нет"
 		model.ResponseWithJson(w, 400, response)
 
-		model.Process(model.NewLogFunc(response.Err, a.Usecase.LogInfo), model.NewResponseFunc(w, 403, response))
+		model.Process(model.LoggerFunc(response.Err, a.Usecase.LogInfo), model.ResponseFunc(w, 403, response))
 		return
 	}
 
