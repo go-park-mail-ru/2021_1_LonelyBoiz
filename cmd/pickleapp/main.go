@@ -38,7 +38,7 @@ func (a *App) Start() error {
 	a.Logger.Info("Server Start")
 
 	cors := cors2.New(cors2.Options{
-		AllowedOrigins:   []string{"http://localhost:3000", "https://lepick.herokuapp.com"},
+		AllowedOrigins:   []string{"*"},
 		AllowCredentials: true,
 		AllowedMethods:   []string{"GET", "POST", "DELETE", "PATCH", "OPTIONS"},
 		AllowedHeaders:   []string{"Content-Type", "Access-Control-Allow-Headers", "Authorization", "X-Requested-With"},
