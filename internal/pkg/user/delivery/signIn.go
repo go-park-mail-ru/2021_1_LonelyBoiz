@@ -16,7 +16,7 @@ func (a *UserHandler) SignIn(w http.ResponseWriter, r *http.Request) {
 
 	newUser, code, err := a.UserCase.SignIn(newUser)
 	if code != 200 {
-		models.Process(models.LoggerFunc(err.Error(), a.UserCase.LogError), models.ResponseFunc(w, code, err))
+		models.ResponseFunc(w, code, err)
 		return
 	}
 
@@ -25,12 +25,6 @@ func (a *UserHandler) SignIn(w http.ResponseWriter, r *http.Request) {
 		models.Process(models.LoggerFunc(err.Error(), a.UserCase.LogError), models.ResponseFunc(w, 500, nil))
 		return
 	}
-
-	if len(newUser.Photos) == 0 {
-		newUser.Photos = make([]int, 0)
-	}
-
-	newUser.PasswordHash = nil
 
 	models.Process(models.LoggerFunc("Success LogIn", a.UserCase.LogInfo), models.ResponseFunc(w, 200, newUser))
 }

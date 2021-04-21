@@ -26,7 +26,6 @@ func (m *MessageHandler) SetMessageHandlers(subRouter *mux.Router) {
 	subRouter.HandleFunc("/chats/{chatId:[0-9]+}/messages", m.SendMessage).Methods("POST")
 	// реакция
 	subRouter.HandleFunc("/messages/{messageId:[0-9]+}", m.ChangeMessage).Methods("PATCH")
-	// отправка сообщения по вэбсокету собеседнику
 
 	// отправка сообщения по вэбсокету собеседнику
 	go m.WebSocketMessageResponse()
@@ -151,13 +150,8 @@ func (m *MessageHandler) ChangeMessage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	newMessage, code, err := m.Usecase.ChangeMessage(userId, messageId, newMessage)
-	switch code {
-	case 204:
-	case 500:
-		model.Process(model.LoggerFunc(err, m.Usecase.LogError), model.ResponseFunc(w, code, nil))
-		return
-	default:
-		model.Process(model.LoggerFunc(err, m.Usecase.LogInfo), model.ResponseFunc(w, code, err))
+	if code != 204 {
+		model.ResponseFunc(w, code, err)
 		return
 	}
 

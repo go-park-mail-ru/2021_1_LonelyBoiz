@@ -72,23 +72,27 @@ func (m *MessageUsecase) WebsocketMessage(newMessage model.Message) {
 func (m *MessageUsecase) ChangeMessage(userId, messageId int, newMessage model.Message) (model.Message, int, error) {
 	authorId, err := m.Db.CheckMessageForReacting(userId, messageId)
 	if err != nil {
+		m.LogError(err)
 		return model.Message{}, 500, nil
 	}
 
 	if authorId == -1 {
 		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
 		response.Description["userId"] = "Пытаешь поменять сообщение не из своего чата"
+		m.LogInfo(response)
 		return model.Message{}, 403, response
 	}
 
 	if authorId == userId {
 		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
 		response.Description["userId"] = "Пытаешь поставить реакцию на свое сообщение"
+		m.LogInfo(response)
 		return model.Message{}, 403, response
 	}
 
 	err = m.Db.ChangeMessageReaction(messageId, newMessage.Reaction)
 	if err != nil {
+		m.LogError(err)
 		return model.Message{}, 500, err
 	}
 

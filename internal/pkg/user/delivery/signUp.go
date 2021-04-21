@@ -26,14 +26,9 @@ func (a *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newUser, code, err := a.UserCase.CreateNewUser(newUser)
-	switch code {
-	case 200:
-	case 500:
-		models.Process(models.LoggerFunc(err, a.UserCase.LogError), models.ResponseFunc(w, code, err))
-		return
-	default:
-		models.Process(models.LoggerFunc(err, a.UserCase.LogInfo), models.ResponseFunc(w, code, err))
+	newUser, code, responseError := a.UserCase.CreateNewUser(newUser)
+	if code != 200 {
+		models.ResponseFunc(w, code, responseError)
 		return
 	}
 

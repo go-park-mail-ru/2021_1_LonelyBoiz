@@ -23,7 +23,6 @@ type UserHandlerInterface interface {
 	GetUsers(w http.ResponseWriter, r *http.Request)
 	GetLogin(w http.ResponseWriter, r *http.Request)
 
-	//куда??
 	WsHandler(w http.ResponseWriter, r *http.Request)
 	LikesHandler(w http.ResponseWriter, r *http.Request)
 	WebSocketChatResponse()

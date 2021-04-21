@@ -33,14 +33,11 @@ func (a *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	feed, code, err := a.UserCase.CreateFeed(id, limitInt)
-	switch code {
-	case 200:
-		model.Process(model.LoggerFunc("Create Feed", a.UserCase.LogInfo), model.ResponseFunc(w, code, feed))
-	case 500:
-		model.Process(model.LoggerFunc(err, a.UserCase.LogError), model.ResponseFunc(w, code, err))
-	default:
-		model.Process(model.LoggerFunc(err, a.UserCase.LogInfo), model.ResponseFunc(w, code, err))
+	if code != 200 {
+		model.ResponseFunc(w, code, err)
+		return
 	}
 
+	model.Process(model.LoggerFunc("Create Feed", a.UserCase.LogInfo), model.ResponseFunc(w, 200, feed))
 	return
 }

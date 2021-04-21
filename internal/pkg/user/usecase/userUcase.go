@@ -38,7 +38,7 @@ type UserUseCaseInterface interface {
 	GetUserInfoById(id int) (user model.User, err error)
 	DeleteUser(id int) error
 	CheckCaptch(token string) (bool, error)
-	CreateNewUser(newUser model.User) (user model.User, code int, err error)
+	CreateNewUser(newUser model.User) (user model.User, code int, responseError error)
 	ChangeUserInfo(newUser model.User, id int) (user model.User, code int, err error)
 	CreateFeed(id int, limitInt int) ([]int, int, error)
 	CreateChat(id int, like model.Like) (model.Chat, int, error)
@@ -93,39 +93,46 @@ func (u *UserUsecase) WebsocketChat(newChat *model.Chat) {
 func (u *UserUsecase) CreateChat(id int, like model.Like) (model.Chat, int, error) {
 	if like.Reaction != "like" && like.Reaction != "skip" {
 		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
-		response.Description["like"] = "неправильный формат реацкции, ожидается skip или like"
+		response.Description["like"] = "неправильный формат реакции, ожидается skip или like"
+		u.LogInfo(response)
 		return model.Chat{}, 400, response
 	}
 
 	rowsAffected, err := u.Db.Rating(id, like.UserId, like.Reaction)
 	if err != nil {
+		u.LogError(err)
 		return model.Chat{}, 500, nil
 	}
 
 	if rowsAffected != 1 {
 		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
 		response.Description["userID"] = "Пытаешься поставить лайк человеку не со своей ленты"
+		u.LogInfo(response)
 		return model.Chat{}, 403, response
 	}
 
 	reciprocity, err := u.Db.CheckReciprocity(like.UserId, id)
 	if err != nil {
+		u.LogError(err)
 		return model.Chat{}, 500, nil
 	}
 
 	if reciprocity == false || like.Reaction == "skip" {
+		u.LogInfo("Return 204 header")
 		return model.Chat{}, 204, nil
 	}
 
 	var newChat model.Chat
 	newChat.ChatId, err = u.Db.CreateChat(id, like.UserId)
 	if err != nil {
+		u.LogError(err)
 		return model.Chat{}, 500, nil
 	}
 
 	newChat.PartnerId = like.UserId
 	newChat.Photos, err = u.Db.GetPhotos(newChat.PartnerId)
 	if err != nil {
+		u.LogError(err)
 		return model.Chat{}, 500, nil
 	}
 
@@ -136,6 +143,7 @@ func (u *UserUsecase) CreateFeed(id int, limitInt int) ([]int, int, error) {
 	feed, err := u.Db.GetFeed(id, limitInt)
 
 	if err != nil {
+		u.LogError(err)
 		return nil, 500, nil
 	}
 
@@ -143,21 +151,25 @@ func (u *UserUsecase) CreateFeed(id int, limitInt int) ([]int, int, error) {
 		err = u.Db.CreateFeed(id)
 
 		if err != nil {
+			u.LogError(err)
 			return nil, 500, nil
 		}
 
 		feed, err = u.Db.GetFeed(id, limitInt)
 		if err != nil {
+			u.LogError(err)
 			return nil, 500, nil
 		}
 	}
 	if len(feed) == 0 {
 		err := u.Db.ClearFeed(id)
 		if err != nil {
+			u.LogError(err)
 			return nil, 500, nil
 		}
 		feed, err = u.Db.GetFeed(id, limitInt)
 		if err != nil {
+			u.LogError(err)
 			return nil, 500, nil
 		}
 	}
@@ -196,24 +208,28 @@ func (u *UserUsecase) ChangeUserInfo(newUser model.User, id int) (user model.Use
 	return newUser, 200, nil
 }
 
-func (u *UserUsecase) CreateNewUser(newUser model.User) (user model.User, code int, err error) {
+func (u *UserUsecase) CreateNewUser(newUser model.User) (user model.User, code int, responseError error) {
 	if response := u.ValidateSignUpData(newUser); response != nil {
-		return user, 400, response
+		u.LogInfo(response)
+		return model.User{}, 400, response
 	}
 
 	isSignedUp, response := u.IsAlreadySignedUp(newUser.Email)
 
 	if response != nil && reflect.TypeOf(response) != reflect.TypeOf(model.ErrorDescriptionResponse{}) {
-		return user, 500, nil
+		u.LogInfo(response)
+		return model.User{}, 500, nil
 	}
 
 	if isSignedUp {
-		return user, 400, response
+		u.LogInfo(response)
+		return model.User{}, 400, response
 	}
 
-	err = u.AddNewUser(&newUser)
+	err := u.AddNewUser(&newUser)
 	if err != nil {
-		return user, 500, nil
+		u.LogError(err)
+		return model.User{}, 500, nil
 	}
 
 	newUser.Password = ""
@@ -280,22 +296,32 @@ func (u *UserUsecase) DeleteUser(id int) error {
 func (u *UserUsecase) SignIn(user model.User) (newUser model.User, code int, err error) {
 	isValid, response := u.ValidateSignInData(user)
 	if !isValid {
+		u.LogInfo(response)
 		return model.User{}, 400, response
 	}
 
 	isCorrect, err := u.CheckPasswordWithEmail(user.Password, user.Email)
 	if err != nil {
+		u.LogError(err)
 		return model.User{}, 500, nil
 	}
 	if !isCorrect {
 		response := model.ErrorResponse{Err: "Неверный логин или пароль"}
+		u.LogInfo(response)
 		return model.User{}, 401, response
 	}
 
 	newUser, err = u.Db.SignIn(user.Email)
 	if err != nil {
+		u.LogError(err)
 		return model.User{}, 500, nil
 	}
+
+	if len(newUser.Photos) == 0 {
+		newUser.Photos = make([]int, 0)
+	}
+
+	newUser.PasswordHash = nil
 
 	return newUser, 200, nil
 }

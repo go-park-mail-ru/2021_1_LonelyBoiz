@@ -26,21 +26,17 @@ func (a *UserHandler) LikesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	newChat, code, err := a.UserCase.CreateChat(userId, like)
-	switch code {
-	case 200:
-		model.Process(model.LoggerFunc("Create Feed", a.UserCase.LogError), model.ResponseFunc(w, code, newChat))
-	case 204:
+	if code == 204 {
 		w.WriteHeader(204)
-		model.Process(model.LoggerFunc("Return 204 header", a.UserCase.LogInfo), model.ResponseFunc(w, code, nil))
-		return
-	case 500:
-		model.Process(model.LoggerFunc(err, a.UserCase.LogError), model.ResponseFunc(w, code, err))
-		return
-	default:
-		model.Process(model.LoggerFunc(err, a.UserCase.LogInfo), model.ResponseFunc(w, code, err))
 		return
 	}
 
+	if code != 200 {
+		model.ResponseFunc(w, code, err)
+		return
+	}
+
+	model.Process(model.LoggerFunc("Create Feed", a.UserCase.LogError), model.ResponseFunc(w, code, newChat))
 	go chatsWriter(&newChat)
 }
 
