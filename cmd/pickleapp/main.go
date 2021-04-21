@@ -139,6 +139,7 @@ func (a *App) InitializeRoutes(currConfig Config) {
 		Photo:   &photousecase,
 		Session: &sessionManager,
 		Chat:    &chatUcase,
+		Message: &messUcase,
 	}
 
 	photohandler := delivery3.PhotoHandler{Sessions: &sessionManager, Usecase: photousecase}

@@ -2,12 +2,10 @@ package usecase
 
 import (
 	"encoding/json"
+	"github.com/microcosm-cc/bluemonday"
 	"io"
 	mesrep "server/internal/pkg/message/repository"
 	model "server/internal/pkg/models"
-	"strconv"
-
-	"github.com/microcosm-cc/bluemonday"
 
 	"github.com/gorilla/websocket"
 )
@@ -58,7 +56,7 @@ func (m *MessageUsecase) WebsocketMessage(newMessage model.Message) {
 
 	client, ok := (*m.Clients)[partnerId]
 	if !ok {
-		m.LogInfo("Пользователь с id = " + strconv.Itoa(partnerId) + " не в сети")
+		//m.LogInfo("Пользователь не в сети")
 		return
 	}
 
@@ -136,16 +134,19 @@ func (m *MessageUsecase) CreateMessage(newMessage model.Message, chatId, id int)
 func (m *MessageUsecase) ManageMessage(userId, chatId, limitInt, offsetInt int) ([]model.Message, int, error) {
 	ok, err := m.Db.CheckChat(userId, chatId)
 	if err != nil {
-		return nil, 500, err
+		m.LogError(err)
+		return nil, 500, nil
 	}
 	if !ok {
 		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
 		response.Description["chatId"] = "Пытаешься получить не свой чат"
+		m.LogInfo(response)
 		return nil, 403, response
 	}
 
 	messages, err := m.Db.GetMessages(chatId, limitInt, offsetInt)
 	if err != nil {
+		m.LogError(err)
 		return nil, 500, err
 	}
 
