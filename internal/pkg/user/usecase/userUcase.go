@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"encoding/json"
-	"github.com/microcosm-cc/bluemonday"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -11,6 +10,8 @@ import (
 	model "server/internal/pkg/models"
 	"server/internal/pkg/user/repository"
 	"strconv"
+
+	"github.com/microcosm-cc/bluemonday"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/gorilla/websocket"
@@ -103,7 +104,6 @@ func (u *UserUsecase) CreateChat(id int, like model.Like) (model.Chat, int, erro
 		u.LogError(err)
 		return model.Chat{}, 500, nil
 	}
-
 	if rowsAffected != 1 {
 		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
 		response.Description["userID"] = "Пытаешься поставить лайк человеку не со своей ленты"
@@ -215,7 +215,7 @@ func (u *UserUsecase) CreateNewUser(newUser model.User) (user model.User, code i
 		return model.User{}, 500, nil
 	}
 
-	if ok {
+	if !ok {
 		response := model.ErrorResponse{Err: "Не удалось пройти капчу"}
 		u.LogInfo(response)
 		return model.User{}, 400, response
