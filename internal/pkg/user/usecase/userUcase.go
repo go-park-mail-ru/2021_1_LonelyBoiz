@@ -50,7 +50,7 @@ type UserUseCaseInterface interface {
 
 type UserUsecase struct {
 	Clients *map[int]*websocket.Conn
-	Db      repository.UserRepository
+	Db      repository.UserRepositoryInterface
 	model.LoggerInterface
 	Sanitizer *bluemonday.Policy
 }
@@ -209,6 +209,18 @@ func (u *UserUsecase) ChangeUserInfo(newUser model.User, id int) (user model.Use
 }
 
 func (u *UserUsecase) CreateNewUser(newUser model.User) (user model.User, code int, responseError error) {
+	ok, err := u.CheckCaptch(newUser.CaptchaToken)
+	if err != nil {
+		u.LogError(err)
+		return model.User{}, 500, nil
+	}
+
+	if ok {
+		response := model.ErrorResponse{Err: "Не удалось пройти капчу"}
+		u.LogInfo(response)
+		return model.User{}, 400, response
+	}
+
 	if response := u.ValidateSignUpData(newUser); response != nil {
 		u.LogInfo(response)
 		return model.User{}, 400, response
@@ -226,7 +238,7 @@ func (u *UserUsecase) CreateNewUser(newUser model.User) (user model.User, code i
 		return model.User{}, 400, response
 	}
 
-	err := u.AddNewUser(&newUser)
+	err = u.AddNewUser(&newUser)
 	if err != nil {
 		u.LogError(err)
 		return model.User{}, 500, nil

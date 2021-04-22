@@ -14,18 +14,6 @@ func (a *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ok, err := a.UserCase.CheckCaptch(newUser.CaptchaToken)
-	if err != nil {
-		models.Process(models.LoggerFunc(err.Error(), a.UserCase.LogError), models.ResponseFunc(w, 500, nil))
-		return
-	}
-
-	if ok {
-		response := model.ErrorResponse{Err: "Не удалось пройти капчу"}
-		models.Process(models.LoggerFunc(response.Err, a.UserCase.LogInfo), models.ResponseFunc(w, 400, response))
-		return
-	}
-
 	newUser, code, responseError := a.UserCase.CreateNewUser(newUser)
 	if code != 200 {
 		models.ResponseFunc(w, code, responseError)

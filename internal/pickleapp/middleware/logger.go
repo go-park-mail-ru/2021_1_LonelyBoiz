@@ -31,8 +31,6 @@ func (logger *LoggerMiddleware) Middleware(next http.Handler) http.Handler {
 		}()
 
 		start := time.Now()
-
-		rand.Seed(time.Now().UnixNano())
 		reqId := rand.Int63()
 
 		logger.Logger.Logger = logger.Logger.Logger.WithFields(logrus.Fields{

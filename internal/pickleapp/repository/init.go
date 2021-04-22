@@ -2,7 +2,6 @@ package repository
 
 import (
 	"database/sql"
-	"fmt"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -12,14 +11,12 @@ func getPostgres() *sql.DB {
 	dsn := "dbname=postgres host=127.0.0.1 port=5432 sslmode=disable"
 	db, err := sql.Open("pgx", dsn)
 	if err != nil {
-		fmt.Println("cant parse config", err)
-		return nil
+		panic("cant parse config" + err.Error())
 	}
 
 	err = db.Ping()
 	if err != nil {
-		fmt.Println("can`t ping db", err)
-		return nil
+		panic("can`t ping db" + err.Error())
 	}
 
 	db.SetMaxOpenConns(10)
