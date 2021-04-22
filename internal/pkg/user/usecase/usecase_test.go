@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"server/internal/pkg/models"
 	"server/internal/pkg/user/repository/mocks"
-
-	//"server/internal/pkg/user/usecase"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -14,6 +12,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
+
+//"server/internal/pkg/user/usecase"
 
 func TestUserUsecaseSignInNonValidEmail(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
@@ -537,28 +537,6 @@ func TestCreateFeedSuccess(t *testing.T) {
 	dbMock.EXPECT().GetFeed(userId, limit).Return(nil, nil)
 	dbMock.EXPECT().ClearFeed(userId).Return(nil)
 	dbMock.EXPECT().GetFeed(userId, limit).Return(nil, nil)
-
-	_, code, err := UserUsecaseTest.CreateFeed(userId, limit)
-	assert.Equal(t, nil, err)
-	assert.Equal(t, 200, code)
-}
-
-func TestCreateNewUserCaptchaFail(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-
-	dbMock := mocks.NewMockUserRepositoryInterface(mockCtrl)
-
-	UserUsecaseTest := UserUsecase{
-		Clients:         nil,
-		Db:              dbMock,
-		LoggerInterface: &models.Logger{Logger: logrus.New().WithField("test", "test")},
-		Sanitizer:       bluemonday.NewPolicy(),
-	}
-
-	limit := 10
-	userId := 1
-
-	dbMock.EXPECT().GetFeed(userId, limit).Return([]int{1, 2}, nil)
 
 	_, code, err := UserUsecaseTest.CreateFeed(userId, limit)
 	assert.Equal(t, nil, err)
