@@ -4,8 +4,8 @@ import (
 	"fmt"
 	model "server/internal/pkg/models"
 
-	"github.com/jmoiron/sqlx"
 	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
 )
 
 type ChatRepository struct {
