@@ -37,6 +37,7 @@ func (session *SessionsManager) SetSession(w http.ResponseWriter, id int) error 
 		Secure:   true,
 		Domain:   "p1ckle.herokuapp.com",
 		HttpOnly: true,
+		Path:     "/",
 	}
 
 	http.SetCookie(w, &cookie)
