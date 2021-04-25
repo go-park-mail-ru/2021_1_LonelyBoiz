@@ -22,6 +22,7 @@ import (
 	"server/internal/pkg/user/usecase"
 	"time"
 
+	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/jmoiron/sqlx"
@@ -44,7 +45,7 @@ func (a *App) Start() error {
 		AllowedOrigins:   []string{"http://localhost:3000", "https://lepick.herokuapp.com"},
 		AllowCredentials: true,
 		AllowedMethods:   []string{"GET", "POST", "DELETE", "PATCH", "OPTIONS"},
-		AllowedHeaders:   []string{"Content-Type", "Access-Control-Allow-Headers", "Authorization", "X-Requested-With"},
+		AllowedHeaders:   []string{"Content-Type", "Access-Control-Allow-Headers", "Authorization", "X-Requested-With", "X-CSRF-Token"},
 		Debug:            false,
 	})
 
@@ -134,6 +135,8 @@ func (a *App) InitializeRoutes(currConfig Config) {
 	}
 
 	// init middlewares
+	csrfMiddleware := csrf.Protect([]byte("32-byte-long-auth-key"))
+
 	loggerm := middleware.LoggerMiddleware{
 		Logger:  &models.Logger{Logger: logrus.NewEntry(a.Logger)},
 		User:    &userUcase,
@@ -148,6 +151,8 @@ func (a *App) InitializeRoutes(currConfig Config) {
 	checkcookiem := middleware.ValidateCookieMiddleware{Session: &sessionManager}
 
 	a.router.Use(loggerm.Middleware)
+	a.router.Use(csrfMiddleware)
+	a.router.Use(middleware.CSRFMiddleware)
 
 	// validate cookie router
 	subRouter := a.router.NewRoute().Subrouter()

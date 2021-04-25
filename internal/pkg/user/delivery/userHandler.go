@@ -29,7 +29,6 @@ type UserHandlerInterface interface {
 }
 
 func (a *UserHandler) SetHandlersWithCheckCookie(subRouter *mux.Router) {
-	subRouter.HandleFunc("/users/{id:[0-9]+}", a.GetUserInfo).Methods("GET")
 	// получить ленту
 	subRouter.HandleFunc("/feed", a.GetUsers).Methods("GET")
 	// првоерить куку
@@ -45,6 +44,7 @@ func (a *UserHandler) SetHandlersWithCheckCookie(subRouter *mux.Router) {
 }
 
 func (a *UserHandler) SetHandlersWithoutCheckCookie(subRouter *mux.Router) {
+	subRouter.HandleFunc("/users/{id:[0-9]+}", a.GetUserInfo).Methods("GET")
 	// регистрация
 	subRouter.HandleFunc("/users", a.SignUp).Methods("POST")
 	// логин
