@@ -27,6 +27,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 
+	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/jmoiron/sqlx"
@@ -171,6 +172,7 @@ func (a *App) InitializeRoutes(currConfig Config) {
 
 	csrfRouter.Use(loggerm.Middleware)
 	csrfRouter.Use(middleware.CSRFMiddleware)
+	a.router.Use(middleware.CSRFMiddleware)
 
 	// validate cookie router
 	subRouter := csrfRouter.NewRoute().Subrouter()
