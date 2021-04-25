@@ -294,9 +294,6 @@ func (u *UserUsecase) CheckCaptch(token string) (bool, error) {
 
 func (u *UserUsecase) GetUserInfoById(id int) (user model.User, err error) {
 	user, err = u.Db.GetUser(id)
-	if err != nil {
-		user.PasswordHash = nil
-	}
 
 	return user, err
 }
@@ -531,11 +528,6 @@ func (u *UserUsecase) ValidateSignUpData(newUser model.User) error {
 	_, err := govalidator.ValidateStruct(newUser)
 	if err != nil {
 		response.Description = govalidator.ErrorsByField(err)
-
-		if newUser.Password != newUser.SecondPassword {
-			response.Description["password"] = "Пароли не совпадают"
-		}
-
 		return response
 	}
 
@@ -553,9 +545,7 @@ func (u *UserUsecase) IsAlreadySignedUp(newEmail string) (bool, error) {
 		return true, err
 	}
 	if isSignUp == true {
-		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Не удалось зарегистрироваться"}
-		response.Description["mail"] = "Почта уже зарегистрирована"
-		return true, response
+		return true, nil
 	}
 
 	return false, nil

@@ -2,10 +2,11 @@ package usecase
 
 import (
 	"encoding/json"
-	"github.com/microcosm-cc/bluemonday"
 	"io"
 	mesrep "server/internal/pkg/message/repository"
 	model "server/internal/pkg/models"
+
+	"github.com/microcosm-cc/bluemonday"
 
 	"github.com/gorilla/websocket"
 )
@@ -56,7 +57,6 @@ func (m *MessageUsecase) WebsocketMessage(newMessage model.Message) {
 
 	client, ok := (*m.Clients)[partnerId]
 	if !ok {
-		//m.LogInfo("Пользователь не в сети")
 		return
 	}
 
