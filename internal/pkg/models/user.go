@@ -1,8 +1,6 @@
 package models
 
 import (
-	"encoding/json"
-	"net/http"
 	"time"
 
 	"github.com/asaskevich/govalidator"
@@ -65,26 +63,6 @@ type key int
 const CtxUserId key = -1
 
 const CharSet = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM0123456789"
-
-type ErrorDescriptionResponse struct {
-	Description map[string]string `json:"description"`
-	Err         string            `json:"error"`
-}
-
-type ErrorResponse struct {
-	Err string `json:"error"`
-}
-
-func (e ErrorDescriptionResponse) Error() string {
-	ret, _ := json.Marshal(e)
-
-	return string(ret)
-}
-
-func ResponseWithJson(w http.ResponseWriter, code int, body interface{}) {
-	w.WriteHeader(code)
-	json.NewEncoder(w).Encode(body)
-}
 
 var (
 	UserErrorInvalidData = "Неверный формат входных данных"

@@ -10,7 +10,8 @@ func (a *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 	id, ok := a.Sessions.GetIdFromContext(r.Context())
 	if !ok {
 		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
-		model.ResponseWithJson(w, 403, response)
+
+		model.Process(model.LoggerFunc(response.Err, a.UserCase.LogInfo), model.ResponseFunc(w, 403, response))
 		return
 	}
 
@@ -18,54 +19,25 @@ func (a *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 	limit, ok := query["count"]
 	if !ok {
 		response := model.ErrorResponse{Err: "Не указан count"}
-		model.ResponseWithJson(w, 400, response)
+
+		model.Process(model.LoggerFunc(response.Err, a.UserCase.LogInfo), model.ResponseFunc(w, 400, response))
 		return
 	}
+
 	limitInt, err := strconv.Atoi(limit[0])
+
 	if err != nil {
 		response := model.ErrorResponse{Err: "Неверный формат count"}
-		model.ResponseWithJson(w, 400, response)
+		model.Process(model.LoggerFunc(response.Err, a.UserCase.LogError), model.ResponseFunc(w, 400, response))
 		return
 	}
 
-	feed, err := a.UserCase.Db.GetFeed(id, limitInt)
-	if err != nil {
-		a.UserCase.Logger.Logger.Error(err)
-		model.ResponseWithJson(w, 500, nil)
+	feed, code, err := a.UserCase.CreateFeed(id, limitInt)
+	if code != 200 {
+		model.ResponseFunc(w, code, err)
 		return
 	}
-	if len(feed) < limitInt {
-		err = a.UserCase.Db.CreateFeed(id)
-		if err != nil {
-			a.UserCase.Logger.Logger.Error(err)
-			model.ResponseWithJson(w, 500, nil)
-			return
-		}
-		feed, err = a.UserCase.Db.GetFeed(id, limitInt)
-		if err != nil {
-			a.UserCase.Logger.Info(err)
-			model.ResponseWithJson(w, 500, nil)
-			return
-		}
-	}
-	if len(feed) == 0 {
-		err := a.UserCase.Db.ClearFeed(id)
-		if err != nil {
-			a.UserCase.Logger.Info(err)
-			model.ResponseWithJson(w, 500, nil)
-			return
-		}
-		feed, err = a.UserCase.Db.GetFeed(id, limitInt)
-		if err != nil {
-			a.UserCase.Logger.Info(err)
-			model.ResponseWithJson(w, 500, nil)
-			return
-		}
-	}
 
-	if len(feed) == 0 {
-		feed = make([]int, 0)
-	}
-	model.ResponseWithJson(w, 200, feed)
+	model.Process(model.LoggerFunc("Create Feed", a.UserCase.LogInfo), model.ResponseFunc(w, 200, feed))
 	return
 }

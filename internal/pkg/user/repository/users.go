@@ -3,13 +3,44 @@ package repository
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	model "server/internal/pkg/models"
 
 	"github.com/jmoiron/sqlx"
 
 	_ "github.com/jackc/pgx/stdlib"
 )
+
+type UserRepositoryInterface interface {
+	AddUser(newUser model.User) (int, error)
+	GetUser(id int) (model.User, error)
+	DeleteUser(id int) error
+	ChangeUser(newUser model.User) error
+	CheckMail(email string) (bool, error)
+	GetPassWithEmail(email string) ([]byte, error)
+	GetPassWithId(id int) ([]byte, error)
+	SignIn(email string) (model.User, error)
+	ChangePassword(userId int, hash []byte) error
+
+	//фотки
+	AddPhoto(userId int, image string) (int, error)
+	GetPhoto(photoId int) (string, error)
+	GetPhotos(userId int) ([]int, error)
+	CheckPhoto(photoId int, userId int) (bool, error)
+
+	//чат
+	CreateChat(userId1 int, userId2 int) (int, error)
+	GetNewChatById(chatId int, userId int) (model.Chat, error)
+	GetChatById(chatId int, userId int) (model.Chat, error)
+
+	//лента
+	ClearFeed(userId int) error
+	CreateFeed(userId int) error
+	GetFeed(userId int, limit int) ([]int, error)
+
+	//реакция
+	Rating(userIdFrom int, userIdTo int, reaction string) (int64, error)
+	CheckReciprocity(userId1 int, userId2 int) (bool, error)
+}
 
 type UserRepository struct {
 	DB *sqlx.DB
@@ -88,7 +119,6 @@ func (repo *UserRepository) GetUser(id int) (model.User, error) {
 
 	err = repo.DB.Select(&user[0].Photos, `SELECT photoId FROM photos WHERE userid = $1`, id)
 	if err != nil {
-		fmt.Println(err)
 		return model.User{}, err
 	}
 	if len(user[0].Photos) == 0 {
@@ -128,7 +158,6 @@ func (repo *UserRepository) ChangeUser(newUser model.User) error {
 func (repo *UserRepository) CheckMail(email string) (bool, error) {
 	var emails []string
 	err := repo.DB.Select(&emails, `SELECT email FROM users WHERE email = $1`, email)
-	fmt.Println(err, emails)
 	if err != nil {
 		return true, err
 	}
