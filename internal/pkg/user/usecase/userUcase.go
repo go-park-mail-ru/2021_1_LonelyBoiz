@@ -89,7 +89,7 @@ func (u *UserUsecase) CreateChat(id int, like model.Like) (model.Chat, int, erro
 	if like.Reaction != "like" && like.Reaction != "skip" {
 		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
 		response.Description["like"] = "неправильный формат реакции, ожидается skip или like"
-		u.LogInfo(response)
+		u.LogInfo(response.Err)
 		return model.Chat{}, 400, response
 	}
 
@@ -101,7 +101,7 @@ func (u *UserUsecase) CreateChat(id int, like model.Like) (model.Chat, int, erro
 	if rowsAffected != 1 {
 		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
 		response.Description["userID"] = "Пытаешься поставить лайк человеку не со своей ленты"
-		u.LogInfo(response)
+		u.LogInfo(response.Err)
 		return model.Chat{}, 403, response
 	}
 

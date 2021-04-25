@@ -27,6 +27,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 
+	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/jmoiron/sqlx"
@@ -49,7 +50,7 @@ func (a *App) Start() error {
 		AllowedOrigins:   []string{"http://localhost:3000", "https://lepick.herokuapp.com"},
 		AllowCredentials: true,
 		AllowedMethods:   []string{"GET", "POST", "DELETE", "PATCH", "OPTIONS"},
-		AllowedHeaders:   []string{"Content-Type", "Access-Control-Allow-Headers", "Access-Control-Expose-Headers", "Authorization", "X-Requested-With", "X-Csrf-Token"},
+		AllowedHeaders:   []string{"Content-Type", "Access-Control-Allow-Headers", "Access-Control-Expose-Headers", "Authorization", "X-Requested-With", "X-CSRF-Token"},
 		Debug:            false,
 	})
 
@@ -164,6 +165,7 @@ func (a *App) InitializeRoutes(currConfig Config) {
 	checkcookiem := middleware.ValidateCookieMiddleware{Session: &sessionManager}
 
 	a.router.Use(loggerm.Middleware)
+	a.router.Use(middleware.CSRFMiddleware)
 	a.router.Use(middleware.CSRFMiddleware)
 
 	// validate cookie router
