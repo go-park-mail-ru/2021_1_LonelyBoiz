@@ -16,14 +16,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-//"server/internal/pkg/user/usecase"
-
 func TestUserUsecaseSignInNonValidEmail(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
 	dbMock := mocks.NewMockUserRepositoryInterface(mockCtrl)
-
-	//logger1 := models.Logger{Logger: &logrus.Entry{}}
 
 	UserUsecaseTest := UserUsecase{
 		Clients:         nil,
@@ -1363,7 +1359,6 @@ func TestAddNewUserIsActiveError(t *testing.T) {
 		Photos:         make([]int, 0),
 	}
 
-	dbMock.EXPECT().AddUser(gomock.Any()).Return(newUser.Id, nil)
 	dbMock.EXPECT().GetPhotos(1).Return(nil, errors.New("Some error"))
 
 	err := UserUsecaseTest.AddNewUser(&newUser)
@@ -1432,7 +1427,6 @@ func TestGetUserInfoById(t *testing.T) {
 	}
 
 	dbMock.EXPECT().GetUser(1).Return(newUser, nil)
-	dbMock.EXPECT().GetPhotos(1).Return(nil, nil)
 
 	_, err := UserUsecaseTest.GetUserInfoById(newUser.Id)
 	assert.Equal(t, nil, err)

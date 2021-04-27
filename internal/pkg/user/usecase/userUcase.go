@@ -31,7 +31,7 @@ type UserUseCaseInterface interface {
 	ValidateSignUpData(newUser model.User) error
 	IsAlreadySignedUp(newEmail string) (bool, error)
 	HashPassword(pass string) ([]byte, error)
-	isActive(newUser *model.User) error
+	//isActive(newUser *model.User) error
 	AddNewUser(newUser *model.User) error
 	ParseJsonToUser(body io.ReadCloser) (model.User, error)
 
@@ -117,7 +117,7 @@ func (u *UserUsecase) CreateChat(id int, like model.Like) (model.Chat, int, erro
 		return model.Chat{}, 500, nil
 	}
 
-	if reciprocity == false || like.Reaction == "skip" {
+	if !reciprocity || like.Reaction == "skip" {
 		u.LogInfo("Return 204 header")
 		return model.Chat{}, 204, nil
 	}
@@ -285,7 +285,7 @@ func (u *UserUsecase) CheckCaptch(token string) (bool, error) {
 		return false, err
 	}
 
-	if googleResponse.Success == false {
+	if !googleResponse.Success {
 		return false, nil
 	}
 
@@ -544,7 +544,7 @@ func (u *UserUsecase) IsAlreadySignedUp(newEmail string) (bool, error) {
 	if err != nil {
 		return true, err
 	}
-	if isSignUp == true {
+	if !isSignUp {
 		return true, nil
 	}
 
