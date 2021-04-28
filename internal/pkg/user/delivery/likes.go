@@ -2,6 +2,7 @@ package delivery
 
 import (
 	"encoding/json"
+	"github.com/google/uuid"
 	"net/http"
 	model "server/internal/pkg/models"
 )
@@ -100,7 +101,7 @@ func (a *UserHandler) WebSocketChatResponse() {
 		}
 
 		if len(newChatToSend.Photos) == 0 {
-			newChatToSend.Photos = make([]int, 0)
+			newChatToSend.Photos = make([]uuid.UUID, 0)
 		}
 
 		response := model.WebsocketReesponse{ResponseType: "chat", Object: newChatToSend}

@@ -2,9 +2,11 @@ package delivery
 
 import (
 	"encoding/json"
+	"github.com/google/uuid"
 	"io/ioutil"
-	"net/http"
 	"os"
+
+	"net/http"
 	"reflect"
 	"server/internal/pkg/models"
 	model "server/internal/pkg/models"
@@ -107,7 +109,7 @@ func (a *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 	newUser.SecondPassword = ""
 	newUser.PasswordHash = nil
 	if len(newUser.Photos) == 0 {
-		newUser.Photos = make([]int, 0)
+		newUser.Photos = make([]uuid.UUID, 0)
 	}
 	model.ResponseWithJson(w, 200, newUser)
 	a.UserCase.Logger.Info("Success SignUp")

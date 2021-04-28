@@ -1,6 +1,9 @@
 package main
 
 import (
+	awsSession "github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"math/rand"
 	"net/http"
 	"os"
@@ -9,6 +12,9 @@ import (
 	"server/internal/pkg/chat/delivery"
 	chatrep "server/internal/pkg/chat/repository"
 	usecase2 "server/internal/pkg/chat/usecase"
+	imageDelivery "server/internal/pkg/image/delivery"
+	imageRepository "server/internal/pkg/image/repository"
+	imageUsecase "server/internal/pkg/image/usecase"
 	delivery2 "server/internal/pkg/message/delivery"
 	mesrep "server/internal/pkg/message/repository"
 	usecase3 "server/internal/pkg/message/usecase"
@@ -99,6 +105,13 @@ func (a *App) InitializeRoutes(currConfig Config) {
 	sessionRep := sesrep.SessionRepository{DB: a.Db}
 	messageRep := mesrep.MessageRepository{DB: a.Db}
 	chatRep := chatrep.ChatRepository{DB: a.Db}
+	imageRep := imageRepository.PostgresRepository{Db: a.Db}
+	sess := awsSession.Must(awsSession.NewSession())
+	awsRep := imageRepository.AwsImageRepository{
+		Bucket:   "lepick-images",
+		Svc:      s3.New(sess),
+		Uploader: s3manager.NewUploader(sess),
+	}
 
 	clients := make(map[int]*websocket.Conn)
 	// init uCases & handlers
@@ -108,6 +121,10 @@ func (a *App) InitializeRoutes(currConfig Config) {
 	userUcase := usecase.UserUsecase{Db: userRep, Clients: &clients, Sanitizer: sanitizer}
 	chatUcase := usecase2.ChatUsecase{Db: chatRep, Clients: &clients}
 	messUcase := usecase3.MessageUsecase{Db: messageRep, Clients: &clients, Sanitizer: sanitizer}
+	imageUcase := imageUsecase.ImageUsecase{
+		Db:           &imageRep,
+		ImageStorage: &awsRep,
+	}
 	sessionManager := session.SessionsManager{DB: sessionRep}
 
 	chatHandler := delivery.ChatHandler{
@@ -124,6 +141,11 @@ func (a *App) InitializeRoutes(currConfig Config) {
 
 	userHandler := handler.UserHandler{
 		UserCase: &userUcase,
+		Sessions: &sessionManager,
+	}
+
+	imageHandler := imageDelivery.ImageHandler{
+		Usecase:  &imageUcase,
 		Sessions: &sessionManager,
 	}
 
@@ -157,11 +179,9 @@ func (a *App) InitializeRoutes(currConfig Config) {
 	subRouter.HandleFunc("/likes", userHandler.LikesHandler).Methods("POST")
 
 	// загрузить новую фотку на сервер
-	subRouter.HandleFunc("/images", userHandler.UploadPhoto).Methods("POST")
-	// выгрузить фотку с сервера
-	subRouter.HandleFunc("/images/{id:[0-9]+}", userHandler.DownloadPhoto).Methods("GET")
+	subRouter.HandleFunc("/images", imageHandler.UploadImage).Methods("POST")
 	// удалить фотку
-	//subRouter.HandleFunc("/images/{id:[0-9]+}", userHandler.DeletePhoto).Methods("DELETE")
+	subRouter.HandleFunc("/images/{uuid}", imageHandler.DeleteImage).Methods("DELETE")
 
 	// валидация всех данных, без кук
 	// регистрация
