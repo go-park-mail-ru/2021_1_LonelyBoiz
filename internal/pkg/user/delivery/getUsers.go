@@ -10,7 +10,6 @@ func (a *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 	id, ok := a.Sessions.GetIdFromContext(r.Context())
 	if !ok {
 		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
-
 		model.Process(model.LoggerFunc(response.Err, a.UserCase.LogInfo), model.ResponseFunc(w, 403, response))
 		return
 	}
@@ -19,7 +18,6 @@ func (a *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 	limit, ok := query["count"]
 	if !ok {
 		response := model.ErrorResponse{Err: "Не указан count"}
-
 		model.Process(model.LoggerFunc(response.Err, a.UserCase.LogInfo), model.ResponseFunc(w, 400, response))
 		return
 	}
@@ -33,6 +31,9 @@ func (a *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	feed, code, err := a.UserCase.CreateFeed(id, limitInt)
+	if code == 500 {
+		model.Process(model.LoggerFunc(err, a.UserCase.LogError), model.ResponseFunc(w, code, nil))
+	}
 	if code != 200 {
 		model.ResponseFunc(w, code, err)
 		return

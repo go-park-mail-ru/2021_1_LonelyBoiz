@@ -31,7 +31,7 @@ type UserUseCaseInterface interface {
 	ValidateSignUpData(newUser model.User) error
 	IsAlreadySignedUp(newEmail string) (bool, error)
 	HashPassword(pass string) ([]byte, error)
-	//isActive(newUser *model.User) error
+	IsActive(newUser *model.User) error
 	AddNewUser(newUser *model.User) error
 	ParseJsonToUser(body io.ReadCloser) (model.User, error)
 
@@ -451,7 +451,7 @@ func (u *UserUsecase) ChangeUserProperties(newUser *model.User) error {
 		bufUser.DatePreference = newUser.DatePreference
 	}
 
-	err = u.isActive(&bufUser)
+	err = u.IsActive(&bufUser)
 	if err != nil {
 		return err
 	}
@@ -562,7 +562,7 @@ func (u *UserUsecase) HashPassword(pass string) ([]byte, error) {
 	return secondHash, nil
 }
 
-func (u *UserUsecase) isActive(newUser *model.User) error {
+func (u *UserUsecase) IsActive(newUser *model.User) error {
 	photos, err := u.Db.GetPhotos(newUser.Id)
 	if err != nil {
 		return err
@@ -586,7 +586,7 @@ func (u *UserUsecase) AddNewUser(newUser *model.User) error {
 	newUser.Password = ""
 	newUser.SecondPassword = ""
 
-	err = u.isActive(newUser)
+	err = u.IsActive(newUser)
 	if err != nil {
 		return err
 	}

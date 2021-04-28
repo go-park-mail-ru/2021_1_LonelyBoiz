@@ -396,16 +396,16 @@ func (mr *MockUserUseCaseInterfaceMockRecorder) WebsocketChat(newChat interface{
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WebsocketChat", reflect.TypeOf((*MockUserUseCaseInterface)(nil).WebsocketChat), newChat)
 }
 
-// isActive mocks base method.
-func (m *MockUserUseCaseInterface) isActive(newUser *models.User) error {
+// IsActive mocks base method.
+func (m *MockUserUseCaseInterface) IsActive(newUser *models.User) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "isActive", newUser)
+	ret := m.ctrl.Call(m, "IsActive", newUser)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// isActive indicates an expected call of isActive.
-func (mr *MockUserUseCaseInterfaceMockRecorder) isActive(newUser interface{}) *gomock.Call {
+// IsActive indicates an expected call of IsActive.
+func (mr *MockUserUseCaseInterfaceMockRecorder) IsActive(newUser interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "isActive", reflect.TypeOf((*MockUserUseCaseInterface)(nil).isActive), newUser)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsActive", reflect.TypeOf((*MockUserUseCaseInterface)(nil).IsActive), newUser)
 }

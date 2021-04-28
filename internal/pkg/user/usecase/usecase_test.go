@@ -592,7 +592,7 @@ func TestChangeUserInfo(t *testing.T) {
 	}
 
 	dbMock.EXPECT().GetPassWithId(newUser.Id).Return(pass, nil)
-	dbMock.EXPECT().CheckMail(newUser.Email).Return(false, nil)
+	dbMock.EXPECT().CheckMail(newUser.Email).Return(true, nil)
 	dbMock.EXPECT().GetPhotos(newUser.Id).Return([]int{1, 2}, nil)
 	dbMock.EXPECT().ChangePassword(newUser.Id, gomock.Any()).Return(nil)
 	dbMock.EXPECT().GetUser(newUser.Id).Return(oldUser, nil)
@@ -978,7 +978,7 @@ func TestChangeUserInfoEmailIsSignedUp(t *testing.T) {
 	dbMock.EXPECT().ChangePassword(newUser.Id, gomock.Any()).Return(nil)
 	dbMock.EXPECT().GetPassWithId(newUser.Id).Return(pass, nil)
 	dbMock.EXPECT().GetUser(newUser.Id).Return(newUser, nil)
-	dbMock.EXPECT().CheckMail(newUser.Email).Return(true, nil)
+	dbMock.EXPECT().CheckMail(newUser.Email).Return(false, nil)
 
 	_, code, err := UserUsecaseTest.ChangeUserInfo(newUser, newUser.Id)
 	assert.Equal(t, nil, err)
@@ -1107,7 +1107,7 @@ func TestChangeUserInfoIsActiveError(t *testing.T) {
 	dbMock.EXPECT().ChangePassword(newUser.Id, gomock.Any()).Return(nil)
 	dbMock.EXPECT().GetPassWithId(newUser.Id).Return(pass, nil)
 	dbMock.EXPECT().GetUser(newUser.Id).Return(newUser, nil)
-	dbMock.EXPECT().CheckMail(newUser.Email).Return(false, nil)
+	dbMock.EXPECT().CheckMail(newUser.Email).Return(true, nil)
 	dbMock.EXPECT().GetPhotos(newUser.Id).Return(nil, errors.New("Some error"))
 
 	_, code, err := UserUsecaseTest.ChangeUserInfo(newUser, newUser.Id)
@@ -1151,7 +1151,7 @@ func TestChangeUserInfoIsActiveFalse(t *testing.T) {
 	dbMock.EXPECT().ChangePassword(newUser.Id, gomock.Any()).Return(nil)
 	dbMock.EXPECT().GetPassWithId(newUser.Id).Return(pass, nil)
 	dbMock.EXPECT().GetUser(newUser.Id).Return(newUser, nil)
-	dbMock.EXPECT().CheckMail(newUser.Email).Return(false, nil)
+	dbMock.EXPECT().CheckMail(newUser.Email).Return(true, nil)
 	dbMock.EXPECT().GetPhotos(newUser.Id).Return(nil, nil)
 	dbMock.EXPECT().ChangeUser(gomock.Any()).Return(nil)
 
@@ -1196,7 +1196,7 @@ func TestChangeUserInfoChangeUserError(t *testing.T) {
 	dbMock.EXPECT().ChangePassword(newUser.Id, gomock.Any()).Return(nil)
 	dbMock.EXPECT().GetPassWithId(newUser.Id).Return(pass, nil)
 	dbMock.EXPECT().GetUser(newUser.Id).Return(newUser, nil)
-	dbMock.EXPECT().CheckMail(newUser.Email).Return(false, nil)
+	dbMock.EXPECT().CheckMail(newUser.Email).Return(true, nil)
 	dbMock.EXPECT().GetPhotos(newUser.Id).Return(nil, nil)
 	dbMock.EXPECT().ChangeUser(gomock.Any()).Return(errors.New("Some error"))
 
