@@ -20,23 +20,23 @@ func (a *UserHandler) LikesHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	if err != nil {
 		response := model.ErrorResponse{Err: "Не удалось прочитать тело запроса"}
-
 		model.Process(model.LoggerFunc(response.Err, a.UserCase.LogError), model.ResponseFunc(w, 400, response))
 		return
 	}
 
 	newChat, code, err := a.UserCase.CreateChat(userId, like)
 	if code == 204 {
+		a.UserCase.LogInfo("Success like")
 		w.WriteHeader(204)
 		return
 	}
 
-	if code != 200 {
-		model.ResponseFunc(w, code, err)
+	if code == 500 {
+		model.Process(model.LoggerFunc("Create Feed", a.UserCase.LogError), model.ResponseFunc(w, code, nil))
 		return
 	}
 
-	model.Process(model.LoggerFunc("Create Feed", a.UserCase.LogError), model.ResponseFunc(w, code, newChat))
+	model.Process(model.LoggerFunc("Create Feed", a.UserCase.LogInfo), model.ResponseFunc(w, code, newChat))
 	go chatsWriter(&newChat)
 }
 

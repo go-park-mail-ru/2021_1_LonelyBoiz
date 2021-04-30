@@ -15,8 +15,12 @@ func (a *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	newUser, code, responseError := a.UserCase.CreateNewUser(newUser)
-	if code != 200 {
-		models.ResponseFunc(w, code, responseError)
+	if code == 500 {
+		models.Process(models.LoggerFunc(err, a.UserCase.LogError), models.ResponseFunc(w, 500, nil))
+		return
+	}
+	if responseError != nil {
+		models.Process(models.LoggerFunc(err, a.UserCase.LogInfo), models.ResponseFunc(w, code, responseError))
 		return
 	}
 

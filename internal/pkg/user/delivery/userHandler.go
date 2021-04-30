@@ -1,10 +1,11 @@
 package delivery
 
 import (
-	"github.com/gorilla/mux"
 	"net/http"
 	"server/internal/pkg/session"
 	"server/internal/pkg/user/usecase"
+
+	"github.com/gorilla/mux"
 )
 
 type UserHandler struct {

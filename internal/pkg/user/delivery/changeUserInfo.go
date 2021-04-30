@@ -40,7 +40,6 @@ func (a *UserHandler) ChangeUserInfo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	newUser, code, err := a.UserCase.ChangeUserInfo(newUser, userId)
-
 	if code == 200 {
 		model.Process(model.LoggerFunc("Success Change User Info", a.UserCase.LogInfo), model.ResponseFunc(w, 200, newUser))
 		return
