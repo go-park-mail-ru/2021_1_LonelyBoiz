@@ -48,17 +48,17 @@ func (mr *MockSessionRepositoryInterfaceMockRecorder) AddCookie(id, token interf
 }
 
 // DeleteCookie mocks base method.
-func (m *MockSessionRepositoryInterface) DeleteCookie(id int, token string) error {
+func (m *MockSessionRepositoryInterface) DeleteCookie(token string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteCookie", id, token)
+	ret := m.ctrl.Call(m, "DeleteCookie", token)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteCookie indicates an expected call of DeleteCookie.
-func (mr *MockSessionRepositoryInterfaceMockRecorder) DeleteCookie(id, token interface{}) *gomock.Call {
+func (mr *MockSessionRepositoryInterfaceMockRecorder) DeleteCookie(token interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteCookie", reflect.TypeOf((*MockSessionRepositoryInterface)(nil).DeleteCookie), id, token)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteCookie", reflect.TypeOf((*MockSessionRepositoryInterface)(nil).DeleteCookie), token)
 }
 
 // GetCookie mocks base method.

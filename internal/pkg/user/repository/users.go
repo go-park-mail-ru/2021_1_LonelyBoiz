@@ -52,7 +52,7 @@ func (repo *UserRepository) AddUser(newUser model.User) (int, error) {
 	err := repo.DB.QueryRowx(
 		`INSERT INTO users (
 			email, 
-			name,getPostgres()
+			name,
 			passwordHash,
 			birthday,
 			description,

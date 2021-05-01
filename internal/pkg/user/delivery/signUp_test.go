@@ -210,7 +210,7 @@ func TestSetSessionError(t *testing.T) {
 	userUseCaseMock.EXPECT().ParseJsonToUser(req.Body).Return(user, nil)
 	userUseCaseMock.EXPECT().CreateNewUser(user).Return(user, 200, nil)
 	sessionManagerMock.EXPECT().SetSession(rw, user.Id).Return(errors.New("Some error"))
-	userUseCaseMock.EXPECT().LogInfo(gomock.Any()).Return()
+	userUseCaseMock.EXPECT().LogError(gomock.Any()).Return()
 
 	handlerTest.SignUp(rw, req)
 

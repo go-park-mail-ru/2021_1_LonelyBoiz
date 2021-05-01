@@ -11,7 +11,7 @@ import (
 type SessionRepositoryInterface interface {
 	AddCookie(id int, token string) error
 	GetCookie(token string) (int, error)
-	DeleteCookie(id int, token string) error
+	DeleteCookie(token string) error
 }
 
 type SessionRepository struct {
@@ -39,8 +39,8 @@ func (repo *SessionRepository) GetCookie(token string) (int, error) {
 	return id[0], nil
 }
 
-func (repo *SessionRepository) DeleteCookie(id int, token string) error {
-	_, err := repo.DB.Exec(`DELETE FROM sessions WHERE userid=$1 AND token=$2`, id, token)
+func (repo *SessionRepository) DeleteCookie(token string) error {
+	_, err := repo.DB.Exec(`DELETE FROM sessions WHERE token=$1`, token)
 
 	return err
 }

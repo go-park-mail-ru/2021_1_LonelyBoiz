@@ -336,3 +336,64 @@ func TestGetChatById(t *testing.T) {
 		return
 	}
 }
+
+func TestAddUser(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("cant create mock: %s", err)
+	}
+	defer db.Close()
+
+	user := models.User{
+		Id:             1,
+		Email:          "exmaple@mail.ru",
+		Name:           "name",
+		Birthday:       123,
+		Description:    "desc",
+		City:           "city",
+		Sex:            "male",
+		Instagram:      "inst",
+		PasswordHash:   []byte{1, 2},
+		DatePreference: "male",
+		IsActive:       true,
+		IsDeleted:      true,
+		Photos:         []int{1},
+	}
+
+	rows := sqlmock.NewRows([]string{"id"}).AddRow(user.Id)
+
+	mock.
+		ExpectQuery("INSERT INTO ").
+		WithArgs(
+			user.Email,
+			user.Name,
+			user.PasswordHash,
+			user.Birthday,
+			user.Description,
+			user.City,
+			user.Sex,
+			user.DatePreference,
+			user.IsActive,
+			user.IsDeleted,
+			user.Instagram,
+		).
+		WillReturnRows(rows)
+
+	repo := UserRepository{
+		DB: sqlx.NewDb(db, "psx"),
+	}
+
+	res, err := repo.AddUser(user)
+	if err != nil {
+		t.Errorf("unexpected err: %s", err)
+		return
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+		return
+	}
+	if !reflect.DeepEqual(res, user.Id) {
+		t.Errorf("results not match, want %v, have %v", user.Id, res)
+		return
+	}
+}
