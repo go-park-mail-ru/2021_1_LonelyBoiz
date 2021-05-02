@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+package session;
+
+
+//protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative user.proto
+option go_package= "/Users/nick_nak/programs/2_parkMail/2021_1_LonelyBoiz/internal/user_server/delivery/proto/user.proto";
+
+message User {
+  int32 Id = 1;
+  string Email = 2;
+  string Password = 3;
+  string SecondPassword = 4;
+  bytes PasswordHash = 5;
+  string OldPassword = 6;
+  string Name = 7;
+  int64 Birthday = 8;
+  string Description = 9;
+  string City = 10;
+  string Instagram = 11;
+  string Sex = 12;
+  string DatePreference = 13;
+  bool IsDeleted = 14;
+  bool IsActive = 15;
+  repeated int32 Photos = 16;
+  string CaptchaToken = 17;
+}
+
+message UserLogin {
+  string Email = 1;
+  string Password = 2;
+  string SecondPassword = 3;
+}
+
+message UserId {
+  int32 Id = 1;
+}
+
+message UserNothing {
+  bool dummy = 1;
+}
+
+message Feed {
+  repeated UserId users = 1;
+}
+
+// grpc-сервис работы с юзером
+service UserService {
+  rpc CreateUser (User) returns (User) {}
+  rpc ChangeUser (User) returns (User) {}
+  rpc CheckUser (UserLogin) returns (User) {}
+
+  // метаданные
+  rpc DeleteUser (UserNothing) returns (UserNothing) {}
+  // достает из метаданных id. В метаданные кладет в интерсепторе
+  rpc GetUserById (UserNothing) returns (User) {}
+
+  // метаданные
+  rpc CreateFeed (UserNothing) returns (Feed) {}
+}
