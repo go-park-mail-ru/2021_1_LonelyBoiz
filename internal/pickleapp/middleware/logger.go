@@ -1,25 +1,26 @@
 package middleware
 
 import (
-	"github.com/sirupsen/logrus"
 	"math/rand"
 	"net/http"
-	usecase3 "server/internal/pkg/chat/usecase"
-	usecase4 "server/internal/pkg/message/usecase"
+	chatUsecase "server/internal/pkg/chat/usecase"
+	messageUsecase "server/internal/pkg/message/usecase"
 	"server/internal/pkg/models"
-	usecase2 "server/internal/pkg/photo/usecase"
+	photoUsecase "server/internal/pkg/photo/usecase"
 	"server/internal/pkg/session"
 	"server/internal/pkg/user/usecase"
 	"time"
+
+	"github.com/sirupsen/logrus"
 )
 
 type LoggerMiddleware struct {
 	Logger  *models.Logger
 	User    *usecase.UserUsecase
-	Photo   *usecase2.PhotoUseCase
-	Chat    *usecase3.ChatUsecase
+	Photo   *photoUsecase.PhotoUseCase
+	Chat    *chatUsecase.ChatUsecase
 	Session *session.SessionsManager
-	Message *usecase4.MessageUsecase
+	Message *messageUsecase.MessageUsecase
 }
 
 func (logger *LoggerMiddleware) Middleware(next http.Handler) http.Handler {

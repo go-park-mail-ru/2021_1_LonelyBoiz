@@ -215,7 +215,7 @@ func (u *UserUsecase) CreateNewUser(newUser model.User) (user model.User, code i
 		return model.User{}, 500, nil
 	}
 
-	if !ok {
+	if ok {
 		response := model.ErrorResponse{Err: "Не удалось пройти капчу"}
 		u.LogInfo(response)
 		return model.User{}, 400, response
@@ -227,7 +227,6 @@ func (u *UserUsecase) CreateNewUser(newUser model.User) (user model.User, code i
 	}
 
 	isSignedUp, response := u.IsAlreadySignedUp(newUser.Email)
-
 	if response != nil && reflect.TypeOf(response) != reflect.TypeOf(model.ErrorDescriptionResponse{}) {
 		u.LogInfo(response)
 		return model.User{}, 500, nil
@@ -541,14 +540,8 @@ func (u *UserUsecase) ValidateSignUpData(newUser model.User) error {
 
 func (u *UserUsecase) IsAlreadySignedUp(newEmail string) (bool, error) {
 	isSignUp, err := u.Db.CheckMail(newEmail)
-	if err != nil {
-		return true, err
-	}
-	if !isSignUp {
-		return true, nil
-	}
 
-	return false, nil
+	return isSignUp, err
 }
 
 func (u *UserUsecase) HashPassword(pass string) ([]byte, error) {

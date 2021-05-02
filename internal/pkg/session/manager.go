@@ -39,6 +39,8 @@ func (session *SessionsManager) SetSession(w http.ResponseWriter, id int) error 
 		Expires:  expiration,
 		SameSite: http.SameSiteLaxMode,
 		Domain:   "localhost:3000",
+		//Secure:   true,
+		HttpOnly: true,
 	}
 
 	http.SetCookie(w, &cookie)
@@ -54,7 +56,6 @@ func (session *SessionsManager) SetSession(w http.ResponseWriter, id int) error 
 
 func (session *SessionsManager) DeleteSession(cookie *http.Cookie) error {
 	key := cookie.Value
-	cookie.Expires = time.Now().AddDate(0, 0, -1)
 	cookie.SameSite = http.SameSiteNoneMode
 	cookie.Secure = true
 	cookie.HttpOnly = true

@@ -1,12 +1,12 @@
 package models
 
 type Chat struct {
-	ChatId              int    `json:"chatId" db:"ChatId"`
-	PartnerId           int    `json:"partnerId" db:"partnerId"`
-	PartnerName         string `json:"partnerName" db:"partnerName"`
-	LastMessage         string `json:"lastMessage,omitempty" db:"lastMessage"`
-	LastMessageTime     int64  `json:"lastMessageTime,omitempty" db:"lastMessageTime"`
-	LastMessageAuthorId int    `json:"lastMessageAuthor,omitempty" db:"lastMessageAuthorId"`
+	ChatId              int    `json:"chatId" db:"chatid"`
+	PartnerId           int    `json:"partnerId" db:"partnerid"`
+	PartnerName         string `json:"partnerName" db:"partnername"`
+	LastMessage         string `json:"lastMessage,omitempty" db:"lastmessage"`
+	LastMessageTime     int64  `json:"lastMessageTime,omitempty" db:"lastmessagetime"`
+	LastMessageAuthorId int    `json:"lastMessageAuthor,omitempty" db:"lastmessageauthorid"`
 	Photos              []int  `json:"photos" db:"photos"`
 }
 

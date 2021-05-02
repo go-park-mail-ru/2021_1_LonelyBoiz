@@ -3,7 +3,7 @@ package usecase
 import (
 	"encoding/json"
 	"io"
-	mesrep "server/internal/pkg/message/repository"
+	messageRepository "server/internal/pkg/message/repository"
 	model "server/internal/pkg/models"
 
 	"github.com/microcosm-cc/bluemonday"
@@ -22,7 +22,7 @@ type MessageUsecaseInterface interface {
 
 type MessageUsecase struct {
 	Clients *map[int]*websocket.Conn
-	Db      mesrep.MessageRepositoryInterface
+	Db      messageRepository.MessageRepositoryInterface
 
 	model.LoggerInterface
 
