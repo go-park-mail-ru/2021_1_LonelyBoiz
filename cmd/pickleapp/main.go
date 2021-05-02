@@ -11,9 +11,13 @@ func main() {
 	a := entryPoint.App{}
 	config := entryPoint.NewConfig()
 
-	conn := a.InitializeRoutes(config)
+	conns := a.InitializeRoutes(config)
 
-	defer conn.Close()
+	defer func() {
+		for _, conn := range conns {
+			conn.Close()
+		}
+	}()
 
 	err := a.Start()
 	if err != nil {
