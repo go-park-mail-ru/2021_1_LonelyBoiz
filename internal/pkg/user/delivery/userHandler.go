@@ -3,28 +3,28 @@ package delivery
 import (
 	"github.com/gorilla/mux"
 	"net/http"
-	session_proto2 "server/internal/auth_server/delivery/session"
+	sessionProto "server/internal/auth_server/delivery/session"
 	"server/internal/pkg/user/usecase"
-
-	"github.com/gorilla/mux"
+	userProto "server/internal/user_server/delivery/proto"
 )
 
 type UserHandler struct {
+	Server   userProto.UserServiceClient
 	UserCase usecase.UserUseCaseInterface
-	Sessions session_proto2.AuthCheckerClient
+	Sessions sessionProto.AuthCheckerClient
 }
 
 type UserHandlerInterface interface {
-	// остается
-	SignIn(w http.ResponseWriter, r *http.Request)
-	DeleteUser(w http.ResponseWriter, r *http.Request)
-	//LogOut(w http.ResponseWriter, r *http.Request)
-	ChangeUserInfo(w http.ResponseWriter, r *http.Request)
-	SignUp(w http.ResponseWriter, r *http.Request)
 	GetUserInfo(w http.ResponseWriter, r *http.Request)
-	GetUsers(w http.ResponseWriter, r *http.Request)
-	GetLogin(w http.ResponseWriter, r *http.Request)
 
+	SignUp(w http.ResponseWriter, r *http.Request)
+	DeleteUser(w http.ResponseWriter, r *http.Request)
+	ChangeUserInfo(w http.ResponseWriter, r *http.Request)
+	SignIn(w http.ResponseWriter, r *http.Request)
+	GetLogin(w http.ResponseWriter, r *http.Request)
+	GetUsers(w http.ResponseWriter, r *http.Request)
+
+	// TODO:: не добавлены в proto
 	UnblockSecreteAlbum(w http.ResponseWriter, r *http.Request)
 	GetSecreteAlbum(w http.ResponseWriter, r *http.Request)
 

@@ -31,6 +31,7 @@ import (
 	handler "server/internal/pkg/user/delivery"
 	userrep "server/internal/pkg/user/repository"
 	"server/internal/pkg/user/usecase"
+	user_proto "server/internal/user_server/delivery/proto"
 	"time"
 )
 
@@ -89,7 +90,7 @@ func NewConfig() Config {
 	return newConfig
 }
 
-func (a *App) InitializeRoutes(currConfig Config) *grpc.ClientConn {
+func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 
 	//init config
 	a.addr = currConfig.addr
@@ -110,12 +111,12 @@ func (a *App) InitializeRoutes(currConfig Config) *grpc.ClientConn {
 	// init uCases & handlers
 	sanitizer := bluemonday.UGCPolicy()
 
-	//GRPC
+	//GRPC auth
 	opts := []grpc.DialOption{
 		grpc.WithInsecure(),
 	}
 
-	conn, err := grpc.Dial("localhost:5400", opts...)
+	authConn, err := grpc.Dial("localhost:5400", opts...)
 
 	if err != nil {
 		log.Print(1)
@@ -123,7 +124,20 @@ func (a *App) InitializeRoutes(currConfig Config) *grpc.ClientConn {
 		panic(err)
 	}
 
-	client := session_proto2.NewAuthCheckerClient(conn)
+	client := session_proto2.NewAuthCheckerClient(authConn)
+
+	//GRPC user
+	opts = []grpc.DialOption{
+		grpc.WithInsecure(),
+	}
+
+	userConn, err := grpc.Dial("localhost:5500", opts...)
+	if err != nil {
+		grpclog.Fatalf("fail to dial: %v", err)
+		panic(err)
+	}
+
+	userClient := user_proto.NewUserServiceClient(userConn)
 
 	userUcase := usecase.UserUsecase{Db: &userRep, Clients: &clients, Sanitizer: sanitizer}
 	chatUcase := usecase2.ChatUsecase{Db: &chatRep, Clients: &clients}
@@ -140,6 +154,7 @@ func (a *App) InitializeRoutes(currConfig Config) *grpc.ClientConn {
 	}
 
 	userHandler := handler.UserHandler{
+		Server:   userClient,
 		UserCase: &userUcase,
 		Sessions: client,
 	}
@@ -180,5 +195,5 @@ func (a *App) InitializeRoutes(currConfig Config) *grpc.ClientConn {
 	messHandler.SetMessageHandlers(subRouter)
 	chatHandler.SetChatHandlers(subRouter)
 
-	return conn
+	return []*grpc.ClientConn{userConn, authConn}
 }
