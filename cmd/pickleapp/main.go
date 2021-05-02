@@ -7,18 +7,18 @@ import (
 	"server/internal/pickleapp/middleware"
 	mainrep "server/internal/pickleapp/repository"
 	"server/internal/pkg/chat/delivery"
-	chatrep "server/internal/pkg/chat/repository"
-	usecase2 "server/internal/pkg/chat/usecase"
-	delivery2 "server/internal/pkg/message/delivery"
-	mesrep "server/internal/pkg/message/repository"
-	usecase3 "server/internal/pkg/message/usecase"
+	chatRepository "server/internal/pkg/chat/repository"
+	chatUsecase "server/internal/pkg/chat/usecase"
+	messageDelivery "server/internal/pkg/message/delivery"
+	messageRepository "server/internal/pkg/message/repository"
+	messageUsecase "server/internal/pkg/message/usecase"
 	"server/internal/pkg/models"
-	delivery3 "server/internal/pkg/photo/delivery"
-	usecase4 "server/internal/pkg/photo/usecase"
+	photoDelivery "server/internal/pkg/photo/delivery"
+	photoUsecase "server/internal/pkg/photo/usecase"
 	"server/internal/pkg/session"
-	sesrep "server/internal/pkg/session/repository"
-	handler "server/internal/pkg/user/delivery"
-	userrep "server/internal/pkg/user/repository"
+	sessionRepository "server/internal/pkg/session/repository"
+	userDelivery "server/internal/pkg/user/delivery"
+	userRepository "server/internal/pkg/user/repository"
 	"server/internal/pkg/user/usecase"
 	"time"
 
@@ -26,7 +26,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/jmoiron/sqlx"
 	"github.com/microcosm-cc/bluemonday"
-	cors2 "github.com/rs/cors"
+	cors "github.com/rs/cors"
 	"github.com/sirupsen/logrus"
 )
 
@@ -40,15 +40,15 @@ type App struct {
 func (a *App) Start() error {
 	a.Logger.Info("Server Start")
 
-	cors := cors2.New(cors2.Options{
+	corsMiddleware := cors.New(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:3000", "https://lepick.herokuapp.com"},
 		AllowCredentials: true,
 		AllowedMethods:   []string{"GET", "POST", "DELETE", "PATCH", "OPTIONS"},
-		AllowedHeaders:   []string{"Content-Type", "Access-Control-Allow-Headers", "Authorization", "X-Requested-With"},
+		AllowedHeaders:   []string{"Content-Type", "Access-Control-Expose-Headers", "Authorization", "X-Requested-With", "X-Csrf-Token"},
 		Debug:            false,
 	})
 
-	corsHandler := cors.Handler(a.router)
+	corsHandler := corsMiddleware.Handler(a.router)
 
 	s := http.Server{
 		Addr:         a.addr,
@@ -99,10 +99,10 @@ func (a *App) InitializeRoutes(currConfig Config) {
 
 	// init db
 	a.Db = mainrep.Init()
-	userRep := userrep.UserRepository{DB: a.Db}
-	sessionRep := sesrep.SessionRepository{DB: a.Db}
-	messageRep := mesrep.MessageRepository{DB: a.Db}
-	chatRep := chatrep.ChatRepository{DB: a.Db}
+	userRep := userRepository.UserRepository{DB: a.Db}
+	sessionRep := sessionRepository.SessionRepository{DB: a.Db}
+	messageRep := messageRepository.MessageRepository{DB: a.Db}
+	chatRep := chatRepository.ChatRepository{DB: a.Db}
 
 	clients := make(map[int]*websocket.Conn)
 	// init uCases & handlers
@@ -110,8 +110,8 @@ func (a *App) InitializeRoutes(currConfig Config) {
 	sanitizer := bluemonday.UGCPolicy()
 
 	userUcase := usecase.UserUsecase{Db: &userRep, Clients: &clients, Sanitizer: sanitizer}
-	chatUcase := usecase2.ChatUsecase{Db: &chatRep, Clients: &clients}
-	messUcase := usecase3.MessageUsecase{Db: &messageRep, Clients: &clients, Sanitizer: sanitizer}
+	chatUcase := chatUsecase.ChatUsecase{Db: &chatRep, Clients: &clients}
+	messUcase := messageUsecase.MessageUsecase{Db: &messageRep, Clients: &clients, Sanitizer: sanitizer}
 	sessionManager := session.SessionsManager{DB: &sessionRep}
 
 	chatHandler := delivery.ChatHandler{
@@ -119,17 +119,17 @@ func (a *App) InitializeRoutes(currConfig Config) {
 		Usecase:  &chatUcase,
 	}
 
-	messHandler := delivery2.MessageHandler{
+	messHandler := messageDelivery.MessageHandler{
 		Sessions: &sessionManager,
 		Usecase:  &messUcase,
 	}
 
-	userHandler := handler.UserHandler{
+	userHandler := userDelivery.UserHandler{
 		UserCase: &userUcase,
 		Sessions: &sessionManager,
 	}
 
-	photousecase := usecase4.PhotoUseCase{
+	photousecase := photoUsecase.PhotoUseCase{
 		Db: &userRep,
 	}
 
@@ -143,11 +143,12 @@ func (a *App) InitializeRoutes(currConfig Config) {
 		Message: &messUcase,
 	}
 
-	photohandler := delivery3.PhotoHandler{Sessions: &sessionManager, Usecase: photousecase}
+	photohandler := photoDelivery.PhotoHandler{Sessions: &sessionManager, Usecase: photousecase}
 
 	checkcookiem := middleware.ValidateCookieMiddleware{Session: &sessionManager}
 
 	a.router.Use(loggerm.Middleware)
+	a.router.Use(middleware.CSRFMiddleware)
 
 	// validate cookie router
 	subRouter := a.router.NewRoute().Subrouter()
