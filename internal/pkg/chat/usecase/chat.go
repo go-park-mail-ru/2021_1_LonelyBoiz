@@ -9,7 +9,7 @@ import (
 
 type ChatUsecaseInterface interface {
 	model.LoggerInterface
-	chatsWriter(newChat *model.Chat)
+	ChatsWriter(newChat *model.Chat)
 	GetChat(userId, limitInt, offsetInt int) ([]model.Chat, error)
 }
 
@@ -24,6 +24,6 @@ func (u *ChatUsecase) GetChat(userId, limitInt, offsetInt int) ([]model.Chat, er
 	return u.Db.GetChats(userId, limitInt, offsetInt)
 }
 
-func (u *ChatUsecase) chatsWriter(newChat *model.Chat) {
+func (u *ChatUsecase) ChatsWriter(newChat *model.Chat) {
 	u.chatsChan <- newChat
 }
