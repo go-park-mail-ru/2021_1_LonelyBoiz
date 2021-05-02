@@ -19,7 +19,7 @@ type LoggerMiddleware struct {
 	User    *usecase.UserUsecase
 	Image   *imageUsecase.ImageUsecase
 	Chat    *chatUsecase.ChatUsecase
-	Session *session.SessionsManager
+	Session *auth_server2.SessionsManager
 	Message *messageUsecase.MessageUsecase
 }
 

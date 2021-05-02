@@ -1,8 +1,9 @@
 package delivery
 
 import (
+	"github.com/gorilla/mux"
 	"net/http"
-	"server/internal/pkg/session"
+	session_proto2 "server/internal/auth_server/delivery/session"
 	"server/internal/pkg/user/usecase"
 
 	"github.com/gorilla/mux"
@@ -10,14 +11,14 @@ import (
 
 type UserHandler struct {
 	UserCase usecase.UserUseCaseInterface
-	Sessions session.SessionManagerInterface
+	Sessions session_proto2.AuthCheckerClient
 }
 
 type UserHandlerInterface interface {
 	// остается
 	SignIn(w http.ResponseWriter, r *http.Request)
 	DeleteUser(w http.ResponseWriter, r *http.Request)
-	LogOut(w http.ResponseWriter, r *http.Request)
+	//LogOut(w http.ResponseWriter, r *http.Request)
 	ChangeUserInfo(w http.ResponseWriter, r *http.Request)
 	SignUp(w http.ResponseWriter, r *http.Request)
 	GetUserInfo(w http.ResponseWriter, r *http.Request)
@@ -64,6 +65,4 @@ func (a *UserHandler) SetHandlersWithoutCheckCookie(subRouter *mux.Router) {
 	subRouter.HandleFunc("/users", a.SignUp).Methods("POST")
 	// логин
 	subRouter.HandleFunc("/login", a.SignIn).Methods("POST")
-	// логаут
-	subRouter.HandleFunc("/login", a.LogOut).Methods("DELETE")
 }

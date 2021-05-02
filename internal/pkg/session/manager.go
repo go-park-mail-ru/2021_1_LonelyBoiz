@@ -10,14 +10,28 @@ import (
 )
 
 type SessionManagerInterface interface {
-	SetSession(w http.ResponseWriter, id int) error
-	DeleteSession(cookie *http.Cookie) error
+	SetSession(id int) (string, error)
+	DeleteSessionById(id int) error
+	DeleteSessionByToken(key string) error
+	DeleteCookie(cookie *http.Cookie)
 	GetIdFromContext(ctx context.Context) (int, bool)
+	CheckSession(tokens []string) (int, bool)
 }
 
 type SessionsManager struct {
-	DB     repository.SessionRepositoryInterface
-	Logger model.LoggerInterface
+	DB repository.SessionRepositoryInterface
+}
+
+func (session *SessionsManager) CheckSession(tokens []string) (int, bool) {
+	for _, token := range tokens {
+		id, _ := session.DB.GetCookie(token)
+
+		if id != -1 {
+			return id, true
+		}
+	}
+
+	return -1, false
 }
 
 func (session *SessionsManager) keyGen() string {
@@ -45,32 +59,42 @@ func (session *SessionsManager) SetSession(w http.ResponseWriter, id int) error 
 		Path:     "/",
 	}
 
-	http.SetCookie(w, &cookie)
+	return cookie
+}
+
+func (session *SessionsManager) SetSession(id int) (string, error) {
+	key := session.keyGen()
 
 	err := session.DB.AddCookie(id, key)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	session.Logger.LogInfo("Success Set Cookie")
+	return key, nil
+}
+
+func (session *SessionsManager) DeleteSessionById(id int) error {
+	if err := session.DB.DeleteCookie(id, ""); err != nil {
+		//session.Logger.Info("Delete Cookie : " + err.Error())
+		return err
+	}
 	return nil
 }
 
-func (session *SessionsManager) DeleteSession(cookie *http.Cookie) error {
-	key := cookie.Value
-	cookie.Secure = true
-	cookie.HttpOnly = true
-	cookie.Domain = "p1ckle.herokuapp.com"
-	//cookie.Domain = "localhost:8000"
-	cookie.Expires = time.Now().AddDate(0, 0, -1)
-	cookie.SameSite = http.SameSiteNoneMode
-	if err := session.DB.DeleteCookie(key); err != nil {
-		session.Logger.LogInfo("Delete Cookie : " + err.Error())
+func (session *SessionsManager) DeleteSessionByToken(token string) error {
+	if err := session.DB.DeleteCookie(-1, token); err != nil {
+		//session.Logger.Info("Delete Cookie : " + err.Error())
 		return err
 	}
-
-	session.Logger.LogInfo("Success Delete Cookie")
 	return nil
+}
+
+func (session *SessionsManager) DeleteCookie(cookie *http.Cookie) {
+	cookie.Expires = time.Now().AddDate(0, 0, -1)
+	cookie.SameSite = http.SameSiteLaxMode
+	cookie.Secure = true
+	cookie.HttpOnly = true
+	cookie.Domain = "localhost:3000"
 }
 
 func (session *SessionsManager) GetIdFromContext(ctx context.Context) (int, bool) {

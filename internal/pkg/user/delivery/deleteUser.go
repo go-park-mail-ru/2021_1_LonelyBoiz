@@ -1,15 +1,15 @@
 package delivery
 
 import (
+	"github.com/gorilla/mux"
 	"net/http"
+	sessionproto "server/internal/auth_server/delivery/session"
 	model "server/internal/pkg/models"
 	"strconv"
-
-	"github.com/gorilla/mux"
 )
 
 func (a *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
-	cookieId, ok := a.Sessions.GetIdFromContext(r.Context())
+	cookieId, ok := a.UserCase.GetIdFromContext(r.Context())
 	if !ok {
 		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
 		model.Process(model.LoggerFunc(response.Err, a.UserCase.LogInfo), model.ResponseFunc(w, 403, response))
@@ -39,5 +39,10 @@ func (a *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	a.LogOut(w, r)
+	_, err = a.Sessions.Delete(r.Context(), &sessionproto.SessionId{Id: int32(cookieId)})
+	if err != nil {
+		model.ResponseWithJson(w, 500, nil)
+		model.Process(model.LoggerFunc(err.Error(), a.UserCase.LogError), model.ResponseFunc(w, 500, nil))
+		return
+	}
 }

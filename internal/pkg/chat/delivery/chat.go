@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"server/internal/pkg/chat/usecase"
 	model "server/internal/pkg/models"
-	"server/internal/pkg/session"
 	"strconv"
 )
 
@@ -15,12 +14,11 @@ type ChatHandlerInterface interface {
 }
 
 type ChatHandler struct {
-	Sessions session.SessionManagerInterface
-	Usecase  usecase.ChatUsecaseInterface
+	Usecase usecase.ChatUsecaseInterface
 }
 
 func (c *ChatHandler) GetChats(w http.ResponseWriter, r *http.Request) {
-	userId, ok := c.Sessions.GetIdFromContext(r.Context())
+	userId, ok := c.Usecase.GetIdFromContext(r.Context())
 	if !ok {
 		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
 		model.Process(model.LoggerFunc(response.Err, c.Usecase.LogError), model.ResponseFunc(w, 403, response))
