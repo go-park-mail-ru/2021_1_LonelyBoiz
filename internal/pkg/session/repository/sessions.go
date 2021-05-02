@@ -40,7 +40,7 @@ func (repo *SessionRepository) GetCookie(token string) (int, error) {
 }
 
 func (repo *SessionRepository) DeleteCookie(id int, token string) error {
-	_, err := repo.DB.Exec(`DELETE FROM sessions WHERE userid=$1 AND token=$2`, id, token)
+	_, err := repo.DB.Exec(`DELETE FROM sessions WHERE userid=$1 OR token=$2`, id, token)
 
 	return err
 }

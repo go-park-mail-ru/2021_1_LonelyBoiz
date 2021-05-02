@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"server/internal/pkg/message/usecase"
 	model "server/internal/pkg/models"
-	"server/internal/pkg/session"
 	"strconv"
 
 	"github.com/gorilla/mux"
@@ -15,8 +14,7 @@ func messagesWriter(newMessage *model.Message) {
 }
 
 type MessageHandler struct {
-	Sessions session.SessionManagerInterface
-	Usecase  usecase.MessageUsecaseInterface
+	Usecase usecase.MessageUsecaseInterface
 }
 
 func (m *MessageHandler) SetMessageHandlers(subRouter *mux.Router) {
@@ -32,7 +30,7 @@ func (m *MessageHandler) SetMessageHandlers(subRouter *mux.Router) {
 }
 
 func (m *MessageHandler) GetMessages(w http.ResponseWriter, r *http.Request) {
-	userId, ok := m.Sessions.GetIdFromContext(r.Context())
+	userId, ok := m.Usecase.GetIdFromContext(r.Context())
 	if !ok {
 		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
 		model.Process(model.LoggerFunc(response.Err, m.Usecase.LogError), model.ResponseFunc(w, 403, response))
@@ -95,7 +93,7 @@ func (m *MessageHandler) SendMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, ok := m.Sessions.GetIdFromContext(r.Context())
+	id, ok := m.Usecase.GetIdFromContext(r.Context())
 	if !ok {
 		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
 		model.Process(model.LoggerFunc(response.Err, m.Usecase.LogError), model.ResponseFunc(w, 401, response))
@@ -126,7 +124,7 @@ func (m *MessageHandler) SendMessage(w http.ResponseWriter, r *http.Request) {
 }
 
 func (m *MessageHandler) ChangeMessage(w http.ResponseWriter, r *http.Request) {
-	userId, ok := m.Sessions.GetIdFromContext(r.Context())
+	userId, ok := m.Usecase.GetIdFromContext(r.Context())
 	if !ok {
 		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
 		model.Process(model.LoggerFunc(response.Err, m.Usecase.LogInfo), model.ResponseFunc(w, 403, response))

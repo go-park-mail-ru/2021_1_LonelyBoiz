@@ -1,10 +1,9 @@
 package delivery
 
 import (
+	"github.com/gorilla/websocket"
 	"net/http"
 	model "server/internal/pkg/models"
-
-	"github.com/gorilla/websocket"
 )
 
 var upgrader = websocket.Upgrader{
@@ -14,7 +13,7 @@ var upgrader = websocket.Upgrader{
 }
 
 func (a *UserHandler) WsHandler(w http.ResponseWriter, r *http.Request) {
-	id, ok := a.Sessions.GetIdFromContext(r.Context())
+	id, ok := a.UserCase.GetIdFromContext(r.Context())
 	if !ok {
 		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
 

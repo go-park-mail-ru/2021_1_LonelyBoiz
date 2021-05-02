@@ -3,12 +3,12 @@ package middleware
 import (
 	"context"
 	"net/http"
+	session_proto "server/internal/auth_server/delivery/session"
 	model "server/internal/pkg/models"
-	"server/internal/pkg/session"
 )
 
 type ValidateCookieMiddleware struct {
-	Session *session.SessionsManager
+	Session session_proto.AuthCheckerClient
 }
 
 func (m *ValidateCookieMiddleware) Middleware(next http.Handler) http.Handler {
@@ -20,7 +20,7 @@ func (m *ValidateCookieMiddleware) Middleware(next http.Handler) http.Handler {
 			return
 		}
 
-		id, err := m.Session.DB.GetCookie(token.Value)
+		id, err := m.Session.Check(r.Context(), &session_proto.SessionToken{Token: token.Value})
 		if err != nil {
 			response := model.ErrorResponse{Err: err.Error()}
 			model.ResponseWithJson(w, 401, response)
@@ -30,9 +30,10 @@ func (m *ValidateCookieMiddleware) Middleware(next http.Handler) http.Handler {
 		ctx := r.Context()
 		ctx = context.WithValue(ctx,
 			model.CtxUserId,
-			id,
+			int(id.GetId()),
 		)
-		m.Session.Logger.LogInfo("Pass ValidateCookie middleware")
+
+		//m.Session.Logger.LogInfo("Pass ValidateCookie middleware")
 		next.ServeHTTP(w, r.WithContext(ctx))
 		return
 	})

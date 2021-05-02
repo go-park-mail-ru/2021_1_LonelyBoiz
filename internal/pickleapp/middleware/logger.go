@@ -8,7 +8,7 @@ import (
 	usecase4 "server/internal/pkg/message/usecase"
 	"server/internal/pkg/models"
 	usecase2 "server/internal/pkg/photo/usecase"
-	"server/internal/pkg/session"
+	auth_server2 "server/internal/pkg/session"
 	"server/internal/pkg/user/usecase"
 	"time"
 )
@@ -18,7 +18,7 @@ type LoggerMiddleware struct {
 	User    *usecase.UserUsecase
 	Photo   *usecase2.PhotoUseCase
 	Chat    *usecase3.ChatUsecase
-	Session *session.SessionsManager
+	Session *auth_server2.SessionsManager
 	Message *usecase4.MessageUsecase
 }
 
@@ -46,7 +46,7 @@ func (logger *LoggerMiddleware) Middleware(next http.Handler) http.Handler {
 		logger.Logger.LogInfo("Entry Point - Logger Middleware")
 		logger.User.LoggerInterface = logger.Logger
 		logger.Photo.LoggerInterface = logger.Logger
-		logger.Session.Logger = logger.Logger
+		//logger.Session.Logger = logger.Logger
 		logger.Chat.LoggerInterface = logger.Logger
 		logger.Message.LoggerInterface = logger.Logger
 

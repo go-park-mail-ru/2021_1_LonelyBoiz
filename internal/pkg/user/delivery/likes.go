@@ -7,7 +7,7 @@ import (
 )
 
 func (a *UserHandler) LikesHandler(w http.ResponseWriter, r *http.Request) {
-	userId, ok := a.Sessions.GetIdFromContext(r.Context())
+	userId, ok := a.UserCase.GetIdFromContext(r.Context())
 	if !ok {
 		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
 		model.Process(model.LoggerFunc(response.Err, a.UserCase.LogError), model.ResponseFunc(w, 403, response))

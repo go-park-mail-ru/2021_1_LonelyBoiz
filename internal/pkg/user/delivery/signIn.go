@@ -2,6 +2,7 @@ package delivery
 
 import (
 	"net/http"
+	session_proto2 "server/internal/auth_server/delivery/session"
 	"server/internal/pkg/models"
 )
 
@@ -19,12 +20,15 @@ func (a *UserHandler) SignIn(w http.ResponseWriter, r *http.Request) {
 		models.ResponseFunc(w, code, err)
 		return
 	}
-
-	err = a.Sessions.SetSession(w, newUser.Id)
+	println(newUser.Id)
+	token, err := a.Sessions.Create(r.Context(), &session_proto2.SessionId{Id: int32(newUser.Id)})
+	println(token)
 	if err != nil {
 		models.Process(models.LoggerFunc(err.Error(), a.UserCase.LogError), models.ResponseFunc(w, 500, nil))
 		return
 	}
 
+	cookie := a.UserCase.SetCookie(token.GetToken())
+	http.SetCookie(w, &cookie)
 	models.Process(models.LoggerFunc("Success LogIn", a.UserCase.LogInfo), models.ResponseFunc(w, 200, newUser))
 }

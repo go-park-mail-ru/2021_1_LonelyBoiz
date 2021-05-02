@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"golang.org/x/net/context"
 	"server/internal/pkg/chat/repository"
 	model "server/internal/pkg/models"
 
@@ -11,6 +12,7 @@ type ChatUsecaseInterface interface {
 	model.LoggerInterface
 	chatsWriter(newChat *model.Chat)
 	GetChat(userId, limitInt, offsetInt int) ([]model.Chat, error)
+	GetIdFromContext(ctx context.Context) (int, bool)
 }
 
 type ChatUsecase struct {
@@ -26,4 +28,12 @@ func (u *ChatUsecase) GetChat(userId, limitInt, offsetInt int) ([]model.Chat, er
 
 func (u *ChatUsecase) chatsWriter(newChat *model.Chat) {
 	u.chatsChan <- newChat
+}
+
+func (u *ChatUsecase) GetIdFromContext(ctx context.Context) (int, bool) {
+	id, ok := ctx.Value(model.CtxUserId).(int)
+	if !ok {
+		return 0, false
+	}
+	return id, true
 }

@@ -9,7 +9,6 @@ import (
 	"net/http"
 	model "server/internal/pkg/models"
 	"server/internal/pkg/photo/usecase"
-	"server/internal/pkg/session"
 	"strconv"
 	"strings"
 )
@@ -20,8 +19,7 @@ type PhotoDeliveryInterface interface {
 }
 
 type PhotoHandler struct {
-	Sessions *session.SessionsManager
-	Usecase  usecase.PhotoUseCase
+	Usecase usecase.PhotoUseCase
 }
 
 func (a *PhotoHandler) SetPhotoHandlers(subRouter *mux.Router) {
@@ -34,7 +32,7 @@ func (a *PhotoHandler) SetPhotoHandlers(subRouter *mux.Router) {
 }
 
 func (a *PhotoHandler) DownloadPhoto(w http.ResponseWriter, r *http.Request) {
-	_, ok := a.Sessions.GetIdFromContext(r.Context())
+	_, ok := a.Usecase.GetIdFromContext(r.Context())
 
 	if !ok {
 		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}

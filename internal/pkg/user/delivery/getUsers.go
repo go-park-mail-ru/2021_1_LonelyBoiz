@@ -7,7 +7,7 @@ import (
 )
 
 func (a *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
-	id, ok := a.Sessions.GetIdFromContext(r.Context())
+	id, ok := a.UserCase.GetIdFromContext(r.Context())
 	if !ok {
 		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
 
