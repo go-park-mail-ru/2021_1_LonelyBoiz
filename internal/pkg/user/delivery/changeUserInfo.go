@@ -1,15 +1,14 @@
 package delivery
 
 import (
+	"github.com/gorilla/mux"
 	"net/http"
 	model "server/internal/pkg/models"
 	"strconv"
-
-	"github.com/gorilla/mux"
 )
 
 func (a *UserHandler) ChangeUserInfo(w http.ResponseWriter, r *http.Request) {
-	cookieId, ok := a.Sessions.GetIdFromContext(r.Context())
+	cookieId, ok := a.UserCase.GetIdFromContext(r.Context())
 	if !ok {
 		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
 		model.Process(model.LoggerFunc(response.Err, a.UserCase.LogInfo), model.ResponseFunc(w, 403, response))

@@ -4,6 +4,7 @@ import (
 	"github.com/google/uuid"
 
 	"net/http"
+	session_proto2 "server/internal/auth_server/delivery/session"
 	"server/internal/pkg/models"
 )
 
@@ -25,18 +26,19 @@ func (a *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = a.Sessions.SetSession(w, newUser.Id)
+	token, err := a.Sessions.Create(r.Context(), &session_proto2.SessionId{Id: int32(newUser.Id)})
 	if err != nil {
 		models.Process(models.LoggerFunc(err, a.UserCase.LogError), models.ResponseFunc(w, 500, nil))
 		return
 	}
+	//	newUser.Password = ""
+	//	newUser.SecondPassword = ""
+	//	newUser.PasswordHash = nil
+	//	if len(newUser.Photos) == 0 {
+	//		newUser.Photos = make([]uuid.UUID, 0)
+	//	}
+	cookie := a.UserCase.SetCookie(token.GetToken())
+	http.SetCookie(w, &cookie)
 
-	newUser.Password = ""
-	newUser.SecondPassword = ""
-	newUser.PasswordHash = nil
-	if len(newUser.Photos) == 0 {
-		newUser.Photos = make([]uuid.UUID, 0)
-	}
-	models.ResponseWithJson(w, 200, newUser)
-	a.UserCase.LogInfo("Success SignUp")
+	models.Process(models.LoggerFunc("Success SignUp", a.UserCase.LogInfo), models.ResponseFunc(w, 200, newUser))
 }

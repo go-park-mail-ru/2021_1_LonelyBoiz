@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"io/ioutil"
@@ -10,6 +11,7 @@ import (
 	model "server/internal/pkg/models"
 	"server/internal/pkg/user/repository"
 	"strconv"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/microcosm-cc/bluemonday"
@@ -46,8 +48,10 @@ type UserUseCaseInterface interface {
 	CreateChat(id int, like model.Like) (model.Chat, int, error)
 	WebsocketChat(newChat *model.Chat)
 	SetChat(ws *websocket.Conn, id int)
+	SetCookie(token string) http.Cookie
 
 	model.LoggerInterface
+	GetIdFromContext(ctx context.Context) (int, bool)
 }
 
 type UserUsecase struct {
@@ -586,6 +590,16 @@ func (u *UserUsecase) AddNewUser(newUser *model.User) error {
 	return nil
 }
 
+func (u *UserUsecase) SetCookie(token string) http.Cookie {
+	return http.Cookie{
+		Name:     "token",
+		Value:    token,
+		Domain:   "localhost:3000",
+		Expires:  time.Now().AddDate(0, 0, 1),
+		SameSite: http.SameSiteLaxMode,
+	}
+}
+
 func (u *UserUsecase) ParseJsonToUser(body io.ReadCloser) (model.User, error) {
 	var newUser model.User
 	decoder := json.NewDecoder(body)
@@ -599,4 +613,12 @@ func (u *UserUsecase) ParseJsonToUser(body io.ReadCloser) (model.User, error) {
 	newUser.Description = u.Sanitizer.Sanitize(newUser.Description)
 
 	return newUser, err
+}
+
+func (u *UserUsecase) GetIdFromContext(ctx context.Context) (int, bool) {
+	id, ok := ctx.Value(model.CtxUserId).(int)
+	if !ok {
+		return 0, false
+	}
+	return id, true
 }

@@ -3,11 +3,10 @@ package usecase
 import (
 	"encoding/json"
 	"fmt"
+	"golang.org/x/net/context"
 	"io"
-	messageRepository "server/internal/pkg/message/repository"
+	mesrep "server/internal/pkg/message/repository"
 	model "server/internal/pkg/models"
-
-	"github.com/microcosm-cc/bluemonday"
 
 	"github.com/gorilla/websocket"
 )
@@ -19,7 +18,7 @@ type MessageUsecaseInterface interface {
 	CreateMessage(newMessage model.Message, chatId, id int) (model.Message, int, error)
 	ChangeMessage(userId, messageId int, newMessage model.Message) (model.Message, int, error)
 	WebsocketMessage(message model.Message)
-	WebsocketReactMessage(message model.Message)
+	GetIdFromContext(ctx context.Context) (int, bool)
 }
 
 type MessageUsecase struct {
@@ -189,4 +188,16 @@ func (m MessageUsecase) ParseJsonToMessage(body io.ReadCloser) (model.Message, e
 	message.Text = m.Sanitizer.Sanitize(message.Text)
 
 	return message, err
+}
+
+func (m MessageUsecase) messagesWriter(newMessage *model.Message) {
+	m.messagesChan <- newMessage
+}
+
+func (u *MessageUsecase) GetIdFromContext(ctx context.Context) (int, bool) {
+	id, ok := ctx.Value(model.CtxUserId).(int)
+	if !ok {
+		return 0, false
+	}
+	return id, true
 }
