@@ -20,7 +20,7 @@ func keyGen() string {
 
 func CSRFMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if (r.RequestURI == "/login" || r.RequestURI == "/users") && r.Method == "POST" || r.RequestURI == "/auth" || r.RequestURI == "/ws" {
+		if (r.RequestURI == "/login" || r.RequestURI == "/users") && r.Method == "POST" {
 			key := keyGen()
 			expiration := time.Now().Add(24 * time.Hour)
 			cookie := http.Cookie{
