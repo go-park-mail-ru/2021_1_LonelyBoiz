@@ -27,7 +27,7 @@ func CSRFMiddleware(next http.Handler) http.Handler {
 				Name:     "csrf-token",
 				Value:    key,
 				Expires:  expiration,
-				SameSite: http.SameSiteLaxMode,
+				SameSite: http.SameSiteNoneMode,
 				Domain:   "p1ckle.herokuapp.com",
 				//Domain: "localhost:8000",
 				Secure:   true,
