@@ -520,6 +520,7 @@ func TestSendMessage(t *testing.T) {
 	sessionManagerMock.EXPECT().GetIdFromContext(ctx).Return(userId, true)
 	messageUseCaseMock.EXPECT().ParseJsonToMessage(req.Body).Return(message, nil)
 	messageUseCaseMock.EXPECT().CreateMessage(message, message.ChatId, userId).Return(message, 200, nil)
+	messageUseCaseMock.EXPECT().WebsocketMessage(message)
 	messageUseCaseMock.EXPECT().LogInfo(gomock.Any()).Return()
 
 	handlerTest.SendMessage(rw, req.WithContext(ctx))
@@ -828,6 +829,7 @@ func TestChangeMessage(t *testing.T) {
 	sessionManagerMock.EXPECT().GetIdFromContext(ctx).Return(userId, true)
 	messageUseCaseMock.EXPECT().ParseJsonToMessage(req.Body).Return(message, nil)
 	messageUseCaseMock.EXPECT().ChangeMessage(userId, message.MessageId, message).Return(message, 204, nil)
+	messageUseCaseMock.EXPECT().WebsocketMessage(message)
 	messageUseCaseMock.EXPECT().LogInfo(gomock.Any()).Return()
 
 	handlerTest.ChangeMessage(rw, req.WithContext(ctx))

@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -61,6 +62,7 @@ var googleCaptchaSecret string = os.Getenv("DATABASE_URL")
 
 func (u *UserUsecase) SetChat(ws *websocket.Conn, id int) {
 	(*u.Clients)[id] = ws
+	fmt.Println("------------------------------")
 }
 
 func (u *UserUsecase) WebsocketChat(newChat *model.Chat) {

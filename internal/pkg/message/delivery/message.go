@@ -10,10 +10,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func messagesWriter(newMessage *model.Message) {
-	model.MessagesChan <- newMessage
-}
-
 type MessageHandler struct {
 	Sessions session.SessionManagerInterface
 	Usecase  usecase.MessageUsecaseInterface
@@ -26,9 +22,6 @@ func (m *MessageHandler) SetMessageHandlers(subRouter *mux.Router) {
 	subRouter.HandleFunc("/chats/{chatId:[0-9]+}/messages", m.SendMessage).Methods("POST")
 	// реакция
 	subRouter.HandleFunc("/messages/{messageId:[0-9]+}", m.ChangeMessage).Methods("PATCH")
-
-	// отправка сообщения по вэбсокету собеседнику
-	go m.WebSocketMessageResponse()
 }
 
 func (m *MessageHandler) GetMessages(w http.ResponseWriter, r *http.Request) {
@@ -120,9 +113,10 @@ func (m *MessageHandler) SendMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	go messagesWriter(&newMessage)
-
 	model.Process(model.LoggerFunc("Success Create Message", m.Usecase.LogInfo), model.ResponseFunc(w, 200, newMessage))
+
+	// отправить сообщение по вэбсокету
+	m.Usecase.WebsocketMessage(newMessage)
 }
 
 func (m *MessageHandler) ChangeMessage(w http.ResponseWriter, r *http.Request) {
@@ -157,12 +151,6 @@ func (m *MessageHandler) ChangeMessage(w http.ResponseWriter, r *http.Request) {
 
 	model.Process(model.LoggerFunc("New message", m.Usecase.LogInfo), model.ResponseFunc(w, 204, err))
 
-	go messagesWriter(&newMessage)
-}
-
-func (m *MessageHandler) WebSocketMessageResponse() {
-	for {
-		newMessage := <-model.MessagesChan
-		m.Usecase.WebsocketMessage(*newMessage)
-	}
+	// отправить сообщение в вэбсокет
+	m.Usecase.WebsocketReactMessage(newMessage)
 }

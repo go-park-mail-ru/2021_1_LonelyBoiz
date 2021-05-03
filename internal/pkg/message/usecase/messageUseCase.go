@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	messageRepository "server/internal/pkg/message/repository"
 	model "server/internal/pkg/models"
@@ -18,6 +19,7 @@ type MessageUsecaseInterface interface {
 	CreateMessage(newMessage model.Message, chatId, id int) (model.Message, int, error)
 	ChangeMessage(userId, messageId int, newMessage model.Message) (model.Message, int, error)
 	WebsocketMessage(message model.Message)
+	WebsocketReactMessage(message model.Message)
 }
 
 type MessageUsecase struct {
@@ -26,12 +28,10 @@ type MessageUsecase struct {
 
 	model.LoggerInterface
 
-	Sanitizer    *bluemonday.Policy
-	messagesChan chan *model.Message
+	Sanitizer *bluemonday.Policy
 }
 
 func (m *MessageUsecase) WebsocketMessage(newMessage model.Message) {
-	m.LogInfo("НАчало отправки сообщения")
 	partnerId, err := m.Db.GetPartnerId(newMessage.ChatId, newMessage.AuthorId)
 	if err != nil {
 		m.LogError(err)
@@ -54,6 +54,28 @@ func (m *MessageUsecase) WebsocketMessage(newMessage model.Message) {
 	}
 
 	err = client.WriteJSON(response)
+	if err != nil {
+		m.LogError("Не удалось отправить сообщение")
+		return
+	}
+
+	m.LogInfo("Сообщение отправлено")
+}
+
+func (m *MessageUsecase) WebsocketReactMessage(newMessage model.Message) {
+	fmt.Println(newMessage)
+	var response model.WebsocketResponse
+
+	response.ResponseType = "edit message"
+	response.Object = newMessage
+
+	client, ok := (*m.Clients)[newMessage.AuthorId]
+	if !ok {
+		m.LogInfo("Пользователь не подключен")
+		return
+	}
+
+	err := client.WriteJSON(response)
 	if err != nil {
 		m.LogError("Не удалось отправить сообщение")
 		return
@@ -89,7 +111,13 @@ func (m *MessageUsecase) ChangeMessage(userId, messageId int, newMessage model.M
 		return model.Message{}, 500, err
 	}
 
-	return model.Message{}, 204, nil
+	newMessage, err = m.Db.GetMessage(messageId)
+	if err != nil {
+		m.LogError(err)
+		return model.Message{}, 500, err
+	}
+
+	return newMessage, 204, nil
 }
 
 func (m *MessageUsecase) CreateMessage(newMessage model.Message, chatId, id int) (model.Message, int, error) {
@@ -161,8 +189,4 @@ func (m MessageUsecase) ParseJsonToMessage(body io.ReadCloser) (model.Message, e
 	message.Text = m.Sanitizer.Sanitize(message.Text)
 
 	return message, err
-}
-
-func (m MessageUsecase) messagesWriter(newMessage *model.Message) {
-	m.messagesChan <- newMessage
 }

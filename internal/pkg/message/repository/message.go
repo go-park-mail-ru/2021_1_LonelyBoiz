@@ -16,6 +16,7 @@ type MessageRepositoryInterface interface {
 	ChangeMessageReaction(messageId int, reaction int) error
 	DeleteMessage(messageId int) error
 	GetMessages(chatId int, limit int, offset int) ([]model.Message, error)
+	GetMessage(messageId int) (model.Message, error)
 }
 
 type MessageRepository struct {
@@ -170,4 +171,21 @@ func (repo *MessageRepository) GetMessages(chatId int, limit int, offset int) ([
 	}
 
 	return reverseMessages(messages), nil
+}
+
+func (repo *MessageRepository) GetMessage(messageId int) (model.Message, error) {
+	var messages []model.Message
+	err := repo.DB.Select(&messages,
+		`SELECT * FROM messages
+			WHERE messages.messageid = $1`,
+		messageId,
+	)
+	if err != nil {
+		return model.Message{}, err
+	}
+	if len(messages) == 0 {
+		return model.Message{}, nil
+	}
+
+	return messages[0], nil
 }
