@@ -128,11 +128,6 @@ func (u *UserUsecase) CreateChat(id int, like model.Like) (model.Chat, int, erro
 		u.LogError(err)
 		return model.Chat{}, 500, nil
 	}
-	newChat.Photos, err = u.Db.GetPhotos(newChat.PartnerId)
-	if err != nil {
-		u.LogError(err)
-		return model.Chat{}, 500, nil
-	}
 
 	return newChat, 200, nil
 }

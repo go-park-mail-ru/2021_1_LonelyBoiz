@@ -343,7 +343,7 @@ func TestCreateChatCreateChatError(t *testing.T) {
 	assert.Equal(t, 500, code)
 }
 
-func TestCreateChatGetPhotosError(t *testing.T) {
+func TestCreateChatGetNewChatByIdError(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
 	dbMock := mocks.NewMockUserRepositoryInterface(mockCtrl)
@@ -360,10 +360,15 @@ func TestCreateChatGetPhotosError(t *testing.T) {
 		Reaction: "like",
 	}
 
+	chat := models.Chat{
+		ChatId:    1,
+		PartnerId: 2,
+	}
+
 	dbMock.EXPECT().Rating(1, 1, "like").Return(int64(1), nil)
 	dbMock.EXPECT().CheckReciprocity(1, 1).Return(true, nil)
 	dbMock.EXPECT().CreateChat(1, 1).Return(1, nil)
-	dbMock.EXPECT().GetPhotos(1).Return(nil, errors.New("Some error"))
+	dbMock.EXPECT().GetNewChatById(1, 1).Return(chat, errors.New("Some error"))
 
 	_, code, err := UserUsecaseTest.CreateChat(1, like)
 	assert.Equal(t, nil, err)
@@ -387,10 +392,15 @@ func TestCreateChatSuccess(t *testing.T) {
 		Reaction: "like",
 	}
 
+	chat := models.Chat{
+		ChatId:    1,
+		PartnerId: 2,
+	}
+
 	dbMock.EXPECT().Rating(1, 1, "like").Return(int64(1), nil)
 	dbMock.EXPECT().CheckReciprocity(1, 1).Return(true, nil)
 	dbMock.EXPECT().CreateChat(1, 1).Return(1, nil)
-	dbMock.EXPECT().GetPhotos(1).Return([]uuid.UUID{}, nil)
+	dbMock.EXPECT().GetNewChatById(1, 1).Return(chat, nil)
 
 	_, code, err := UserUsecaseTest.CreateChat(1, like)
 	assert.Equal(t, nil, err)
