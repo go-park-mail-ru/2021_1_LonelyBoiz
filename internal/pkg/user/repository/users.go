@@ -307,9 +307,8 @@ func (repo *UserRepository) GetNewChatById(chatId int, userId int) (model.Chat, 
     		users.name AS partnerName
 		FROM chats
     		JOIN users ON (users.id <> $1 AND (users.id = chats.userid2 OR users.id = chats.userid1))
-		WHERE chats.userid1 = $1 OR chats.userid2 = $1
-		ORDER BY lastMessageTime`,
-		chatId, userId,
+		WHERE (chats.userid1 = $1 OR chats.userid2 = $1) AND chats.id = $2`,
+		userId, chatId,
 	)
 	if err != nil {
 		return model.Chat{}, err

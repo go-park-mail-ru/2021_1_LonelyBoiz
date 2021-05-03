@@ -71,6 +71,7 @@ func TestLikesHandler(t *testing.T) {
 	sessionManagerMock.EXPECT().GetIdFromContext(ctx).Return(1, true)
 	userUseCaseMock.EXPECT().CreateChat(1, like).Return(newChat, 200, nil)
 	userUseCaseMock.EXPECT().LogInfo(gomock.Any()).Return()
+	userUseCaseMock.EXPECT().WebsocketChat(gomock.Any())
 
 	handlerTest.LikesHandler(rw, req.WithContext(ctx))
 

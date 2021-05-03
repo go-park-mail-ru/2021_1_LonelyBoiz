@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -62,25 +61,19 @@ var googleCaptchaSecret string = os.Getenv("DATABASE_URL")
 
 func (u *UserUsecase) SetChat(ws *websocket.Conn, id int) {
 	(*u.Clients)[id] = ws
-	fmt.Println("------------------------------")
 }
 
 func (u *UserUsecase) WebsocketChat(newChat *model.Chat) {
-	client, ok := (*u.Clients)[newChat.PartnerId]
-	if !ok {
-		u.LogInfo("Пользователь с id = " + strconv.Itoa(newChat.PartnerId) + " не в сети")
-		return
-	}
-
 	newChatToSend, err := u.Db.GetNewChatById(newChat.ChatId, newChat.PartnerId)
-
 	if err != nil {
 		u.LogError("Не удалось составить чат : " + err.Error())
 		return
 	}
 
-	if len(newChatToSend.Photos) == 0 {
-		newChatToSend.Photos = make([]uuid.UUID, 0)
+	client, ok := (*u.Clients)[newChat.PartnerId]
+	if !ok {
+		u.LogInfo("Пользователь с id = " + strconv.Itoa(newChat.PartnerId) + " не в сети")
+		return
 	}
 
 	response := model.WebsocketResponse{ResponseType: "chat", Object: newChatToSend}
@@ -88,8 +81,6 @@ func (u *UserUsecase) WebsocketChat(newChat *model.Chat) {
 	err = client.WriteJSON(response)
 	if err != nil {
 		u.LogError("Не удалось отправить сообщение")
-		client.Close()
-		delete(*u.Clients, newChat.PartnerId)
 		return
 	}
 }
@@ -132,7 +123,11 @@ func (u *UserUsecase) CreateChat(id int, like model.Like) (model.Chat, int, erro
 		return model.Chat{}, 500, nil
 	}
 
-	newChat.PartnerId = like.UserId
+	newChat, err = u.Db.GetNewChatById(newChat.ChatId, id)
+	if err != nil {
+		u.LogError(err)
+		return model.Chat{}, 500, nil
+	}
 	newChat.Photos, err = u.Db.GetPhotos(newChat.PartnerId)
 	if err != nil {
 		u.LogError(err)
