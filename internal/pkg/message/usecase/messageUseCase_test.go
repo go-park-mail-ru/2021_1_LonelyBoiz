@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io/ioutil"
-	"server/internal/pkg/message/repository/mocks"
+	mocks "server/internal/pkg/message/repository/mocks"
 	"server/internal/pkg/models"
 	"strings"
 	"testing"
@@ -317,6 +317,7 @@ func TestChangeMessage(t *testing.T) {
 
 	dbMock.EXPECT().CheckMessageForReacting(id, message.MessageId).Return(2, nil)
 	dbMock.EXPECT().ChangeMessageReaction(message.MessageId, message.Reaction).Return(nil)
+	dbMock.EXPECT().GetMessage(message.MessageId).Return(message, nil)
 
 	_, code, err := UserUsecaseTest.ChangeMessage(id, message.MessageId, message)
 
