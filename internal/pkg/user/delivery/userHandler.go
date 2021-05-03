@@ -26,7 +26,6 @@ type UserHandlerInterface interface {
 
 	WsHandler(w http.ResponseWriter, r *http.Request)
 	LikesHandler(w http.ResponseWriter, r *http.Request)
-	WebSocketChatResponse()
 }
 
 func (a *UserHandler) SetHandlersWithCheckCookie(subRouter *mux.Router) {
@@ -52,7 +51,4 @@ func (a *UserHandler) SetHandlersWithoutCheckCookie(subRouter *mux.Router) {
 	subRouter.HandleFunc("/login", a.SignIn).Methods("POST")
 	// логаут
 	subRouter.HandleFunc("/login", a.LogOut).Methods("DELETE")
-
-	// отправка оповещения о новом чате
-	//go a.WebSocketChatResponse()
 }
