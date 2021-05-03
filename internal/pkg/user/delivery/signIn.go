@@ -17,8 +17,12 @@ func (a *UserHandler) SignIn(w http.ResponseWriter, r *http.Request) {
 	}
 
 	newUser, code, err := a.UserCase.SignIn(newUser)
-	if code != 200 {
+	if code == 500 {
 		models.Process(models.LoggerFunc(err.Error(), a.UserCase.LogError), models.ResponseFunc(w, code, nil))
+		return
+	}
+	if code != 200 {
+		models.Process(models.LoggerFunc(err.Error(), a.UserCase.LogInfo), models.ResponseFunc(w, code, err))
 		return
 	}
 
