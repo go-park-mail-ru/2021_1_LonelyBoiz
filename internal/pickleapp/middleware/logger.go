@@ -4,9 +4,9 @@ import (
 	"math/rand"
 	"net/http"
 	chatUsecase "server/internal/pkg/chat/usecase"
+	imageUsecase "server/internal/pkg/image/usecase"
 	messageUsecase "server/internal/pkg/message/usecase"
 	"server/internal/pkg/models"
-	photoUsecase "server/internal/pkg/photo/usecase"
 	"server/internal/pkg/session"
 	"server/internal/pkg/user/usecase"
 	"time"
@@ -17,7 +17,7 @@ import (
 type LoggerMiddleware struct {
 	Logger  *models.Logger
 	User    *usecase.UserUsecase
-	Photo   *photoUsecase.PhotoUseCase
+	Image   *imageUsecase.ImageUsecase
 	Chat    *chatUsecase.ChatUsecase
 	Session *session.SessionsManager
 	Message *messageUsecase.MessageUsecase
@@ -46,7 +46,7 @@ func (logger *LoggerMiddleware) Middleware(next http.Handler) http.Handler {
 
 		logger.Logger.LogInfo("Entry Point - Logger Middleware")
 		logger.User.LoggerInterface = logger.Logger
-		logger.Photo.LoggerInterface = logger.Logger
+		logger.Image.LoggerInterface = logger.Logger
 		logger.Session.Logger = logger.Logger
 		logger.Chat.LoggerInterface = logger.Logger
 		logger.Message.LoggerInterface = logger.Logger

@@ -1,21 +1,16 @@
 package delivery
 
 import (
-	"encoding/json"
 	"github.com/google/uuid"
-	"io/ioutil"
-	"os"
 
 	"net/http"
-	"reflect"
 	"server/internal/pkg/models"
-	model "server/internal/pkg/models"
 )
 
 func (a *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 	newUser, err := a.UserCase.ParseJsonToUser(r.Body)
 	if err != nil {
-		response := model.ErrorResponse{Err: "Не удалось прочитать тело запроса"}
+		response := models.ErrorResponse{Err: "Не удалось прочитать тело запроса"}
 		models.Process(models.LoggerFunc(response.Err, a.UserCase.LogInfo), models.ResponseFunc(w, 400, response))
 		return
 	}
@@ -42,6 +37,6 @@ func (a *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 	if len(newUser.Photos) == 0 {
 		newUser.Photos = make([]uuid.UUID, 0)
 	}
-	model.ResponseWithJson(w, 200, newUser)
-	a.UserCase.Logger.Info("Success SignUp")
+	models.ResponseWithJson(w, 200, newUser)
+	a.UserCase.LogInfo("Success SignUp")
 }

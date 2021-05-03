@@ -54,5 +54,5 @@ func (a *UserHandler) SetHandlersWithoutCheckCookie(subRouter *mux.Router) {
 	subRouter.HandleFunc("/login", a.LogOut).Methods("DELETE")
 
 	// отправка оповещения о новом чате
-	go a.WebSocketChatResponse()
+	//go a.WebSocketChatResponse()
 }

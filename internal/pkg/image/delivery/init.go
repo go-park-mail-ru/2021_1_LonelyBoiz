@@ -1,14 +1,15 @@
 package delivery
 
 import (
-	"github.com/google/uuid"
-	"github.com/gorilla/mux"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"server/internal/pkg/image/usecase"
 	"server/internal/pkg/models"
 	"server/internal/pkg/session"
+
+	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 )
 
 type ImageDeliveryInterface interface {
@@ -21,16 +22,26 @@ type ImageHandler struct {
 	Sessions *session.SessionsManager
 }
 
+func (a *ImageHandler) SetHandlers(subRouter *mux.Router) {
+	// добавить фотку
+	subRouter.HandleFunc("/images", a.UploadImage).Methods("POST")
+	// удалить фотку
+	subRouter.HandleFunc("/images/{uuid}", a.DeleteImage).Methods("DELETE")
+}
+
 func (h *ImageHandler) UploadImage(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	userId, ok := h.Sessions.GetIdFromContext(r.Context())
 	if !ok {
 		responseBody := models.ErrorResponse{Err: models.SessionErrorDenAccess}
+		h.Usecase.LogInfo(responseBody)
 		models.ResponseWithJson(w, http.StatusForbidden, responseBody)
 		return
 	}
 
-	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1 << 20))
+	h.Usecase.LogInfo("here")
+
+	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1<<20))
 	if err != nil {
 		responseBody := models.ErrorResponse{Err: "Не удалось прочитать файл"}
 		models.ResponseWithJson(w, http.StatusBadRequest, responseBody)
@@ -41,6 +52,7 @@ func (h *ImageHandler) UploadImage(w http.ResponseWriter, r *http.Request) {
 	status := setStatusCode(err, http.StatusBadRequest)
 	if err != nil {
 		responseBody := models.ErrorResponse{Err: err.Error()}
+		h.Usecase.LogInfo(responseBody)
 		models.ResponseWithJson(w, status, responseBody)
 		return
 	}

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -136,7 +137,7 @@ func TestSignIn(t *testing.T) {
 		DatePreference: "male",
 		IsActive:       true,
 		IsDeleted:      true,
-		Photos:         []int{1},
+		Photos:         []uuid.UUID{},
 	}
 
 	rows := sqlmock.NewRows([]string{
@@ -287,7 +288,7 @@ func TestGetChatById(t *testing.T) {
 		LastMessage:         "last message",
 		LastMessageTime:     123,
 		LastMessageAuthorId: 1,
-		Photos:              []int{1, 2},
+		Photos:              []uuid.UUID{},
 	}
 
 	rows := sqlmock.NewRows([]string{
@@ -357,7 +358,7 @@ func TestAddUser(t *testing.T) {
 		DatePreference: "male",
 		IsActive:       true,
 		IsDeleted:      true,
-		Photos:         []int{1},
+		Photos:         []uuid.UUID{},
 	}
 
 	rows := sqlmock.NewRows([]string{"id"}).AddRow(user.Id)

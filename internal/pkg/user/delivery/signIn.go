@@ -1,9 +1,10 @@
 package delivery
 
 import (
-	"github.com/google/uuid"
 	"net/http"
 	"server/internal/pkg/models"
+
+	"github.com/google/uuid"
 )
 
 func (a *UserHandler) SignIn(w http.ResponseWriter, r *http.Request) {
@@ -32,7 +33,7 @@ func (a *UserHandler) SignIn(w http.ResponseWriter, r *http.Request) {
 	}
 
 	newUser.PasswordHash = nil
-	model.ResponseWithJson(w, 200, newUser)
+	models.ResponseWithJson(w, 200, newUser)
 
-	a.UserCase.Logger.Info("Success LogIn")
+	a.UserCase.LogInfo("Success LogIn")
 }

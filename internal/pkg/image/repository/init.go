@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"database/sql"
 	"errors"
+	"server/internal/pkg/models"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
-	"server/internal/pkg/models"
 )
 
 var (

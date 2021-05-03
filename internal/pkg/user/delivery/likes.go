@@ -2,7 +2,6 @@ package delivery
 
 import (
 	"encoding/json"
-	"github.com/google/uuid"
 	"net/http"
 	model "server/internal/pkg/models"
 )
@@ -45,20 +44,20 @@ func chatsWriter(newChat *model.Chat) {
 	model.ChatsChan <- newChat
 }
 
-func (a *UserHandler) WebSocketChatResponse() {
+/*func (a *UserHandler) WebSocketChatResponse() {
 	for {
 		newChat := <-model.ChatsChan
 
 		client, ok := (*a.UserCase.Clients)[newChat.PartnerId]
 		if !ok {
-			a.UserCase.Logger.Info("Пользователь с id = ", newChat.PartnerId, " не в сети")
+			a.UserCase.LogInfo("Пользователь с id = ", newChat.PartnerId, " не в сети")
 			continue
 		}
 
 		newChatToSend, err := a.UserCase.Db.GetNewChatById(newChat.ChatId, newChat.PartnerId)
 
 		if err != nil {
-			a.UserCase.Logger.Error("Не удалось составить чат", err)
+			a.UserCase.LogError("Не удалось составить чат", err)
 			continue
 		}
 
@@ -77,3 +76,4 @@ func (a *UserHandler) WebSocketChatResponse() {
 		}
 	}
 }
+*/

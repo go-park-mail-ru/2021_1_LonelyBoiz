@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/google/uuid"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
@@ -139,7 +140,7 @@ func TestUserUsecaseSignInSuccess(t *testing.T) {
 		IsDeleted:      false,
 		IsActive:       false,
 		CaptchaToken:   "",
-		Photos:         make([]int, 0),
+		Photos:         make([]uuid.UUID, 0),
 	}
 
 	user := models.User{
@@ -572,7 +573,7 @@ func TestChangeUserInfo(t *testing.T) {
 		Instagram:      "inst",
 		Sex:            "male",
 		DatePreference: "male",
-		Photos:         make([]int, 0),
+		Photos:         make([]uuid.UUID, 0),
 	}
 
 	oldUser := models.User{
@@ -588,7 +589,7 @@ func TestChangeUserInfo(t *testing.T) {
 		DatePreference: "female",
 		IsDeleted:      false,
 		IsActive:       false,
-		Photos:         make([]int, 0),
+		Photos:         make([]uuid.UUID, 0),
 	}
 
 	dbMock.EXPECT().GetPassWithId(newUser.Id).Return(pass, nil)
@@ -628,7 +629,7 @@ func TestChangeUserInfoPasswordValidationError(t *testing.T) {
 		Instagram:      "inst",
 		Sex:            "male",
 		DatePreference: "male",
-		Photos:         make([]int, 0),
+		Photos:         make([]uuid.UUID, 0),
 	}
 
 	_, code, err := UserUsecaseTest.ChangeUserInfo(newUser, newUser.Id)
@@ -661,7 +662,7 @@ func TestChangeUserInfoWrongSecondPassword(t *testing.T) {
 		Instagram:      "inst",
 		Sex:            "male",
 		DatePreference: "male",
-		Photos:         make([]int, 0),
+		Photos:         make([]uuid.UUID, 0),
 	}
 
 	_, code, err := UserUsecaseTest.ChangeUserInfo(newUser, newUser.Id)
@@ -694,7 +695,7 @@ func TestChangeUserInfoGetPassError(t *testing.T) {
 		Instagram:      "inst",
 		Sex:            "male",
 		DatePreference: "male",
-		Photos:         make([]int, 0),
+		Photos:         make([]uuid.UUID, 0),
 	}
 
 	dbMock.EXPECT().GetPassWithId(newUser.Id).Return(nil, errors.New("Some error"))
@@ -729,7 +730,7 @@ func TestChangeUserInfoWrongPassword(t *testing.T) {
 		Instagram:      "inst",
 		Sex:            "male",
 		DatePreference: "male",
-		Photos:         make([]int, 0),
+		Photos:         make([]uuid.UUID, 0),
 	}
 
 	dbMock.EXPECT().GetPassWithId(newUser.Id).Return([]byte{1, 2}, nil)
@@ -764,7 +765,7 @@ func TestChangeUserInfoNilPasswordError(t *testing.T) {
 		Instagram:      "inst",
 		Sex:            "male",
 		DatePreference: "male",
-		Photos:         make([]int, 0),
+		Photos:         make([]uuid.UUID, 0),
 	}
 
 	dbMock.EXPECT().GetPassWithId(newUser.Id).Return(nil, nil)
@@ -804,7 +805,7 @@ func TestChangeUserInfoChangePasswordError(t *testing.T) {
 		Instagram:      "inst",
 		Sex:            "male",
 		DatePreference: "male",
-		Photos:         make([]int, 0),
+		Photos:         make([]uuid.UUID, 0),
 	}
 
 	dbMock.EXPECT().ChangePassword(newUser.Id, gomock.Any()).Return(errors.New("Some error"))
@@ -845,7 +846,7 @@ func TestChangeUserInfoGetUserInfoError(t *testing.T) {
 		Instagram:      "inst",
 		Sex:            "male",
 		DatePreference: "male",
-		Photos:         make([]int, 0),
+		Photos:         make([]uuid.UUID, 0),
 	}
 
 	dbMock.EXPECT().ChangePassword(newUser.Id, gomock.Any()).Return(nil)
@@ -887,7 +888,7 @@ func TestChangeUserInfoNonValidEmail(t *testing.T) {
 		Instagram:      "inst",
 		Sex:            "male",
 		DatePreference: "male",
-		Photos:         make([]int, 0),
+		Photos:         make([]uuid.UUID, 0),
 	}
 
 	dbMock.EXPECT().ChangePassword(newUser.Id, gomock.Any()).Return(nil)
@@ -929,7 +930,7 @@ func TestChangeUserInfoEmailIsSignedUpError(t *testing.T) {
 		Instagram:      "inst",
 		Sex:            "male",
 		DatePreference: "male",
-		Photos:         make([]int, 0),
+		Photos:         make([]uuid.UUID, 0),
 	}
 
 	dbMock.EXPECT().ChangePassword(newUser.Id, gomock.Any()).Return(nil)
@@ -972,7 +973,7 @@ func TestChangeUserInfoEmailIsSignedUp(t *testing.T) {
 		Instagram:      "inst",
 		Sex:            "male",
 		DatePreference: "male",
-		Photos:         make([]int, 0),
+		Photos:         make([]uuid.UUID, 0),
 	}
 
 	dbMock.EXPECT().ChangePassword(newUser.Id, gomock.Any()).Return(nil)
@@ -1015,7 +1016,7 @@ func TestChangeUserInfoNonValidSex(t *testing.T) {
 		Instagram:      "inst",
 		Sex:            "male1",
 		DatePreference: "male",
-		Photos:         make([]int, 0),
+		Photos:         make([]uuid.UUID, 0),
 	}
 
 	dbMock.EXPECT().ChangePassword(newUser.Id, gomock.Any()).Return(nil)
@@ -1058,7 +1059,7 @@ func TestChangeUserInfoNonValidPreference(t *testing.T) {
 		Instagram:      "inst",
 		Sex:            "male",
 		DatePreference: "male1",
-		Photos:         make([]int, 0),
+		Photos:         make([]uuid.UUID, 0),
 	}
 
 	dbMock.EXPECT().ChangePassword(newUser.Id, gomock.Any()).Return(nil)
@@ -1101,7 +1102,7 @@ func TestChangeUserInfoIsActiveError(t *testing.T) {
 		Instagram:      "inst",
 		Sex:            "male",
 		DatePreference: "male",
-		Photos:         make([]int, 0),
+		Photos:         make([]uuid.UUID, 0),
 	}
 
 	dbMock.EXPECT().ChangePassword(newUser.Id, gomock.Any()).Return(nil)
@@ -1145,7 +1146,7 @@ func TestChangeUserInfoIsActiveFalse(t *testing.T) {
 		Instagram:      "inst",
 		Sex:            "male",
 		DatePreference: "male",
-		Photos:         make([]int, 0),
+		Photos:         make([]uuid.UUID, 0),
 	}
 
 	dbMock.EXPECT().ChangePassword(newUser.Id, gomock.Any()).Return(nil)
@@ -1190,7 +1191,7 @@ func TestChangeUserInfoChangeUserError(t *testing.T) {
 		Instagram:      "inst",
 		Sex:            "male",
 		DatePreference: "male",
-		Photos:         make([]int, 0),
+		Photos:         make([]uuid.UUID, 0),
 	}
 
 	dbMock.EXPECT().ChangePassword(newUser.Id, gomock.Any()).Return(nil)
@@ -1229,7 +1230,7 @@ func TestValidateSignUpDataSuccess(t *testing.T) {
 		Instagram:      "inst",
 		Sex:            "male",
 		DatePreference: "male",
-		Photos:         make([]int, 0),
+		Photos:         make([]uuid.UUID, 0),
 	}
 
 	err := UserUsecaseTest.ValidateSignUpData(newUser)
@@ -1260,7 +1261,7 @@ func TestValidateSignUpDataError(t *testing.T) {
 		Instagram:      "inst",
 		Sex:            "male",
 		DatePreference: "male",
-		Photos:         make([]int, 0),
+		Photos:         make([]uuid.UUID, 0),
 	}
 
 	err := UserUsecaseTest.ValidateSignUpData(newUser)
@@ -1291,7 +1292,7 @@ func TestValidateSignUpDataPassError(t *testing.T) {
 		Instagram:      "inst",
 		Sex:            "male",
 		DatePreference: "male",
-		Photos:         make([]int, 0),
+		Photos:         make([]uuid.UUID, 0),
 	}
 
 	err := UserUsecaseTest.ValidateSignUpData(newUser)
@@ -1322,7 +1323,7 @@ func TestAddNewUserSuccess(t *testing.T) {
 		Instagram:      "inst",
 		Sex:            "male",
 		DatePreference: "male",
-		Photos:         make([]int, 0),
+		Photos:         make([]uuid.UUID, 0),
 	}
 
 	dbMock.EXPECT().AddUser(gomock.Any()).Return(newUser.Id, nil)
@@ -1356,7 +1357,7 @@ func TestAddNewUserIsActiveError(t *testing.T) {
 		Instagram:      "inst",
 		Sex:            "male",
 		DatePreference: "male",
-		Photos:         make([]int, 0),
+		Photos:         make([]uuid.UUID, 0),
 	}
 
 	dbMock.EXPECT().GetPhotos(1).Return(nil, errors.New("Some error"))
@@ -1389,7 +1390,7 @@ func TestAddNewUserAddUserError(t *testing.T) {
 		Instagram:      "inst",
 		Sex:            "male",
 		DatePreference: "male",
-		Photos:         make([]int, 0),
+		Photos:         make([]uuid.UUID, 0),
 	}
 
 	dbMock.EXPECT().AddUser(gomock.Any()).Return(newUser.Id, errors.New("Some error"))

@@ -26,11 +26,13 @@ var (
 type ImageUsecaseInterface interface {
 	AddImage(userId int, image []byte) (models.Image, error)
 	DeleteImage(userId int, imageUuid uuid.UUID) error
+	models.LoggerInterface
 }
 
 type ImageUsecase struct {
 	Db           repository.DbRepositoryInterface
 	ImageStorage repository.StorageRepositoryInterface
+	models.LoggerInterface
 }
 
 func (u *ImageUsecase) AddImage(userId int, image []byte) (models.Image, error) {
@@ -42,13 +44,19 @@ func (u *ImageUsecase) AddImage(userId int, image []byte) (models.Image, error) 
 
 	err := u.ImageStorage.AddImage(newUuid, image)
 	if err != nil {
+		u.LogInfo("1")
+		u.LogError(err)
 		return models.Image{}, ErrUsecaseFailedToUpload
 	}
 
 	model, err := u.Db.AddImage(userId, newUuid)
 	if err == repository.ErrRepositoryConnection {
+		u.LogInfo("2")
+		u.LogError(err)
 		return models.Image{}, ErrUsecaseFatal
 	} else if err != nil {
+		u.LogInfo("3")
+		u.LogError(err)
 		return models.Image{}, ErrUsecaseFailedToUpload
 	}
 

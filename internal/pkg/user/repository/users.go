@@ -3,9 +3,9 @@ package repository
 import (
 	"database/sql"
 	"errors"
-	"fmt"
-	"github.com/google/uuid"
 	model "server/internal/pkg/models"
+
+	"github.com/google/uuid"
 
 	"github.com/jmoiron/sqlx"
 
@@ -26,8 +26,8 @@ type UserRepositoryInterface interface {
 	//фотки
 	AddPhoto(userId int, image string) (int, error)
 	GetPhoto(photoId int) (string, error)
-	GetPhotos(userId int) ([]int, error)
-	CheckPhoto(photoId int, userId int) (bool, error)
+	GetPhotos(userId int) ([]uuid.UUID, error)
+	CheckPhoto(photoUuid uuid.UUID, userId int) (bool, error)
 
 	//чат
 	CreateChat(userId1 int, userId2 int) (int, error)

@@ -11,6 +11,7 @@ import (
 	"server/internal/pkg/user/repository"
 	"strconv"
 
+	"github.com/google/uuid"
 	"github.com/microcosm-cc/bluemonday"
 
 	"github.com/asaskevich/govalidator"
@@ -77,7 +78,7 @@ func (u *UserUsecase) WebsocketChat(newChat *model.Chat) {
 	}
 
 	if len(newChatToSend.Photos) == 0 {
-		newChatToSend.Photos = make([]int, 0)
+		newChatToSend.Photos = make([]uuid.UUID, 0)
 	}
 
 	response := model.WebsocketResponse{ResponseType: "chat", Object: newChatToSend}
@@ -233,6 +234,7 @@ func (u *UserUsecase) CreateNewUser(newUser model.User) (user model.User, code i
 	}
 
 	if isSignedUp {
+		response = model.ErrorResponse{Err: "Вы уже зарегестрированы"}
 		u.LogInfo(response)
 		return model.User{}, 400, response
 	}
@@ -247,7 +249,7 @@ func (u *UserUsecase) CreateNewUser(newUser model.User) (user model.User, code i
 	newUser.SecondPassword = ""
 	newUser.PasswordHash = nil
 	if len(newUser.Photos) == 0 {
-		newUser.Photos = make([]int, 0)
+		newUser.Photos = make([]uuid.UUID, 0)
 	}
 
 	return newUser, 200, nil
@@ -326,7 +328,7 @@ func (u *UserUsecase) SignIn(user model.User) (newUser model.User, code int, err
 	}
 
 	if len(newUser.Photos) == 0 {
-		newUser.Photos = make([]int, 0)
+		newUser.Photos = make([]uuid.UUID, 0)
 	}
 
 	newUser.PasswordHash = nil

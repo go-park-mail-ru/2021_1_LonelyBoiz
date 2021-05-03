@@ -1,9 +1,6 @@
 package main
 
 import (
-	awsSession "github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"math/rand"
 	"net/http"
 	"os"
@@ -25,6 +22,10 @@ import (
 	userRepository "server/internal/pkg/user/repository"
 	"server/internal/pkg/user/usecase"
 	"time"
+
+	awsSession "github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
@@ -154,13 +155,11 @@ func (a *App) InitializeRoutes(currConfig Config) {
 	loggerm := middleware.LoggerMiddleware{
 		Logger:  &models.Logger{Logger: logrus.NewEntry(a.Logger)},
 		User:    &userUcase,
-		Photo:   &photousecase,
+		Image:   &imageUcase,
 		Session: &sessionManager,
 		Chat:    &chatUcase,
 		Message: &messUcase,
 	}
-
-	photohandler := photoDelivery.PhotoHandler{Sessions: &sessionManager, Usecase: photousecase}
 
 	checkcookiem := middleware.ValidateCookieMiddleware{Session: &sessionManager}
 
@@ -173,14 +172,9 @@ func (a *App) InitializeRoutes(currConfig Config) {
 
 	userHandler.SetHandlersWithCheckCookie(subRouter)
 	userHandler.SetHandlersWithoutCheckCookie(a.router)
-	photohandler.SetPhotoHandlers(subRouter)
 	messHandler.SetMessageHandlers(subRouter)
 	chatHandler.SetChatHandlers(subRouter)
-
-	// загрузить новую фотку на сервер
-	subRouter.HandleFunc("/images", imageHandler.UploadImage).Methods("POST")
-	// удалить фотку
-	subRouter.HandleFunc("/images/{uuid}", imageHandler.DeleteImage).Methods("DELETE")
+	imageHandler.SetHandlers(subRouter)
 }
 
 func main() {

@@ -57,17 +57,14 @@ func (session *SessionsManager) SetSession(w http.ResponseWriter, id int) error 
 
 func (session *SessionsManager) DeleteSession(cookie *http.Cookie) error {
 	key := cookie.Value
-	cookie.SameSite = http.SameSiteNoneMode
-	cookie.Secure = true
+	cookie.SameSite = http.SameSiteLaxMode
+	//cookie.Secure = true
 	cookie.HttpOnly = true
-	cookie.Domain = "p1ckle.herokuapp.com"
+	cookie.Domain = "localhost:3000"
 	cookie.Expires = time.Now().AddDate(0, 0, -1)
-	cookie.SameSite = http.SameSiteNoneMode
-	cookie.Secure = true
-	cookie.HttpOnly = true
-	cookie.Domain = "p1ckle.herokuapp.com"
-	if err := session.DB.DeleteCookie(0, key); err != nil {
-		session.Logger.Info("Delete Cookie : " + err.Error())
+	cookie.SameSite = http.SameSiteLaxMode
+	if err := session.DB.DeleteCookie(key); err != nil {
+		session.Logger.LogInfo("Delete Cookie : " + err.Error())
 		return err
 	}
 
