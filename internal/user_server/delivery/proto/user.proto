@@ -26,6 +26,12 @@ message User {
   string CaptchaToken = 17;
 }
 
+message UserResponse {
+  int32 code = 1;
+  User user = 2;
+  string token = 3;
+}
+
 message UserLogin {
   string Email = 1;
   string Password = 2;
@@ -46,8 +52,8 @@ message Feed {
 
 // grpc-сервис работы с юзером
 service UserService {
-  rpc CreateUser (User) returns (User) {}
-  rpc ChangeUser (User) returns (User) {}
+  rpc CreateUser (User) returns (UserResponse) {}
+  rpc ChangeUser (User) returns (UserResponse) {}
   rpc CheckUser (UserLogin) returns (User) {}
 
   // метаданные

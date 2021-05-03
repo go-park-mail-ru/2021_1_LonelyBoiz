@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"reflect"
 	model "server/internal/pkg/models"
 	"server/internal/pkg/user/repository"
+	userProto "server/internal/user_server/delivery/proto"
 	"strconv"
 	"time"
 
@@ -49,6 +51,8 @@ type UserUseCaseInterface interface {
 	WebsocketChat(newChat *model.Chat)
 	SetChat(ws *websocket.Conn, id int)
 	SetCookie(token string) http.Cookie
+	User2ProtoUser(user model.User) *userProto.User
+	ProtoUser2User(user *userProto.User) model.User
 
 	UnblockSecreteAlbum(ownerId int, getterId int) (int, error)
 	GetSecreteAlbum(ownerId int, getterId int) ([]string, int, error)
@@ -307,7 +311,7 @@ func (u *UserUsecase) CreateNewUser(newUser model.User) (user model.User, code i
 	newUser.SecondPassword = ""
 	newUser.PasswordHash = nil
 	if len(newUser.Photos) == 0 {
-		newUser.Photos = make([]string, 0)
+		newUser.Photos = make([]uuid.UUID, 0)
 	}
 
 	return newUser, 200, nil
@@ -386,7 +390,7 @@ func (u *UserUsecase) SignIn(user model.User) (newUser model.User, code int, err
 	}
 
 	if len(newUser.Photos) == 0 {
-		newUser.Photos = make([]string, 0)
+		newUser.Photos = make([]uuid.UUID, 0)
 	}
 
 	newUser.PasswordHash = nil
@@ -687,4 +691,48 @@ func (u *UserUsecase) GetIdFromContext(ctx context.Context) (int, bool) {
 		return 0, false
 	}
 	return id, true
+}
+
+func (u *UserUsecase) ProtoUser2User(user *userProto.User) model.User {
+	return model.User{
+		Id:             int(user.GetId()),
+		Email:          user.GetEmail(),
+		Password:       user.GetPassword(),
+		SecondPassword: user.GetSecondPassword(),
+		PasswordHash:   nil,
+		OldPassword:    user.GetOldPassword(),
+		Name:           user.GetName(),
+		Birthday:       user.GetBirthday(),
+		Description:    user.GetDescription(),
+		City:           user.GetCity(),
+		Instagram:      user.GetInstagram(),
+		Sex:            user.GetSex(),
+		DatePreference: user.GetDatePreference(),
+		IsDeleted:      user.IsDeleted,
+		IsActive:       user.IsActive,
+		Photos:         nil,
+		CaptchaToken:   user.CaptchaToken,
+	}
+}
+
+func (u *UserUsecase) User2ProtoUser(user model.User) *userProto.User {
+	return &userProto.User{
+		Id:             int32(user.Id),
+		Email:          user.Email,
+		Password:       user.Password,
+		SecondPassword: user.SecondPassword,
+		PasswordHash:   nil,
+		OldPassword:    user.OldPassword,
+		Name:           user.Name,
+		Birthday:       user.Birthday,
+		Description:    user.Description,
+		City:           user.City,
+		Instagram:      user.Instagram,
+		Sex:            user.Sex,
+		DatePreference: user.DatePreference,
+		IsDeleted:      user.IsDeleted,
+		IsActive:       user.IsActive,
+		Photos:         nil,
+		CaptchaToken:   user.CaptchaToken,
+	}
 }

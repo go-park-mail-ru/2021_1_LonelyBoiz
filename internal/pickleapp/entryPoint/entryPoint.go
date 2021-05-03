@@ -181,6 +181,7 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 	checkcookiem := middleware.ValidateCookieMiddleware{Session: client}
 
 	a.router.Use(loggerm.Middleware)
+	a.router.Use(middleware.SetContextMiddleware)
 	//a.router.Use(csrfMiddleware)
 	//a.router.Use(middleware.CSRFMiddleware)
 

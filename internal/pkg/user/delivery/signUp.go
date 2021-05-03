@@ -14,17 +14,14 @@ func (a *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newUser, code, responseError := a.UserCase.CreateNewUser(newUser)
-	if code == 500 {
-		models.Process(models.LoggerFunc(err, a.UserCase.LogError), models.ResponseFunc(w, 500, nil))
-		return
-	}
-	if responseError != nil {
-		models.Process(models.LoggerFunc(err, a.UserCase.LogInfo), models.ResponseFunc(w, code, responseError))
+	userResponse, err := a.Server.CreateUser(r.Context(), a.UserCase.User2ProtoUser(newUser))
+
+	if err != nil || userResponse.GetCode() != 200 {
+		models.ResponseFunc(w, int(userResponse.GetCode()), err.Error())
 		return
 	}
 
-	token, err := a.Sessions.Create(r.Context(), &session_proto2.SessionId{Id: int32(newUser.Id)})
+	token, err := a.Sessions.Create(r.Context(), &session_proto2.SessionId{Id: userResponse.GetUser().GetId()})
 	if err != nil {
 		models.Process(models.LoggerFunc(err, a.UserCase.LogError), models.ResponseFunc(w, 500, nil))
 		return
@@ -38,5 +35,5 @@ func (a *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 	cookie := a.UserCase.SetCookie(token.GetToken())
 	http.SetCookie(w, &cookie)
 
-	models.Process(models.LoggerFunc("Success SignUp", a.UserCase.LogInfo), models.ResponseFunc(w, 200, newUser))
+	models.Process(models.LoggerFunc("Success SignUp", a.UserCase.LogInfo), models.ResponseFunc(w, 200, userResponse.GetUser()))
 }
