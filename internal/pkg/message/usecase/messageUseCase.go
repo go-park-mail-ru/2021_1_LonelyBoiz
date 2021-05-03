@@ -31,32 +31,25 @@ type MessageUsecase struct {
 }
 
 func (m *MessageUsecase) WebsocketMessage(newMessage model.Message) {
+	m.LogInfo("НАчало отправки сообщения")
 	partnerId, err := m.Db.GetPartnerId(newMessage.ChatId, newMessage.AuthorId)
 	if err != nil {
 		m.LogError(err)
 		return
 	}
-
 	if partnerId == -1 {
+		m.LogInfo("Нет такого чата")
 		return
 	}
 
 	var response model.WebsocketResponse
 
-	if newMessage.Reaction != -1 {
-		var editedMessage model.EditedMessage
-		editedMessage.MessageId = newMessage.MessageId
-		editedMessage.Reaction = newMessage.Reaction
-		editedMessage.ChatId = newMessage.ChatId
-		response.ResponseType = "editMessage"
-		response.Object = editedMessage
-	} else {
-		response.ResponseType = "message"
-		response.Object = newMessage
-	}
+	response.ResponseType = "message"
+	response.Object = newMessage
 
 	client, ok := (*m.Clients)[partnerId]
 	if !ok {
+		m.LogInfo("Пользователь не подключен")
 		return
 	}
 
@@ -65,6 +58,8 @@ func (m *MessageUsecase) WebsocketMessage(newMessage model.Message) {
 		m.LogError("Не удалось отправить сообщение")
 		return
 	}
+
+	m.LogInfo("Сообщение отправлено")
 }
 
 func (m *MessageUsecase) ChangeMessage(userId, messageId int, newMessage model.Message) (model.Message, int, error) {

@@ -1,6 +1,7 @@
 package delivery
 
 import (
+	"fmt"
 	"net/http"
 	model "server/internal/pkg/models"
 
@@ -14,10 +15,10 @@ var upgrader = websocket.Upgrader{
 }
 
 func (a *UserHandler) WsHandler(w http.ResponseWriter, r *http.Request) {
+	a.UserCase.LogError("Попытка подключиться по вэбсокету")
 	id, ok := a.Sessions.GetIdFromContext(r.Context())
 	if !ok {
 		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
-
 		model.Process(model.LoggerFunc(response.Err, a.UserCase.LogInfo), model.ResponseFunc(w, 403, response))
 		return
 	}
@@ -29,5 +30,5 @@ func (a *UserHandler) WsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	a.UserCase.SetChat(ws, id)
-	a.UserCase.LogError("Set Websocket connection")
+	a.UserCase.LogInfo(fmt.Sprintf("Новое подключение по вэбсокету id =%d", id))
 }

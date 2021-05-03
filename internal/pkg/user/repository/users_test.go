@@ -137,7 +137,7 @@ func TestSignIn(t *testing.T) {
 		DatePreference: "male",
 		IsActive:       true,
 		IsDeleted:      true,
-		Photos:         []uuid.UUID{},
+		Photos:         []uuid.UUID{uuid.New()},
 	}
 
 	rows := sqlmock.NewRows([]string{
@@ -175,7 +175,7 @@ func TestSignIn(t *testing.T) {
 		WillReturnRows(rows)
 
 	mock.
-		ExpectQuery("SELECT photoId FROM photos WHERE userid").
+		ExpectQuery("SELECT photoUuid FROM photos WHERE userid").
 		WithArgs(user.Id).
 		WillReturnRows(rows2)
 
@@ -194,44 +194,6 @@ func TestSignIn(t *testing.T) {
 	}
 	if !reflect.DeepEqual(res, user) {
 		t.Errorf("results not match, want %v, have %v", user, res)
-		return
-	}
-}
-
-func TestAddPhoto(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("cant create mock: %s", err)
-	}
-	defer db.Close()
-
-	photoid := 1
-
-	rows := sqlmock.NewRows([]string{"photoid"}).AddRow(photoid)
-
-	userid := 1
-	value := "abc"
-
-	mock.
-		ExpectQuery("INSERT INTO ").
-		WithArgs(userid, value).
-		WillReturnRows(rows)
-
-	repo := UserRepository{
-		DB: sqlx.NewDb(db, "psx"),
-	}
-
-	res, err := repo.AddPhoto(userid, value)
-	if err != nil {
-		t.Errorf("unexpected err: %s", err)
-		return
-	}
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
-		return
-	}
-	if !reflect.DeepEqual(res, photoid) {
-		t.Errorf("results not match, want %v, have %v", photoid, res)
 		return
 	}
 }
@@ -288,16 +250,16 @@ func TestGetChatById(t *testing.T) {
 		LastMessage:         "last message",
 		LastMessageTime:     123,
 		LastMessageAuthorId: 1,
-		Photos:              []uuid.UUID{},
+		Photos:              []uuid.UUID{uuid.New(), uuid.New()},
 	}
 
 	rows := sqlmock.NewRows([]string{
-		"ChatId",
-		"partnerId",
-		"partnerName",
-		"lastMessage",
-		"lastMessageTime",
-		"lastMessageAuthorId",
+		"chatid",
+		"partnerid",
+		"partnername",
+		"lastmessage",
+		"lastmessagetime",
+		"lastmessageauthorid",
 	}).AddRow(
 		chat.ChatId,
 		chat.PartnerId,
@@ -307,15 +269,15 @@ func TestGetChatById(t *testing.T) {
 		chat.LastMessageAuthorId,
 	)
 
-	rows2 := sqlmock.NewRows([]string{"photoid"}).AddRow(chat.Photos[0]).AddRow(chat.Photos[1])
+	rows2 := sqlmock.NewRows([]string{"photoUuid"}).AddRow(chat.Photos[0]).AddRow(chat.Photos[1])
 
 	mock.
-		ExpectQuery("SELECT chats.id AS chatId,").
+		ExpectQuery("SELECT chats.id AS chatid,").
 		WithArgs(chat.ChatId, userid).
 		WillReturnRows(rows)
 
 	mock.
-		ExpectQuery("SELECT photoId FROM photos").
+		ExpectQuery("SELECT photoUuid FROM photos").
 		WithArgs(chat.PartnerId).
 		WillReturnRows(rows2)
 

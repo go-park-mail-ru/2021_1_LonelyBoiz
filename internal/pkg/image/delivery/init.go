@@ -39,8 +39,6 @@ func (h *ImageHandler) UploadImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.Usecase.LogInfo("here")
-
 	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1<<20))
 	if err != nil {
 		responseBody := models.ErrorResponse{Err: "Не удалось прочитать файл"}

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"server/internal/pkg/models"
-	"server/internal/pkg/user/repository/mocks"
+	mocks "server/internal/pkg/user/repository/mocks"
 	"strings"
 	"testing"
 
@@ -390,7 +390,7 @@ func TestCreateChatSuccess(t *testing.T) {
 	dbMock.EXPECT().Rating(1, 1, "like").Return(int64(1), nil)
 	dbMock.EXPECT().CheckReciprocity(1, 1).Return(true, nil)
 	dbMock.EXPECT().CreateChat(1, 1).Return(1, nil)
-	dbMock.EXPECT().GetPhotos(1).Return([]int{1, 2}, nil)
+	dbMock.EXPECT().GetPhotos(1).Return([]uuid.UUID{}, nil)
 
 	_, code, err := UserUsecaseTest.CreateChat(1, like)
 	assert.Equal(t, nil, err)
@@ -578,7 +578,7 @@ func TestChangeUserInfo(t *testing.T) {
 
 	oldUser := models.User{
 		Id:             1,
-		Email:          "windes@ya.ru",
+		Email:          "windes1@ya.ru",
 		PasswordHash:   pass,
 		Name:           "notnick",
 		Birthday:       0,
@@ -588,13 +588,12 @@ func TestChangeUserInfo(t *testing.T) {
 		Sex:            "female",
 		DatePreference: "female",
 		IsDeleted:      false,
-		IsActive:       false,
 		Photos:         make([]uuid.UUID, 0),
 	}
 
 	dbMock.EXPECT().GetPassWithId(newUser.Id).Return(pass, nil)
-	dbMock.EXPECT().CheckMail(newUser.Email).Return(true, nil)
-	dbMock.EXPECT().GetPhotos(newUser.Id).Return([]int{1, 2}, nil)
+	dbMock.EXPECT().CheckMail(newUser.Email).Return(false, nil)
+	dbMock.EXPECT().GetPhotos(newUser.Id).Return([]uuid.UUID{uuid.New()}, nil)
 	dbMock.EXPECT().ChangePassword(newUser.Id, gomock.Any()).Return(nil)
 	dbMock.EXPECT().GetUser(newUser.Id).Return(oldUser, nil)
 	dbMock.EXPECT().ChangeUser(gomock.Any()).Return(nil)
@@ -896,7 +895,7 @@ func TestChangeUserInfoNonValidEmail(t *testing.T) {
 	dbMock.EXPECT().GetUser(newUser.Id).Return(newUser, nil)
 
 	_, code, err := UserUsecaseTest.ChangeUserInfo(newUser, newUser.Id)
-	assert.Equal(t, nil, err)
+	assert.NotEqual(t, nil, err)
 	assert.Equal(t, 400, code)
 }
 
@@ -979,10 +978,10 @@ func TestChangeUserInfoEmailIsSignedUp(t *testing.T) {
 	dbMock.EXPECT().ChangePassword(newUser.Id, gomock.Any()).Return(nil)
 	dbMock.EXPECT().GetPassWithId(newUser.Id).Return(pass, nil)
 	dbMock.EXPECT().GetUser(newUser.Id).Return(newUser, nil)
-	dbMock.EXPECT().CheckMail(newUser.Email).Return(false, nil)
+	dbMock.EXPECT().CheckMail(newUser.Email).Return(true, nil)
 
 	_, code, err := UserUsecaseTest.ChangeUserInfo(newUser, newUser.Id)
-	assert.Equal(t, nil, err)
+	assert.NotEqual(t, nil, err)
 	assert.Equal(t, 400, code)
 }
 
@@ -1025,7 +1024,7 @@ func TestChangeUserInfoNonValidSex(t *testing.T) {
 	dbMock.EXPECT().CheckMail(newUser.Email).Return(false, nil)
 
 	_, code, err := UserUsecaseTest.ChangeUserInfo(newUser, newUser.Id)
-	assert.Equal(t, nil, err)
+	assert.NotEqual(t, nil, err)
 	assert.Equal(t, 400, code)
 }
 
@@ -1068,7 +1067,7 @@ func TestChangeUserInfoNonValidPreference(t *testing.T) {
 	dbMock.EXPECT().CheckMail(newUser.Email).Return(false, nil)
 
 	_, code, err := UserUsecaseTest.ChangeUserInfo(newUser, newUser.Id)
-	assert.Equal(t, nil, err)
+	assert.NotEqual(t, nil, err)
 	assert.Equal(t, 400, code)
 }
 
@@ -1109,11 +1108,10 @@ func TestChangeUserInfoIsActiveError(t *testing.T) {
 	dbMock.EXPECT().GetPassWithId(newUser.Id).Return(pass, nil)
 	dbMock.EXPECT().GetUser(newUser.Id).Return(newUser, nil)
 	dbMock.EXPECT().CheckMail(newUser.Email).Return(true, nil)
-	dbMock.EXPECT().GetPhotos(newUser.Id).Return(nil, errors.New("Some error"))
 
 	_, code, err := UserUsecaseTest.ChangeUserInfo(newUser, newUser.Id)
-	assert.Equal(t, nil, err)
-	assert.Equal(t, 500, code)
+	assert.NotEqual(t, nil, err)
+	assert.Equal(t, 400, code)
 }
 
 func TestChangeUserInfoIsActiveFalse(t *testing.T) {
@@ -1152,7 +1150,7 @@ func TestChangeUserInfoIsActiveFalse(t *testing.T) {
 	dbMock.EXPECT().ChangePassword(newUser.Id, gomock.Any()).Return(nil)
 	dbMock.EXPECT().GetPassWithId(newUser.Id).Return(pass, nil)
 	dbMock.EXPECT().GetUser(newUser.Id).Return(newUser, nil)
-	dbMock.EXPECT().CheckMail(newUser.Email).Return(true, nil)
+	dbMock.EXPECT().CheckMail(newUser.Email).Return(false, nil)
 	dbMock.EXPECT().GetPhotos(newUser.Id).Return(nil, nil)
 	dbMock.EXPECT().ChangeUser(gomock.Any()).Return(nil)
 
@@ -1197,7 +1195,7 @@ func TestChangeUserInfoChangeUserError(t *testing.T) {
 	dbMock.EXPECT().ChangePassword(newUser.Id, gomock.Any()).Return(nil)
 	dbMock.EXPECT().GetPassWithId(newUser.Id).Return(pass, nil)
 	dbMock.EXPECT().GetUser(newUser.Id).Return(newUser, nil)
-	dbMock.EXPECT().CheckMail(newUser.Email).Return(true, nil)
+	dbMock.EXPECT().CheckMail(newUser.Email).Return(false, nil)
 	dbMock.EXPECT().GetPhotos(newUser.Id).Return(nil, nil)
 	dbMock.EXPECT().ChangeUser(gomock.Any()).Return(errors.New("Some error"))
 
@@ -1327,43 +1325,9 @@ func TestAddNewUserSuccess(t *testing.T) {
 	}
 
 	dbMock.EXPECT().AddUser(gomock.Any()).Return(newUser.Id, nil)
-	dbMock.EXPECT().GetPhotos(1).Return(nil, nil)
 
 	err := UserUsecaseTest.AddNewUser(&newUser)
 	assert.Equal(t, nil, err)
-}
-
-func TestAddNewUserIsActiveError(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-
-	dbMock := mocks.NewMockUserRepositoryInterface(mockCtrl)
-
-	UserUsecaseTest := UserUsecase{
-		Clients:         nil,
-		Db:              dbMock,
-		LoggerInterface: &models.Logger{Logger: logrus.New().WithField("test", "test")},
-		Sanitizer:       bluemonday.NewPolicy(),
-	}
-
-	newUser := models.User{
-		Id:             1,
-		Email:          "windes@mail.ru",
-		Password:       "123456789",
-		SecondPassword: "1234567891",
-		Name:           "nick",
-		Birthday:       123123,
-		Description:    "desc",
-		City:           "city",
-		Instagram:      "inst",
-		Sex:            "male",
-		DatePreference: "male",
-		Photos:         make([]uuid.UUID, 0),
-	}
-
-	dbMock.EXPECT().GetPhotos(1).Return(nil, errors.New("Some error"))
-
-	err := UserUsecaseTest.AddNewUser(&newUser)
-	assert.NotEqual(t, nil, err)
 }
 
 func TestAddNewUserAddUserError(t *testing.T) {
@@ -1394,7 +1358,6 @@ func TestAddNewUserAddUserError(t *testing.T) {
 	}
 
 	dbMock.EXPECT().AddUser(gomock.Any()).Return(newUser.Id, errors.New("Some error"))
-	dbMock.EXPECT().GetPhotos(1).Return(nil, nil)
 
 	err := UserUsecaseTest.AddNewUser(&newUser)
 	assert.NotEqual(t, nil, err)

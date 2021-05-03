@@ -41,7 +41,7 @@ func (a *UserHandler) SetHandlersWithCheckCookie(subRouter *mux.Router) {
 	subRouter.HandleFunc("/users/{id:[0-9]+}", a.ChangeUserInfo).Methods("PATCH")
 	// поставить оценку юзеру из ленты
 	subRouter.HandleFunc("/likes", a.LikesHandler).Methods("POST")
-	// открытие вэсокетного соединения
+	// открытие вэбсокетного соединения
 	subRouter.HandleFunc("/ws", a.WsHandler).Methods("GET")
 }
 

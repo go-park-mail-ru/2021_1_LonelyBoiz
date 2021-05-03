@@ -24,7 +24,6 @@ type UserRepositoryInterface interface {
 	ChangePassword(userId int, hash []byte) error
 
 	//фотки
-	AddPhoto(userId int, image string) (int, error)
 	GetPhoto(photoId int) (string, error)
 	GetPhotos(userId int) ([]uuid.UUID, error)
 	CheckPhoto(photoUuid uuid.UUID, userId int) (bool, error)
@@ -232,20 +231,6 @@ func (repo *UserRepository) SignIn(email string) (model.User, error) {
 	return user[0], nil
 }
 
-func (repo *UserRepository) AddPhoto(userId int, image string) (int, error) {
-	var photoId int
-
-	err := repo.DB.QueryRowx(
-		`INSERT INTO photos (userid, value) VALUES ($1, $2) RETURNING photoId;`,
-		userId, image,
-	).Scan(&photoId)
-	if err != nil {
-		return -1, err
-	}
-
-	return photoId, nil
-}
-
 func (repo *UserRepository) GetPhoto(photoId int) (string, error) {
 	var image []string
 	err := repo.DB.Select(&image,
@@ -345,12 +330,12 @@ func (repo *UserRepository) GetNewChatById(chatId int, userId int) (model.Chat, 
 func (repo *UserRepository) GetChatById(chatId int, userId int) (model.Chat, error) {
 	var chats []model.Chat
 	err := repo.DB.Select(&chats,
-		`SELECT chats.id AS chatId,
-    		users.id AS partnerId,
-    		users.name AS partnerName,
-    		lastMessage.text AS lastMessage,
-    		lastMessage.time AS lastMessageTime,
-    		lastMessage.authorid AS lastMessageAuthorid
+		`SELECT chats.id AS chatid,
+    		users.id AS partnerid,
+    		users.name AS partnername,
+    		lastMessage.text AS lastmessage,
+    		lastMessage.time AS lastmessagetime,
+    		lastMessage.authorid AS lastmessageauthorid
 		FROM chats
     		JOIN users ON (users.id <> $1 AND (users.id = chats.userid2 OR users.id = chats.userid1))
     		LEFT JOIN (

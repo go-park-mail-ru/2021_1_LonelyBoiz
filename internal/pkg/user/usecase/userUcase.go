@@ -202,7 +202,7 @@ func (u *UserUsecase) ChangeUserInfo(newUser model.User, id int) (user model.Use
 		if reflect.TypeOf(err) != reflect.TypeOf(model.ErrorDescriptionResponse{}) {
 			return user, 500, nil
 		}
-		return user, 400, nil
+		return user, 400, err
 	}
 
 	newUser.PasswordHash = nil
@@ -581,10 +581,8 @@ func (u *UserUsecase) AddNewUser(newUser *model.User) error {
 	newUser.Password = ""
 	newUser.SecondPassword = ""
 
-	err = u.IsActive(newUser)
-	if err != nil {
-		return err
-	}
+	newUser.IsActive = false
+	newUser.IsDeleted = false
 
 	id, err := u.Db.AddUser(*newUser)
 	if err != nil {

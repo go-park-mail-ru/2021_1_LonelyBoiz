@@ -37,9 +37,9 @@ func (session *SessionsManager) SetSession(w http.ResponseWriter, id int) error 
 		Name:     "token",
 		Value:    key,
 		Expires:  expiration,
-		SameSite: http.SameSiteLaxMode,
-		Domain:   "localhost:3000",
-		//Secure:   true,
+		SameSite: http.SameSiteNoneMode,
+		Domain:   "p1ckle.herokuapp.com",
+		Secure:   true,
 		HttpOnly: true,
 		Path:     "/",
 	}
@@ -58,11 +58,11 @@ func (session *SessionsManager) SetSession(w http.ResponseWriter, id int) error 
 func (session *SessionsManager) DeleteSession(cookie *http.Cookie) error {
 	key := cookie.Value
 	cookie.SameSite = http.SameSiteLaxMode
-	//cookie.Secure = true
+	cookie.Secure = true
 	cookie.HttpOnly = true
-	cookie.Domain = "localhost:3000"
+	cookie.Domain = "p1ckle.herokuapp.com"
 	cookie.Expires = time.Now().AddDate(0, 0, -1)
-	cookie.SameSite = http.SameSiteLaxMode
+	cookie.SameSite = http.SameSiteNoneMode
 	if err := session.DB.DeleteCookie(key); err != nil {
 		session.Logger.LogInfo("Delete Cookie : " + err.Error())
 		return err
