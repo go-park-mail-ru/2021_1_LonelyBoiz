@@ -1,6 +1,9 @@
 package main
 
 import (
+	awsSession "github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"math/rand"
 	"net/http"
 	"os"
@@ -9,12 +12,13 @@ import (
 	"server/internal/pkg/chat/delivery"
 	chatRepository "server/internal/pkg/chat/repository"
 	chatUsecase "server/internal/pkg/chat/usecase"
+	imageDelivery "server/internal/pkg/image/delivery"
+	imageRepository "server/internal/pkg/image/repository"
+	imageUsecase "server/internal/pkg/image/usecase"
 	messageDelivery "server/internal/pkg/message/delivery"
 	messageRepository "server/internal/pkg/message/repository"
 	messageUsecase "server/internal/pkg/message/usecase"
 	"server/internal/pkg/models"
-	photoDelivery "server/internal/pkg/photo/delivery"
-	photoUsecase "server/internal/pkg/photo/usecase"
 	"server/internal/pkg/session"
 	sessionRepository "server/internal/pkg/session/repository"
 	userDelivery "server/internal/pkg/user/delivery"
@@ -104,6 +108,14 @@ func (a *App) InitializeRoutes(currConfig Config) {
 	messageRep := messageRepository.MessageRepository{DB: a.Db}
 	chatRep := chatRepository.ChatRepository{DB: a.Db}
 
+	imageRep := imageRepository.PostgresRepository{Db: a.Db}
+	sess := awsSession.Must(awsSession.NewSession())
+	awsRep := imageRepository.AwsImageRepository{
+		Bucket:   "lepick-images",
+		Svc:      s3.New(sess),
+		Uploader: s3manager.NewUploader(sess),
+	}
+
 	clients := make(map[int]*websocket.Conn)
 	// init uCases & handlers
 
@@ -113,6 +125,10 @@ func (a *App) InitializeRoutes(currConfig Config) {
 	chatUcase := chatUsecase.ChatUsecase{Db: &chatRep, Clients: &clients}
 	messUcase := messageUsecase.MessageUsecase{Db: &messageRep, Clients: &clients, Sanitizer: sanitizer}
 	sessionManager := session.SessionsManager{DB: &sessionRep}
+	imageUcase := imageUsecase.ImageUsecase{
+		Db:           &imageRep,
+		ImageStorage: &awsRep,
+	}
 
 	chatHandler := delivery.ChatHandler{
 		Sessions: &sessionManager,
@@ -129,8 +145,9 @@ func (a *App) InitializeRoutes(currConfig Config) {
 		Sessions: &sessionManager,
 	}
 
-	photousecase := photoUsecase.PhotoUseCase{
-		Db: &userRep,
+	imageHandler := imageDelivery.ImageHandler{
+		Usecase:  &imageUcase,
+		Sessions: &sessionManager,
 	}
 
 	// init middlewares
@@ -159,6 +176,11 @@ func (a *App) InitializeRoutes(currConfig Config) {
 	photohandler.SetPhotoHandlers(subRouter)
 	messHandler.SetMessageHandlers(subRouter)
 	chatHandler.SetChatHandlers(subRouter)
+
+	// загрузить новую фотку на сервер
+	subRouter.HandleFunc("/images", imageHandler.UploadImage).Methods("POST")
+	// удалить фотку
+	subRouter.HandleFunc("/images/{uuid}", imageHandler.DeleteImage).Methods("DELETE")
 }
 
 func main() {

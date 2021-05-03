@@ -4,33 +4,34 @@ import (
 	"time"
 
 	"github.com/asaskevich/govalidator"
+	"github.com/google/uuid"
 )
 
 type GoogleCaptcha struct {
 	Success     bool     `json:"success"`
-	ChallengeTs int64    `json:"challenge_ts"`
+	ChallengeTs string   `json:"challenge_ts"`
 	Hostname    string   `json:"hostname"`
 	ErrorCodes  []string `json:"error-codes"`
 }
 
 type User struct {
-	Id             int    `json:"id"`
-	Email          string `json:"mail" valid:"email~Почта не прошла валидацию"`
-	Password       string `json:"password,omitempty" valid:"length(8|64)~Пароль не прошел валидацию"`
-	SecondPassword string `json:"passwordRepeat,omitempty" valid:"length(8|64)"`
-	PasswordHash   []byte `json:",omitempty"`
-	OldPassword    string `json:"passwordOld,omitempty"`
-	Name           string `json:"name"`
-	Birthday       int64  `json:"birthday" valid:"ageValid~Вам должно быть 18!"`
-	Description    string `json:"description"`
-	City           string `json:"city"`
-	Instagram      string `json:"instagram"`
-	Sex            string `json:"sex"`
-	DatePreference string `json:"datePreference"`
-	IsDeleted      bool   `json:"isDeleted"`
-	IsActive       bool   `json:"isActive"`
-	Photos         []int  `json:"photos"`
-	CaptchaToken   string `json:"captchaToken"`
+	Id             int         `json:"id"`
+	Email          string      `json:"mail" valid:"email~Почта не прошла валидацию"`
+	Password       string      `json:"password,omitempty" valid:"length(8|64)~Пароль не прошел валидацию"`
+	SecondPassword string      `json:"passwordRepeat,omitempty" valid:"length(8|64)"`
+	PasswordHash   []byte      `json:",omitempty"`
+	OldPassword    string      `json:"passwordOld,omitempty"`
+	Name           string      `json:"name"`
+	Birthday       int64       `json:"birthday" valid:"ageValid~Вам должно быть 18!"`
+	Description    string      `json:"description"`
+	City           string      `json:"city"`
+	Instagram      string      `json:"instagram"`
+	Sex            string      `json:"sex"`
+	DatePreference string      `json:"datePreference"`
+	IsDeleted      bool        `json:"isDeleted"`
+	IsActive       bool        `json:"isActive"`
+	Photos         []uuid.UUID `json:"photos"`
+	CaptchaToken   string      `json:"captchaToken"`
 }
 
 type Like struct {

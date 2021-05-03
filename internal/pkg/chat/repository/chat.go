@@ -4,6 +4,7 @@ import (
 	"fmt"
 	model "server/internal/pkg/models"
 
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -63,13 +64,13 @@ func (repo *ChatRepository) GetChats(userId int, limit int, offset int) ([]model
 	}
 
 	for i, _ := range chats {
-		err = repo.DB.Select(&chats[i].Photos, `SELECT photoId FROM photos WHERE userid = $1`, chats[i].PartnerId)
+		err = repo.DB.Select(&chats[i].Photos, `SELECT photoUuid FROM photos WHERE userid = $1`, chats[i].PartnerId)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
 		if len(chats[i].Photos) == 0 {
-			chats[i].Photos = make([]int, 0)
+			chats[i].Photos = make([]uuid.UUID, 0)
 		}
 	}
 

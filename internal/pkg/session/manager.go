@@ -41,6 +41,7 @@ func (session *SessionsManager) SetSession(w http.ResponseWriter, id int) error 
 		Domain:   "localhost:3000",
 		//Secure:   true,
 		HttpOnly: true,
+		Path:     "/",
 	}
 
 	http.SetCookie(w, &cookie)
@@ -61,8 +62,12 @@ func (session *SessionsManager) DeleteSession(cookie *http.Cookie) error {
 	cookie.HttpOnly = true
 	cookie.Domain = "p1ckle.herokuapp.com"
 	cookie.Expires = time.Now().AddDate(0, 0, -1)
-	if err := session.DB.DeleteCookie(key); err != nil {
-		session.Logger.LogInfo("Delete Cookie : " + err.Error())
+	cookie.SameSite = http.SameSiteNoneMode
+	cookie.Secure = true
+	cookie.HttpOnly = true
+	cookie.Domain = "p1ckle.herokuapp.com"
+	if err := session.DB.DeleteCookie(0, key); err != nil {
+		session.Logger.Info("Delete Cookie : " + err.Error())
 		return err
 	}
 

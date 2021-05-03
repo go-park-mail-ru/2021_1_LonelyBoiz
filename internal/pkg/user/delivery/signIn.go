@@ -1,6 +1,7 @@
 package delivery
 
 import (
+	"github.com/google/uuid"
 	"net/http"
 	"server/internal/pkg/models"
 )
@@ -26,5 +27,12 @@ func (a *UserHandler) SignIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	models.Process(models.LoggerFunc("Success LogIn", a.UserCase.LogInfo), models.ResponseFunc(w, 200, newUser))
+	if len(newUser.Photos) == 0 {
+		newUser.Photos = make([]uuid.UUID, 0)
+	}
+
+	newUser.PasswordHash = nil
+	model.ResponseWithJson(w, 200, newUser)
+
+	a.UserCase.Logger.Info("Success LogIn")
 }
