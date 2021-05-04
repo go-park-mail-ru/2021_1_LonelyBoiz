@@ -4,8 +4,6 @@ import (
 	"net/http"
 	session_proto2 "server/internal/auth_server/delivery/session"
 	"server/internal/pkg/models"
-
-	"github.com/google/uuid"
 )
 
 func (a *UserHandler) SignIn(w http.ResponseWriter, r *http.Request) {

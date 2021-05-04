@@ -22,7 +22,7 @@ message User {
   string DatePreference = 13;
   bool IsDeleted = 14;
   bool IsActive = 15;
-  repeated int32 Photos = 16;
+  repeated bytes Photos = 16;
   string CaptchaToken = 17;
 }
 
@@ -52,7 +52,7 @@ message Feed {
 // grpc-сервис работы с юзером
 service UserService {
   rpc CreateUser (User) returns (UserResponse) {}
-  rpc ChangeUser (User) returns (UserResponse) {}
+  rpc ChangeUser (User) returns (User) {}
   rpc CheckUser (UserLogin) returns (User) {}
 
   // метаданные

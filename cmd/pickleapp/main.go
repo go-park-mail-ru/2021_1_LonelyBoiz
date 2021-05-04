@@ -1,8 +1,6 @@
 package main
 
 import (
-	"math/rand"
-	"net/http"
 	"os"
 	"server/internal/pickleapp/entryPoint"
 )
