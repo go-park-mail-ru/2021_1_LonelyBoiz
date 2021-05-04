@@ -31,6 +31,13 @@ type UserHandlerInterface interface {
 	LikesHandler(w http.ResponseWriter, r *http.Request)
 }
 
+func (a *UserHandler) SetRawRouter(subRouter *mux.Router) {
+	// открытие вэбсокетного соединения
+	subRouter.HandleFunc("/ws", a.WsHandler).Methods("GET")
+	// оплата
+	subRouter.HandleFunc("/pay", a.Payment).Methods("POST")
+}
+
 func (a *UserHandler) SetHandlersWithCheckCookie(subRouter *mux.Router) {
 	subRouter.HandleFunc("/users/{id:[0-9]+}", a.GetUserInfo).Methods("GET")
 	// получить ленту
@@ -43,8 +50,6 @@ func (a *UserHandler) SetHandlersWithCheckCookie(subRouter *mux.Router) {
 	subRouter.HandleFunc("/users/{id:[0-9]+}", a.ChangeUserInfo).Methods("PATCH")
 	// поставить оценку юзеру из ленты
 	subRouter.HandleFunc("/likes", a.LikesHandler).Methods("POST")
-	// открытие вэбсокетного соединения
-	subRouter.HandleFunc("/ws", a.WsHandler).Methods("GET")
 
 	// добавить фотки в секретный альбом
 	subRouter.HandleFunc("/secreteAlbum", a.AddToSecreteAlbum).Methods("POST")
@@ -61,6 +66,4 @@ func (a *UserHandler) SetHandlersWithoutCheckCookie(subRouter *mux.Router) {
 	subRouter.HandleFunc("/login", a.SignIn).Methods("POST")
 	// логаут
 	subRouter.HandleFunc("/login", a.LogOut).Methods("DELETE")
-	// оплата
-	subRouter.HandleFunc("/pay", a.Payment).Methods("POST")
 }
