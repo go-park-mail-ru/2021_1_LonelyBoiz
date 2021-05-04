@@ -6,7 +6,6 @@ import (
 	"fmt"
 	model "server/internal/pkg/models"
 
-	"github.com/google/uuid"
 	"github.com/lib/pq"
 
 	"github.com/jmoiron/sqlx"
@@ -26,9 +25,8 @@ type UserRepositoryInterface interface {
 	ChangePassword(userId int, hash []byte) error
 
 	//фотки
-	GetPhoto(photoId int) (string, error)
-	GetPhotos(userId int) ([]uuid.UUID, error)
-	CheckPhoto(photoUuid uuid.UUID, userId int) (bool, error)
+	GetPhotos(userId int) ([]string, error)
+	//CheckPhoto(photoUuid uuid.UUID, userId int) (bool, error)
 
 	//чат
 	CreateChat(userId1 int, userId2 int) (int, error)
@@ -40,9 +38,14 @@ type UserRepositoryInterface interface {
 	CreateFeed(userId int) error
 	GetFeed(userId int, limit int) ([]int, error)
 
+	//уеньшить количесвто скроллов
+	ReduceScrolls(userId int) (int, error)
+
 	//реакция
 	Rating(userIdFrom int, userIdTo int, reaction string) (int64, error)
 	CheckReciprocity(userId1 int, userId2 int) (bool, error)
+	//добавить скролов в ленту
+	UpdatePayment(userId int, amount int) error
 
 	// секретный альбом
 	UnblockSecreteAlbum(ownerId int, getterId int) error
@@ -53,6 +56,30 @@ type UserRepositoryInterface interface {
 
 type UserRepository struct {
 	DB *sqlx.DB
+}
+
+func (repo *UserRepository) ReduceScrolls(userId int) (int, error) {
+	var amount int
+	err := repo.DB.QueryRowx(
+		`UPDATE users SET scrolls = (scrolls - 1)
+  			WHERE userid = $1
+  		RETURNING scrolls;`,
+		userId,
+	).Scan(&amount)
+	if err != nil {
+		return -1, err
+	}
+
+	return amount, nil
+}
+
+func (repo *UserRepository) UpdatePayment(userId int, amount int) error {
+	_, err := repo.DB.Exec(
+		`UPDATE users SET scrolls = $1 WHERE id = $2`,
+		amount, userId,
+	)
+
+	return err
 }
 
 func (repo *UserRepository) AddToSecreteAlbum(ownerId int, photos []string) error {
@@ -282,36 +309,20 @@ func (repo *UserRepository) SignIn(email string) (model.User, error) {
 	return user[0], nil
 }
 
-func (repo *UserRepository) GetPhoto(photoId int) (string, error) {
-	var image []string
-	err := repo.DB.Select(&image,
-		`SELECT value FROM photos WHERE photoId = $1`,
-		photoId,
-	)
-	if err != nil {
-		return "", err
-	}
-	if len(image) == 0 {
-		return "", nil
-	}
-
-	return image[0], nil
-}
-
-func (repo *UserRepository) GetPhotos(userId int) ([]uuid.UUID, error) {
-	var photos []uuid.UUID
-	err := repo.DB.Select(&photos, `SELECT photoUuid FROM photos WHERE userId = $1`, userId)
+func (repo *UserRepository) GetPhotos(userId int) ([]string, error) {
+	var photos pq.StringArray
+	err := repo.DB.Select(&photos, `SELECT photos FROM users WHERE userId = $1`, userId)
 	if err != nil {
 		return nil, err
 	}
 	if len(photos) == 0 {
-		return make([]uuid.UUID, 0), nil
+		return make([]string, 0), nil
 	}
 
 	return photos, nil
 }
 
-func (repo *UserRepository) CheckPhoto(photoUuid uuid.UUID, userId int) (bool, error) {
+/*func (repo *UserRepository) CheckPhoto(photoUuid uuid.UUID, userId int) (bool, error) {
 	var idFromDB []int
 	err := repo.DB.Select(&idFromDB, `SELECT userId FROM photos WHERE photoUuid = $1`, photoUuid)
 	if err != nil {
@@ -322,7 +333,7 @@ func (repo *UserRepository) CheckPhoto(photoUuid uuid.UUID, userId int) (bool, e
 	}
 
 	return true, nil
-}
+}*/
 
 func (repo *UserRepository) ChangePassword(userId int, hash []byte) error {
 	_, err := repo.DB.Exec(

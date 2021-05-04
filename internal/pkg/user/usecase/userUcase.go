@@ -50,6 +50,7 @@ type UserUseCaseInterface interface {
 	UnblockSecreteAlbum(ownerId int, getterId int) (int, error)
 	GetSecreteAlbum(ownerId int, getterId int) ([]string, int, error)
 	AddToSecreteAlbum(ownerId int, photos []string) (int, error)
+	UpdatePayment(userid int, amount int) error
 
 	model.LoggerInterface
 }
@@ -62,6 +63,10 @@ type UserUsecase struct {
 }
 
 var googleCaptchaSecret string = os.Getenv("DATABASE_URL")
+
+func (u *UserUsecase) UpdatePayment(userid int, amount int) error {
+	return u.Db.UpdatePayment(userid, amount)
+}
 
 func (u *UserUsecase) SetChat(ws *websocket.Conn, id int) {
 	(*u.Clients)[id] = ws
@@ -130,6 +135,18 @@ func (u *UserUsecase) WebsocketChat(newChat *model.Chat) {
 }
 
 func (u *UserUsecase) CreateChat(id int, like model.Like) (model.Chat, int, error) {
+	amount, err := u.Db.ReduceScrolls(id)
+	if err != nil {
+		u.LogError(err)
+		return model.Chat{}, 500, nil
+	}
+	if amount < 0 {
+		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Требуется оплата"}
+		response.Description["scrolls"] = "у вас закончились скроллы"
+		u.LogInfo(response)
+		return model.Chat{}, 402, response
+	}
+
 	if like.Reaction != "like" && like.Reaction != "skip" {
 		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
 		response.Description["like"] = "неправильный формат реакции, ожидается skip или like"

@@ -34,6 +34,11 @@ type User struct {
 	CaptchaToken   string         `json:"captchaToken"`
 }
 
+type Label struct {
+	UserId int `json:"userId"`
+	Amount int `json:"amount"`
+}
+
 type Like struct {
 	UserId   int    `json:"userId"`
 	Reaction string `json:"reaction"`
