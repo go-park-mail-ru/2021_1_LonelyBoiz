@@ -3,8 +3,6 @@ package delivery
 import (
 	"net/http"
 	"server/internal/pkg/models"
-
-	"github.com/google/uuid"
 )
 
 func (a *UserHandler) SignIn(w http.ResponseWriter, r *http.Request) {
@@ -33,7 +31,7 @@ func (a *UserHandler) SignIn(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(newUser.Photos) == 0 {
-		newUser.Photos = make([]uuid.UUID, 0)
+		newUser.Photos = make([]string, 0)
 	}
 
 	newUser.PasswordHash = nil

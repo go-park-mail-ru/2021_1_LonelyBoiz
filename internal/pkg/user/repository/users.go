@@ -47,7 +47,7 @@ type UserRepositoryInterface interface {
 	// секретный альбом
 	UnblockSecreteAlbum(ownerId int, getterId int) error
 	CheckPermission(ownerId int, getterId int) (bool, error)
-	GetSecretePhotos(ownerId int) ([]uuid.UUID, error)
+	GetSecretePhotos(ownerId int) ([]string, error)
 	AddToSecreteAlbum(ownerId int, photos []string) error
 }
 
@@ -62,16 +62,16 @@ func (repo *UserRepository) AddToSecreteAlbum(ownerId int, photos []string) erro
 	return err.Err()
 }
 
-func (repo *UserRepository) GetSecretePhotos(ownerId int) ([]uuid.UUID, error) {
-	var photos []uuid.UUID
+func (repo *UserRepository) GetSecretePhotos(ownerId int) ([]string, error) {
+	var photos []string
 	err := repo.DB.Select(&photos,
-		`SELECT photoUuid FROM secretPhotos WHERE ownerId = $1`,
+		`SELECT photos FROM secretPhotos WHERE ownerId = $1`,
 		ownerId)
 	if err != nil {
 		return nil, err
 	}
 	if len(photos) == 0 {
-		return make([]uuid.UUID, 0), nil
+		return make([]string, 0), nil
 	}
 
 	return photos, nil
@@ -101,6 +101,7 @@ func (repo *UserRepository) UnblockSecreteAlbum(ownerId int, getterId int) error
 
 func (repo *UserRepository) AddUser(newUser model.User) (int, error) {
 	var id int
+	newUser.Photos = make([]string, 0)
 
 	err := repo.DB.QueryRowx(
 		`INSERT INTO users (
@@ -176,7 +177,7 @@ func (repo *UserRepository) GetUser(id int) (model.User, error) {
 	}
 
 	if len(user[0].Photos) == 0 {
-		user[0].Photos = make([]uuid.UUID, 0)
+		user[0].Photos = make([]string, 0)
 	}
 
 	return user[0], nil
@@ -198,7 +199,7 @@ func (repo *UserRepository) ChangeUser(newUser model.User) error {
 		`UPDATE users 
 			SET email = $1, name = $2, birthday = $3, 
 			description = $4, city = $5, sex = $6, 
-			datePreference = $7, isActive = $8, instagram = $9, photots = $10
+			datePreference = $7, isActive = $8, instagram = $9, photos = $10
 		WHERE id = $11`,
 		newUser.Email, newUser.Name, newUser.Birthday,
 		newUser.Description, newUser.City, newUser.Sex,
@@ -269,17 +270,13 @@ func (repo *UserRepository) SignIn(email string) (model.User, error) {
     		datepreference,
     		isactive,
     		isdeleted,
-			photos
+			COALESCE(photos, {'', ''}) AS photos
 		FROM users WHERE email = $1`, email)
 	if err != nil {
 		return model.User{}, err
 	}
 	if len(user) == 0 {
 		return model.User{}, errors.New("пользователь не найден")
-	}
-	err = repo.DB.Select(&user[0].Photos, `SELECT photoUuid FROM photos WHERE userid = $1`, user[0].Id)
-	if err != nil {
-		return model.User{}, err
 	}
 
 	return user[0], nil

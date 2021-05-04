@@ -1,4 +1,6 @@
 DROP TABLE sessions;
+DROP TABLE secretePermission;
+DROP TABLE secretphotos;
 DROP TABLE messages;
 DROP TABLE photos;
 DROP TABLE chats;
@@ -16,6 +18,7 @@ CREATE TABLE users (
     city varchar(50),
     sex varchar(10),
     datePreference varchar(10),
+    photos varchar(50)[] DEFAULT '{}',
     isActive BOOLEAN NOT NULL,
     isDeleted BOOLEAN NOT NULL
 );
@@ -61,3 +64,18 @@ CREATE TABLE sessions (
     token varchar(40) NOT NULL UNIQUE,
     expiration INT
 );
+
+CREATE TABLE secretPhotos(
+    photoId SERIAL PRIMARY KEY,
+    photos varchar(50)[] DEFAULT '{}',
+    userId INT,
+    FOREIGN KEY (userId) REFERENCES users (id)
+);
+
+CREATE TABLE secretePermission(
+    ownerId INT,
+    FOREIGN KEY (ownerId) REFERENCES users (id),
+    getterId INT,
+    FOREIGN KEY (getterId) REFERENCES users (id)
+);
+

@@ -11,7 +11,6 @@ import (
 	"server/internal/pkg/user/repository"
 	"strconv"
 
-	"github.com/google/uuid"
 	"github.com/microcosm-cc/bluemonday"
 
 	"github.com/asaskevich/govalidator"
@@ -48,7 +47,7 @@ type UserUseCaseInterface interface {
 	SetChat(ws *websocket.Conn, id int)
 
 	UnblockSecreteAlbum(ownerId int, getterId int) (int, error)
-	GetSecreteAlbum(ownerId int, getterId int) ([]uuid.UUID, int, error)
+	GetSecreteAlbum(ownerId int, getterId int) ([]string, int, error)
 	AddToSecreteAlbum(ownerId int, photos []string) (int, error)
 
 	model.LoggerInterface
@@ -76,20 +75,20 @@ func (u *UserUsecase) AddToSecreteAlbum(ownerId int, photos []string) (int, erro
 	return 204, nil
 }
 
-func (u *UserUsecase) GetSecreteAlbum(ownerId int, getterId int) ([]uuid.UUID, int, error) {
+func (u *UserUsecase) GetSecreteAlbum(ownerId int, getterId int) ([]string, int, error) {
 	if ownerId != getterId {
 		ok, err := u.Db.CheckPermission(ownerId, getterId)
 		if err != nil {
-			return make([]uuid.UUID, 0), 500, err
+			return make([]string, 0), 500, err
 		}
 		if !ok {
-			return make([]uuid.UUID, 0), 403, nil
+			return make([]string, 0), 403, nil
 		}
 	}
 
 	photos, err := u.Db.GetSecretePhotos(ownerId)
 	if err != nil {
-		return make([]uuid.UUID, 0), 500, err
+		return make([]string, 0), 500, err
 	}
 
 	return photos, 200, err
@@ -284,7 +283,7 @@ func (u *UserUsecase) CreateNewUser(newUser model.User) (user model.User, code i
 	newUser.SecondPassword = ""
 	newUser.PasswordHash = nil
 	if len(newUser.Photos) == 0 {
-		newUser.Photos = make([]uuid.UUID, 0)
+		newUser.Photos = make([]string, 0)
 	}
 
 	return newUser, 200, nil
@@ -363,7 +362,7 @@ func (u *UserUsecase) SignIn(user model.User) (newUser model.User, code int, err
 	}
 
 	if len(newUser.Photos) == 0 {
-		newUser.Photos = make([]uuid.UUID, 0)
+		newUser.Photos = make([]string, 0)
 	}
 
 	newUser.PasswordHash = nil
