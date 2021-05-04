@@ -12,7 +12,7 @@ func SetContextMiddleware(next http.Handler) http.Handler {
 		_, ok := vars["id"]
 		ctx := r.Context()
 		if ok {
-			ctx = metadata.AppendToOutgoingContext(r.Context(), "id", vars["id"])
+			ctx = metadata.AppendToOutgoingContext(r.Context(), "urlId", vars["id"])
 		}
 
 		next.ServeHTTP(w, r.WithContext(ctx))
