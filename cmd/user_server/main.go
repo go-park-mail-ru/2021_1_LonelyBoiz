@@ -10,6 +10,7 @@ import (
 	"log"
 	"math/rand"
 	"net"
+	session_proto2 "server/internal/auth_server/delivery/session"
 	"server/internal/pickleapp/repository"
 	"server/internal/pkg/models"
 	repository2 "server/internal/pkg/user/repository"
@@ -31,6 +32,22 @@ func serverInterceptor(ctx context.Context, req interface{}, info *grpc.UnarySer
 }
 
 func main() {
+	//GRPC auth
+	opts := []grpc.DialOption{
+		grpc.WithInsecure(),
+	}
+
+	authConn, err := grpc.Dial("localhost:5400", opts...)
+
+	if err != nil {
+		log.Print(1)
+		grpclog.Fatalf("fail to dial: %v", err)
+		panic(err)
+	}
+
+	auth := session_proto2.NewAuthCheckerClient(authConn)
+
+	// main part
 	rand.Seed(time.Now().UnixNano())
 	listener, err := net.Listen("tcp", ":5500")
 
@@ -50,6 +67,7 @@ func main() {
 			LoggerInterface: &models.Logger{Logger: loger.WithField("key", "value")},
 			Sanitizer:       bluemonday.NewPolicy(),
 		},
+		Sessions: auth,
 	}
 
 	userProto.RegisterUserServiceServer(grpcServer, &userServer)

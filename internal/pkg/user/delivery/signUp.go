@@ -1,6 +1,7 @@
 package delivery
 
 import (
+	"google.golang.org/grpc/status"
 	"github.com/google/uuid"
 
 	"net/http"
@@ -17,11 +18,18 @@ func (a *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userResponse, err := a.Server.CreateUser(r.Context(), a.UserCase.User2ProtoUser(newUser))
-
-	if err != nil || userResponse.GetCode() != 200 {
-		models.ResponseFunc(w, int(userResponse.GetCode()), err.Error())
-		return
+	if err != nil {
+		st, _ := status.FromError(err)
+		if st.Code() != 200 {
+			models.Process(models.LoggerFunc(st.Message(), a.UserCase.LogError), models.ResponseFunc(w, int(st.Code()), st.Message()))
+			return
+		}
 	}
+
+	//if err != nil || userResponse.GetCode() != 200 {
+	//	models.ResponseFunc(w, int(userResponse.GetCode()), err.Error())
+	//	return
+	//}
 
 	token, err := a.Sessions.Create(r.Context(), &session_proto2.SessionId{Id: userResponse.GetUser().GetId()})
 	if err != nil {
