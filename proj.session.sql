@@ -1,5 +1,5 @@
 DROP TABLE sessions;
-DROP TABLE secretePermission;
+DROP TABLE secretPermission;
 DROP TABLE secretphotos;
 DROP TABLE messages;
 DROP TABLE photos;
@@ -18,10 +18,12 @@ CREATE TABLE users (
     city varchar(50),
     sex varchar(10),
     datePreference varchar(10),
-    photos varchar(50)[] DEFAULT '{}',
+    photos varchar(50)[] DEFAULT array[]::varchar[],
     isActive BOOLEAN NOT NULL,
-    isDeleted BOOLEAN NOT NULL
+    isDeleted BOOLEAN NOT NULL,
+    scrolls INT DEFAULT 20
 );
+
 
 CREATE TABLE photos(
     photoId SERIAL PRIMARY KEY,
@@ -67,12 +69,12 @@ CREATE TABLE sessions (
 
 CREATE TABLE secretPhotos(
     photoId SERIAL PRIMARY KEY,
-    photos varchar(50)[] DEFAULT '{}',
+    photos varchar(50)[] DEFAULT array[]::varchar[],
     userId INT,
     FOREIGN KEY (userId) REFERENCES users (id)
 );
 
-CREATE TABLE secretePermission(
+CREATE TABLE secretPermission(
     ownerId INT,
     FOREIGN KEY (ownerId) REFERENCES users (id),
     getterId INT,

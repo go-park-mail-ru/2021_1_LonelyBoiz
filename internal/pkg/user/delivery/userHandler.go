@@ -61,4 +61,6 @@ func (a *UserHandler) SetHandlersWithoutCheckCookie(subRouter *mux.Router) {
 	subRouter.HandleFunc("/login", a.SignIn).Methods("POST")
 	// логаут
 	subRouter.HandleFunc("/login", a.LogOut).Methods("DELETE")
+	// оплата
+	subRouter.HandleFunc("/pay", a.Payment).Methods("POST")
 }
