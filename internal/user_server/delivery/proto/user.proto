@@ -53,7 +53,7 @@ message Feed {
 service UserService {
   rpc CreateUser (User) returns (UserResponse) {}
   rpc ChangeUser (User) returns (User) {}
-  rpc CheckUser (UserLogin) returns (User) {}
+  rpc CheckUser (UserLogin) returns (UserResponse) {}
 
   // метаданные
   rpc DeleteUser (UserNothing) returns (UserNothing) {}

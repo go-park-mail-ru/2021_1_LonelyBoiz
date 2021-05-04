@@ -93,17 +93,44 @@ func (u UserServer) ChangeUser(ctx context.Context, user *userProto.User) (*user
 	return protoUser, nil
 }
 
-func (UserServer) CheckUser(ctx context.Context, login *userProto.UserLogin) (*userProto.User, error) {
-	panic("implement me")
+func (u UserServer) CheckUser(ctx context.Context, login *userProto.UserLogin) (*userProto.UserResponse, error) {
+	newUser, code, err := u.Usecase.SignIn(model.User{
+		Email:          login.GetEmail(),
+		Password:       login.GetPassword(),
+		SecondPassword: login.GetSecondPassword(),
+	})
+
+	if code == 500 {
+		return &userProto.UserResponse{}, status.Error(codes.Code(code), "")
+	}
+
+	if code != 200 {
+		return &userProto.UserResponse{}, status.Error(codes.Code(code), err.Error())
+	}
+
+	token, err := u.Sessions.Create(ctx, &session_proto2.SessionId{Id: int32(newUser.Id)})
+	if err != nil {
+		return &userProto.UserResponse{}, status.Error(500, "")
+	}
+
+	protoUser, ok := u.Usecase.User2ProtoUser(newUser)
+	if !ok {
+		return &userProto.UserResponse{}, status.Error(500, "")
+	}
+
+	return &userProto.UserResponse{User: protoUser, Token: token.GetToken()}, nil
 }
 
 func (u UserServer) GetUserById(ctx context.Context, nothing *userProto.UserNothing) (*userProto.User, error) {
 	id, ok := u.Usecase.GetParamFromContext(ctx, "urlId")
 	if !ok {
-		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
-		return &userProto.User{}, status.Error(403, response.Error())
-	}
+		id, ok = u.Usecase.GetParamFromContext(ctx, "cookieId")
 
+		if !ok {
+			response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
+			return &userProto.User{}, status.Error(403, response.Error())
+		}
+	}
 	userInfo, err := u.Usecase.GetUserInfoById(id)
 	if err != nil {
 		response := model.ErrorResponse{Err: "Пользователь не найден"}
@@ -118,6 +145,32 @@ func (u UserServer) GetUserById(ctx context.Context, nothing *userProto.UserNoth
 	return protoUser, nil
 }
 
-func (UserServer) CreateFeed(ctx context.Context, nothing *userProto.UserNothing) (*userProto.Feed, error) {
-	panic("implement me")
+func (u UserServer) CreateFeed(ctx context.Context, nothing *userProto.UserNothing) (*userProto.Feed, error) {
+	id, ok := u.Usecase.GetParamFromContext(ctx, "cookieId")
+	if !ok {
+		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
+		return &userProto.Feed{}, status.Error(403, response.Err)
+	}
+
+	limitInt, ok := u.Usecase.GetParamFromContext(ctx, "urlCount")
+	if !ok {
+		response := model.ErrorResponse{Err: "Неверный формат count"}
+		return &userProto.Feed{}, status.Error(400, response.Err)
+	}
+
+	feed, code, err := u.Usecase.CreateFeed(id, limitInt)
+	if code == 500 {
+		return &userProto.Feed{}, status.Error(500, "")
+	}
+	if code != 200 {
+		return &userProto.Feed{}, status.Error(codes.Code(code), err.Error())
+	}
+
+	var feed1 []*userProto.UserId
+
+	for _, idFromFeed := range feed {
+		feed1 = append(feed1, &userProto.UserId{Id: int32(idFromFeed)})
+	}
+
+	return &userProto.Feed{Users: feed1}, nil
 }

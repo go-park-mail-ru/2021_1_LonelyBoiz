@@ -15,6 +15,12 @@ func SetContextMiddleware(next http.Handler) http.Handler {
 			ctx = metadata.AppendToOutgoingContext(r.Context(), "urlId", vars["id"])
 		}
 
+		query := r.URL.Query()
+		limit, ok := query["count"]
+		if ok && len(limit) != 0 {
+			ctx = metadata.AppendToOutgoingContext(r.Context(), "urlCount", limit[0])
+		}
+
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

@@ -1,27 +1,23 @@
 package delivery
 
 import (
+	"google.golang.org/grpc/status"
 	"net/http"
-	model "server/internal/pkg/models"
-	"strconv"
+	"server/internal/pkg/models"
+	user_proto "server/internal/user_server/delivery/proto"
 )
 
 func (a *UserHandler) GetLogin(w http.ResponseWriter, r *http.Request) {
-	id, ok := a.UserCase.GetIdFromContext(r.Context())
-	if !ok {
-		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
-		model.Process(model.LoggerFunc(response.Err, a.UserCase.LogInfo), model.ResponseFunc(w, 403, response))
-		return
-	}
-
-	userInfo, err := a.UserCase.GetUserInfoById(id)
+	userResponse, err := a.Server.GetUserById(r.Context(), &user_proto.UserNothing{})
 	if err != nil {
-		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: err.Error()}
-		response.Description["id"] = "Пользователя с таким id нет"
-
-		model.Process(model.LoggerFunc(response.Err, a.UserCase.LogError), model.ResponseFunc(w, 401, response))
+		st, _ := status.FromError(err)
+		models.Process(models.LoggerFunc(st.Message(), a.UserCase.LogError), models.ResponseFunc(w, int(st.Code()), st.Message()))
 		return
 	}
 
-	model.Process(model.LoggerFunc("Get User Info for "+strconv.Itoa(id), a.UserCase.LogInfo), model.ResponseFunc(w, 200, userInfo))
+	nUser, ok := a.UserCase.ProtoUser2User(userResponse)
+	if !ok {
+		models.Process(models.LoggerFunc("User Proto Error", a.UserCase.LogError), models.ResponseFunc(w, 500, nil))
+	}
+	models.Process(models.LoggerFunc("Get User Info", a.UserCase.LogInfo), models.ResponseFunc(w, 200, nUser))
 }

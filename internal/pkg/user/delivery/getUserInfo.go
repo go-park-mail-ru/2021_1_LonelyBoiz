@@ -15,5 +15,10 @@ func (a *UserHandler) GetUserInfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	model.Process(model.LoggerFunc("Get User Info", a.UserCase.LogInfo), model.ResponseFunc(w, 200, user))
+	nUser, ok := a.UserCase.ProtoUser2User(user)
+	if !ok {
+		model.Process(model.LoggerFunc("User Proto Error", a.UserCase.LogError), model.ResponseFunc(w, 500, nil))
+	}
+
+	model.Process(model.LoggerFunc("Get User Info", a.UserCase.LogInfo), model.ResponseFunc(w, 200, nUser))
 }

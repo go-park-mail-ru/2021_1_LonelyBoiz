@@ -1,9 +1,10 @@
 package delivery
 
 import (
+	"google.golang.org/grpc/status"
 	"net/http"
-	session_proto2 "server/internal/auth_server/delivery/session"
 	"server/internal/pkg/models"
+	userProto "server/internal/user_server/delivery/proto"
 )
 
 func (a *UserHandler) SignIn(w http.ResponseWriter, r *http.Request) {
@@ -15,26 +16,24 @@ func (a *UserHandler) SignIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newUser, code, err := a.UserCase.SignIn(newUser)
-	if code == 500 {
-		models.Process(models.LoggerFunc(err.Error(), a.UserCase.LogError), models.ResponseFunc(w, code, nil))
-		return
-	}
-	if code != 200 {
-		models.Process(models.LoggerFunc(err.Error(), a.UserCase.LogInfo), models.ResponseFunc(w, code, err))
-		return
-	}
-	println(newUser.Id)
-	token, err := a.Sessions.Create(r.Context(), &session_proto2.SessionId{Id: int32(newUser.Id)})
-	println(token)
+	userResponse, err := a.Server.CheckUser(r.Context(), &userProto.UserLogin{
+		Email:          newUser.Email,
+		Password:       newUser.Password,
+		SecondPassword: newUser.SecondPassword,
+	})
+
 	if err != nil {
-		models.Process(models.LoggerFunc(err.Error(), a.UserCase.LogError), models.ResponseFunc(w, 500, nil))
+		st, _ := status.FromError(err)
+		models.Process(models.LoggerFunc(st.Message(), a.UserCase.LogError), models.ResponseFunc(w, int(st.Code()), st.Message()))
 		return
 	}
-	//if len(newUser.Photos) == 0 {
-	//		newUser.Photos = make([]string, 0)
-	//	}
-	cookie := a.UserCase.SetCookie(token.GetToken())
+
+	user, ok := a.UserCase.ProtoUser2User(userResponse.GetUser())
+	if !ok {
+		models.Process(models.LoggerFunc("Proto Error", a.UserCase.LogError), models.ResponseFunc(w, 500, nil))
+	}
+
+	cookie := a.UserCase.SetCookie(userResponse.GetToken())
 	http.SetCookie(w, &cookie)
-	models.Process(models.LoggerFunc("Success LogIn", a.UserCase.LogInfo), models.ResponseFunc(w, 200, newUser))
+	models.Process(models.LoggerFunc("Success LogIn", a.UserCase.LogInfo), models.ResponseFunc(w, 200, user))
 }
