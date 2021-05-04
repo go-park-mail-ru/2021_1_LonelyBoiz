@@ -57,15 +57,15 @@ type UserRepository struct {
 
 func (repo *UserRepository) AddToSecreteAlbum(ownerId int, photos []string) error {
 	err := repo.DB.QueryRowx(
-		`INSERT INTO secretePhotos (userId, photos) Values ($1, $2)`,
-		ownerId, photos)
+		`INSERT INTO secretPhotos (userId, photos) Values ($1, $2)`,
+		ownerId, pq.Array(photos))
 	return err.Err()
 }
 
 func (repo *UserRepository) GetSecretePhotos(ownerId int) ([]string, error) {
-	var photos []string
+	var photos []pq.StringArray
 	err := repo.DB.Select(&photos,
-		`SELECT photos FROM secretPhotos WHERE ownerId = $1`,
+		`SELECT photos FROM secretPhotos WHERE userId = $1`,
 		ownerId)
 	if err != nil {
 		return nil, err
@@ -74,13 +74,13 @@ func (repo *UserRepository) GetSecretePhotos(ownerId int) ([]string, error) {
 		return make([]string, 0), nil
 	}
 
-	return photos, nil
+	return photos[0], nil
 }
 
 func (repo *UserRepository) CheckPermission(ownerId int, getterId int) (bool, error) {
 	var ids []int
 	err := repo.DB.Select(&ids,
-		`SELECT ownerId FROM secretePermission WHERE ownerId = $1 AND getterId = $2`,
+		`SELECT ownerId FROM secretPermission WHERE ownerId = $1 AND getterId = $2`,
 		ownerId, getterId)
 	if err != nil {
 		return false, err
@@ -94,7 +94,7 @@ func (repo *UserRepository) CheckPermission(ownerId int, getterId int) (bool, er
 
 func (repo *UserRepository) UnblockSecreteAlbum(ownerId int, getterId int) error {
 	err := repo.DB.QueryRowx(
-		`INSERT INTO secretePermition (ownerId, getterId) Values ($1, $2)`,
+		`INSERT INTO secretPermition (ownerId, getterId) Values ($1, $2)`,
 		ownerId, getterId)
 	return err.Err()
 }

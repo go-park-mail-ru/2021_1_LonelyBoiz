@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -91,13 +92,15 @@ func (u *UserUsecase) GetSecreteAlbum(ownerId int, getterId int) ([]string, int,
 		return make([]string, 0), 500, err
 	}
 
+	fmt.Println(photos)
+
 	return photos, 200, err
 }
 
 func (u *UserUsecase) UnblockSecreteAlbum(ownerId int, getterId int) (int, error) {
 	err := u.Db.UnblockSecreteAlbum(ownerId, getterId)
 	if err != nil {
-		u.LogError("Не удалось составить чат : " + err.Error())
+		u.LogError("Не удалось разблокировать альбом : " + err.Error())
 		return 500, err
 	}
 

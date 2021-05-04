@@ -3,7 +3,6 @@ package middleware
 import (
 	"math/rand"
 	"net/http"
-	"time"
 
 	model "server/internal/pkg/models"
 )
@@ -19,7 +18,7 @@ func keyGen() string {
 
 func CSRFMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.RequestURI == "/ws" {
+		/*if r.RequestURI == "/ws" {
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -52,7 +51,7 @@ func CSRFMiddleware(next http.Handler) http.Handler {
 				model.ResponseWithJson(w, 403, response)
 				return
 			}
-		}
+		}*/
 
 		next.ServeHTTP(w, r)
 	})

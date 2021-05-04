@@ -1,6 +1,7 @@
 package delivery
 
 import (
+	"encoding/json"
 	"net/http"
 	model "server/internal/pkg/models"
 	"strconv"
@@ -17,7 +18,7 @@ func (a *UserHandler) GetSecreteAlbum(w http.ResponseWriter, r *http.Request) {
 	}
 
 	vars := mux.Vars(r)
-	ownerId, err := strconv.Atoi(vars["userId"])
+	ownerId, err := strconv.Atoi(vars["ownerId"])
 	if err != nil {
 		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Неправильные входные данные"}
 		response.Description["id"] = "Пользователя с таким id нет"
@@ -25,11 +26,19 @@ func (a *UserHandler) GetSecreteAlbum(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var photos []string
 	photos, code, err := a.UserCase.GetSecreteAlbum(ownerId, getterId)
 	if code == 500 {
 		model.Process(model.LoggerFunc(err, a.UserCase.LogError), model.ResponseFunc(w, code, nil))
+		return
 	}
 
-	model.ResponseFunc(w, code, photos)
-	a.UserCase.LogInfo("Success unblock secrete album")
+	res := make(map[string][]string, 1)
+
+	res["photos"] = photos
+
+	w.WriteHeader(code)
+	json.NewEncoder(w).Encode(res)
+
+	a.UserCase.LogInfo("Success get secrete album")
 }

@@ -34,6 +34,7 @@ func (a *UserHandler) ChangeUserInfo(w http.ResponseWriter, r *http.Request) {
 
 	newUser, err := a.UserCase.ParseJsonToUser(r.Body)
 	if err != nil {
+		a.UserCase.LogError(err)
 		response := model.ErrorResponse{Err: "Не удалось прочитать тело запроса"}
 		model.Process(model.LoggerFunc(response.Err, a.UserCase.LogError), model.ResponseFunc(w, 400, response))
 		return
