@@ -26,7 +26,6 @@ type UserRepositoryInterface interface {
 
 	//фотки
 	GetPhotos(userId int) ([]string, error)
-	//CheckPhoto(photoUuid uuid.UUID, userId int) (bool, error)
 
 	//чат
 	CreateChat(userId1 int, userId2 int) (int, error)
@@ -62,7 +61,7 @@ func (repo *UserRepository) ReduceScrolls(userId int) (int, error) {
 	var amount int
 	err := repo.DB.QueryRowx(
 		`UPDATE users SET scrolls = (scrolls - 1)
-  			WHERE userid = $1
+  			WHERE id = $1
   		RETURNING scrolls;`,
 		userId,
 	).Scan(&amount)
@@ -297,7 +296,7 @@ func (repo *UserRepository) SignIn(email string) (model.User, error) {
     		datepreference,
     		isactive,
     		isdeleted,
-			COALESCE(photos, {'', ''}) AS photos
+			photos
 		FROM users WHERE email = $1`, email)
 	if err != nil {
 		return model.User{}, err
@@ -311,7 +310,7 @@ func (repo *UserRepository) SignIn(email string) (model.User, error) {
 
 func (repo *UserRepository) GetPhotos(userId int) ([]string, error) {
 	var photos pq.StringArray
-	err := repo.DB.Select(&photos, `SELECT photos FROM users WHERE userId = $1`, userId)
+	err := repo.DB.Select(&photos, `SELECT photos FROM users WHERE Id = $1`, userId)
 	if err != nil {
 		return nil, err
 	}
@@ -321,19 +320,6 @@ func (repo *UserRepository) GetPhotos(userId int) ([]string, error) {
 
 	return photos, nil
 }
-
-/*func (repo *UserRepository) CheckPhoto(photoUuid uuid.UUID, userId int) (bool, error) {
-	var idFromDB []int
-	err := repo.DB.Select(&idFromDB, `SELECT userId FROM photos WHERE photoUuid = $1`, photoUuid)
-	if err != nil {
-		return false, err
-	}
-	if len(idFromDB) == 0 || idFromDB[0] != userId {
-		return false, nil
-	}
-
-	return true, nil
-}*/
 
 func (repo *UserRepository) ChangePassword(userId int, hash []byte) error {
 	_, err := repo.DB.Exec(
