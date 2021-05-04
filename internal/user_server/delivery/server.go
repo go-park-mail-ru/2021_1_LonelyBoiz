@@ -2,9 +2,12 @@ package delivery
 
 import (
 	"golang.org/x/net/context"
+	codes "google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 	"log"
 	session_proto2 "server/internal/auth_server/delivery/session"
+	model "server/internal/pkg/models"
 	"server/internal/pkg/user/usecase"
 	userProto "server/internal/user_server/delivery/proto"
 	"strconv"
@@ -20,10 +23,8 @@ func (u UserServer) CreateUser(ctx context.Context, user *userProto.User) (*user
 	newUser, code, responseError := u.Usecase.CreateNewUser(u.Usecase.ProtoUser2User(user))
 	if code != 200 {
 		return &userProto.UserResponse{
-			Code:  int32(code),
-			Token: "",
-			User:  nil,
-		}, responseError
+			User: nil,
+		}, status.Error(codes.Code(code), responseError.Error())
 	}
 
 	//token, err := u.Sessions.Create(ctx, &session_proto2.SessionId{Id: int32(newUser.Id)})
@@ -35,14 +36,45 @@ func (u UserServer) CreateUser(ctx context.Context, user *userProto.User) (*user
 	//}
 
 	return &userProto.UserResponse{
-		Code:  200,
 		User:  u.Usecase.User2ProtoUser(newUser),
 		Token: "",
 	}, nil
 }
 
-func (UserServer) DeleteUser(ctx context.Context, nothing *userProto.UserNothing) (*userProto.UserNothing, error) {
-	panic("implement me")
+func (u UserServer) DeleteUser(ctx context.Context, nothing *userProto.UserNothing) (*userProto.UserNothing, error) {
+	cookieId, ok := u.Usecase.GetParamFromContext(ctx, "cookieId")
+	if !ok {
+		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
+		return &userProto.UserNothing{}, status.Error(403, response.Error())
+	}
+
+	urlId, ok := u.Usecase.GetParamFromContext(ctx, "urlId")
+	if !ok {
+		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
+		response.Description["id"] = "Юзера с таким id нет"
+		return &userProto.UserNothing{}, status.Error(403, response.Error())
+	}
+
+	log.Print(cookieId)
+	log.Print(urlId)
+
+	if cookieId != urlId {
+		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
+		response.Description["id"] = "Пытаешься удалить не себя"
+		return &userProto.UserNothing{}, status.Error(403, response.Error())
+	}
+
+	err := u.Usecase.DeleteUser(cookieId)
+	if err != nil {
+		return &userProto.UserNothing{}, status.Error(500, "")
+	}
+
+	_, err = u.Sessions.Delete(ctx, &session_proto2.SessionId{Id: int32(cookieId)})
+	if err != nil {
+		return &userProto.UserNothing{}, status.Error(500, "")
+	}
+
+	return &userProto.UserNothing{}, nil
 }
 
 func (UserServer) ChangeUser(ctx context.Context, user *userProto.User) (*userProto.UserResponse, error) {

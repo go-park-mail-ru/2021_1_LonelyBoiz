@@ -3,7 +3,8 @@ package usecase
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	"github.com/microcosm-cc/bluemonday"
+	"google.golang.org/grpc/metadata"
 	"io"
 	"io/ioutil"
 	"log"
@@ -16,6 +17,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/microcosm-cc/bluemonday"
 
 	"github.com/asaskevich/govalidator"
@@ -61,6 +63,8 @@ type UserUseCaseInterface interface {
 
 	model.LoggerInterface
 	GetIdFromContext(ctx context.Context) (int, bool)
+	GetParamFromContext(ctx context.Context, param string) (int, bool)
+	DeleteSession(cookie *http.Cookie)
 }
 
 type UserUsecase struct {
@@ -735,4 +739,33 @@ func (u *UserUsecase) User2ProtoUser(user model.User) *userProto.User {
 		Photos:         nil,
 		CaptchaToken:   user.CaptchaToken,
 	}
+}
+
+func (u *UserUsecase) GetParamFromContext(ctx context.Context, param string) (int, bool) {
+	data, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return -1, false
+	}
+
+	dataByParam := data.Get(param)
+
+	if len(dataByParam) == 0 {
+		return -1, false
+	}
+
+	value, err := strconv.Atoi(dataByParam[0])
+	if err != nil {
+		return -1, false
+	}
+
+	return value, true
+}
+
+func (u *UserUsecase) DeleteSession(cookie *http.Cookie) {
+	cookie.Expires = time.Now().AddDate(0, 0, -1)
+	cookie.SameSite = http.SameSiteLaxMode
+	cookie.Secure = true
+	cookie.HttpOnly = true
+	cookie.Domain = "localhost:3000"
+	cookie.Value = ""
 }

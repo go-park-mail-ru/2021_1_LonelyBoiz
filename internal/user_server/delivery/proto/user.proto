@@ -27,7 +27,6 @@ message User {
 }
 
 message UserResponse {
-  int32 code = 1;
   User user = 2;
   string token = 3;
 }
