@@ -43,24 +43,24 @@ func (session *SessionsManager) keyGen() string {
 	return string(b)
 }
 
-func (session *SessionsManager) SetSession(w http.ResponseWriter, id int) error {
-	key := session.keyGen()
-	expiration := time.Now().Add(24 * time.Hour)
-
-	cookie := http.Cookie{
-		Name:     "token",
-		Value:    key,
-		Expires:  expiration,
-		SameSite: http.SameSiteNoneMode,
-		Domain:   "p1ckle.herokuapp.com",
-		//Domain: "localhost:8000",
-		Secure:   true,
-		HttpOnly: true,
-		Path:     "/",
-	}
-
-	return cookie
-}
+//func (session *SessionsManager) SetSession(w http.ResponseWriter, id int) error {
+//	key := session.keyGen()
+//	expiration := time.Now().Add(24 * time.Hour)
+//
+//	cookie := http.Cookie{
+//		Name:     "token",
+//		Value:    key,
+//		Expires:  expiration,
+//		SameSite: http.SameSiteNoneMode,
+//		Domain:   "p1ckle.herokuapp.com",
+//		//Domain: "localhost:8000",
+//		Secure:   true,
+//		HttpOnly: true,
+//		Path:     "/",
+//	}
+//
+//	return cookie
+//}
 
 func (session *SessionsManager) SetSession(id int) (string, error) {
 	key := session.keyGen()

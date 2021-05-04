@@ -1,6 +1,9 @@
 package entryPoint
 
 import (
+	awsSession "github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/jmoiron/sqlx"
@@ -15,21 +18,21 @@ import (
 	"os"
 	session_proto2 "server/internal/auth_server/delivery/session"
 	"server/internal/pickleapp/middleware"
-	mainrep "server/internal/pickleapp/repository"
+	"server/internal/pickleapp/repository"
 	"server/internal/pkg/chat/delivery"
-	chatrep "server/internal/pkg/chat/repository"
-	usecase2 "server/internal/pkg/chat/usecase"
-	delivery2 "server/internal/pkg/message/delivery"
-	mesrep "server/internal/pkg/message/repository"
-	usecase3 "server/internal/pkg/message/usecase"
+	chatRepository "server/internal/pkg/chat/repository"
+	chatUsecase "server/internal/pkg/chat/usecase"
+	imageDelivery "server/internal/pkg/image/delivery"
+	imageRepository "server/internal/pkg/image/repository"
+	imageUsecase "server/internal/pkg/image/usecase"
+	messageDelivery "server/internal/pkg/message/delivery"
+	messageRepository "server/internal/pkg/message/repository"
+	messageUsecase "server/internal/pkg/message/usecase"
 	"server/internal/pkg/models"
-	delivery3 "server/internal/pkg/photo/delivery"
-	usecase4 "server/internal/pkg/photo/usecase"
-	auth_server "server/internal/pkg/session"
-	delivery4 "server/internal/pkg/session/delivery"
-	"server/internal/pkg/session/repository"
-	handler "server/internal/pkg/user/delivery"
-	userrep "server/internal/pkg/user/repository"
+	"server/internal/pkg/session"
+	sessionRepository "server/internal/pkg/session/repository"
+	userDelivery "server/internal/pkg/user/delivery"
+	userRepository "server/internal/pkg/user/repository"
 	"server/internal/pkg/user/usecase"
 	user_proto "server/internal/user_server/delivery/proto"
 	"time"
@@ -102,14 +105,21 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 	a.Logger = contextLogger
 
 	// init db
-	a.Db = mainrep.Init()
-	userRep := userrep.UserRepository{DB: a.Db}
-	sesRep := repository.SessionRepository{DB: a.Db}
-	messageRep := mesrep.MessageRepository{DB: a.Db}
-	chatRep := chatrep.ChatRepository{DB: a.Db}
+	a.Db = repository.Init()
+	userRep := userRepository.UserRepository{DB: a.Db}
+	sessionRep := sessionRepository.SessionRepository{DB: a.Db}
+	messageRep := messageRepository.MessageRepository{DB: a.Db}
+	chatRep := chatRepository.ChatRepository{DB: a.Db}
+
+	imageRep := imageRepository.PostgresRepository{Db: a.Db}
+	sess := awsSession.Must(awsSession.NewSession())
+	awsRep := imageRepository.AwsImageRepository{
+		Bucket:   "lepick-images",
+		Svc:      s3.New(sess),
+		Uploader: s3manager.NewUploader(sess),
+	}
+
 	clients := make(map[int]*websocket.Conn)
-	// init uCases & handlers
-	sanitizer := bluemonday.UGCPolicy()
 
 	//GRPC auth
 	opts := []grpc.DialOption{
@@ -124,7 +134,7 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 		panic(err)
 	}
 
-	client := session_proto2.NewAuthCheckerClient(authConn)
+	authClient := session_proto2.NewAuthCheckerClient(authConn)
 
 	//GRPC user
 	opts = []grpc.DialOption{
@@ -139,62 +149,63 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 
 	userClient := user_proto.NewUserServiceClient(userConn)
 
+	// init uCases & handlers
+	sanitizer := bluemonday.UGCPolicy()
 	userUcase := usecase.UserUsecase{Db: &userRep, Clients: &clients, Sanitizer: sanitizer}
-	chatUcase := usecase2.ChatUsecase{Db: &chatRep, Clients: &clients}
-	messUcase := usecase3.MessageUsecase{Db: &messageRep, Clients: &clients, Sanitizer: sanitizer}
+	chatUcase := chatUsecase.ChatUsecase{Db: &chatRep, Clients: &clients}
+	messUcase := messageUsecase.MessageUsecase{Db: &messageRep, Clients: &clients, Sanitizer: sanitizer}
+	sessionManager := session.SessionsManager{DB: &sessionRep}
+	imageUcase := imageUsecase.ImageUsecase{
+		Db:           &imageRep,
+		ImageStorage: &awsRep,
+	}
 
 	chatHandler := delivery.ChatHandler{
-		//Sessions: &sessionManager,
 		Usecase: &chatUcase,
 	}
 
-	messHandler := delivery2.MessageHandler{
-		//Sessions: &sessionManager,
+	messHandler := messageDelivery.MessageHandler{
 		Usecase: &messUcase,
 	}
 
-	userHandler := handler.UserHandler{
+	userHandler := userDelivery.UserHandler{
 		Server:   userClient,
 		UserCase: &userUcase,
-		Sessions: client,
+		Sessions: authClient,
 	}
 
-	photousecase := usecase4.PhotoUseCase{
-		Db: &userRep,
+	imageHandler := imageDelivery.ImageHandler{
+		Usecase:  &imageUcase,
+		Sessions: &sessionManager,
 	}
-
-	authHandler := delivery4.AuthHandler{Usecase: &auth_server.SessionsManager{DB: &sesRep}}
 
 	// init middlewares
-	//csrfMiddleware := csrf.Protect([]byte("32-byte-long-auth_server-key"))
-
 	loggerm := middleware.LoggerMiddleware{
-		Logger:  &models.Logger{Logger: logrus.NewEntry(a.Logger)},
-		User:    &userUcase,
-		Photo:   &photousecase,
+		Logger: &models.Logger{Logger: logrus.NewEntry(a.Logger)},
+		User:   &userUcase,
+		Image:  &imageUcase,
+		//Session: &sessionManager,
 		Chat:    &chatUcase,
 		Message: &messUcase,
 	}
 
-	photohandler := delivery3.PhotoHandler{Usecase: photousecase}
-	//
-	checkcookiem := middleware.ValidateCookieMiddleware{Session: client}
+	checkcookiem := middleware.ValidateCookieMiddleware{
+		Session: authClient,
+	}
 
 	a.router.Use(loggerm.Middleware)
-	a.router.Use(middleware.SetContextMiddleware)
-	//a.router.Use(csrfMiddleware)
 	//a.router.Use(middleware.CSRFMiddleware)
+	a.router.Use(middleware.SetContextMiddleware)
 
 	// validate cookie router
 	subRouter := a.router.NewRoute().Subrouter()
 	subRouter.Use(checkcookiem.Middleware)
 
-	a.router.HandleFunc("/login", authHandler.LogOut).Methods("DELETE")
 	userHandler.SetHandlersWithCheckCookie(subRouter)
 	userHandler.SetHandlersWithoutCheckCookie(a.router)
-	photohandler.SetPhotoHandlers(subRouter)
 	messHandler.SetMessageHandlers(subRouter)
 	chatHandler.SetChatHandlers(subRouter)
+	imageHandler.SetHandlers(subRouter)
 
 	return []*grpc.ClientConn{userConn, authConn}
 }

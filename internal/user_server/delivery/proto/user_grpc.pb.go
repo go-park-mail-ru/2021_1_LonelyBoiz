@@ -23,7 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type UserServiceClient interface {
 	CreateUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*UserResponse, error)
-	ChangeUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*UserResponse, error)
+	ChangeUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*User, error)
 	CheckUser(ctx context.Context, in *UserLogin, opts ...grpc.CallOption) (*User, error)
 	// метаданные
 	DeleteUser(ctx context.Context, in *UserNothing, opts ...grpc.CallOption) (*UserNothing, error)
@@ -50,8 +50,8 @@ func (c *userServiceClient) CreateUser(ctx context.Context, in *User, opts ...gr
 	return out, nil
 }
 
-func (c *userServiceClient) ChangeUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*UserResponse, error) {
-	out := new(UserResponse)
+func (c *userServiceClient) ChangeUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*User, error) {
+	out := new(User)
 	err := c.cc.Invoke(ctx, "/session.UserService/ChangeUser", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -100,7 +100,7 @@ func (c *userServiceClient) CreateFeed(ctx context.Context, in *UserNothing, opt
 // for forward compatibility
 type UserServiceServer interface {
 	CreateUser(context.Context, *User) (*UserResponse, error)
-	ChangeUser(context.Context, *User) (*UserResponse, error)
+	ChangeUser(context.Context, *User) (*User, error)
 	CheckUser(context.Context, *UserLogin) (*User, error)
 	// метаданные
 	DeleteUser(context.Context, *UserNothing) (*UserNothing, error)
@@ -118,7 +118,7 @@ type UnimplementedUserServiceServer struct {
 func (UnimplementedUserServiceServer) CreateUser(context.Context, *User) (*UserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateUser not implemented")
 }
-func (UnimplementedUserServiceServer) ChangeUser(context.Context, *User) (*UserResponse, error) {
+func (UnimplementedUserServiceServer) ChangeUser(context.Context, *User) (*User, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ChangeUser not implemented")
 }
 func (UnimplementedUserServiceServer) CheckUser(context.Context, *UserLogin) (*User, error) {

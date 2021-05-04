@@ -7,7 +7,6 @@ import (
 	"google.golang.org/grpc/metadata"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"reflect"
@@ -17,10 +16,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/google/uuid"
-	"github.com/microcosm-cc/bluemonday"
-
 	"github.com/asaskevich/govalidator"
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/crypto/sha3"
@@ -53,18 +50,17 @@ type UserUseCaseInterface interface {
 	WebsocketChat(newChat *model.Chat)
 	SetChat(ws *websocket.Conn, id int)
 	SetCookie(token string) http.Cookie
-	User2ProtoUser(user model.User) *userProto.User
-	ProtoUser2User(user *userProto.User) model.User
-
 	UnblockSecreteAlbum(ownerId int, getterId int) (int, error)
 	GetSecreteAlbum(ownerId int, getterId int) ([]string, int, error)
 	AddToSecreteAlbum(ownerId int, photos []string) (int, error)
 	UpdatePayment(userid int, amount int) error
-
+	User2ProtoUser(user model.User) (*userProto.User, bool)
+	ProtoUser2User(user *userProto.User) (model.User, bool)
 	model.LoggerInterface
 	GetIdFromContext(ctx context.Context) (int, bool)
 	GetParamFromContext(ctx context.Context, param string) (int, bool)
 	DeleteSession(cookie *http.Cookie)
+	CheckIds(ctx context.Context) (int, int, error)
 }
 
 type UserUsecase struct {
@@ -666,11 +662,15 @@ func (u *UserUsecase) AddNewUser(newUser *model.User) error {
 
 func (u *UserUsecase) SetCookie(token string) http.Cookie {
 	return http.Cookie{
-		Name:     "token",
-		Value:    token,
-		Domain:   "localhost:3000",
-		Expires:  time.Now().AddDate(0, 0, 1),
-		SameSite: http.SameSiteLaxMode,
+		Name:    "token",
+		Value:   token,
+		Expires: time.Now().AddDate(0, 0, 1),
+		//SameSite: http.SameSiteLaxMode,
+		//Domain:   "p1ckle.herokuapp.com",
+		Domain: "localhost:3000",
+		//Secure:   true,
+		//HttpOnly: true,
+		//Path:     "/",
 	}
 }
 
@@ -697,7 +697,16 @@ func (u *UserUsecase) GetIdFromContext(ctx context.Context) (int, bool) {
 	return id, true
 }
 
-func (u *UserUsecase) ProtoUser2User(user *userProto.User) model.User {
+func (u *UserUsecase) ProtoUser2User(user *userProto.User) (model.User, bool) {
+	var photos []uuid.UUID
+	for _, photo := range user.Photos {
+		uuidPhoto, err := uuid.FromBytes(photo)
+		if err != nil {
+			return model.User{}, false
+		}
+		photos = append(photos, uuidPhoto)
+	}
+
 	return model.User{
 		Id:             int(user.GetId()),
 		Email:          user.GetEmail(),
@@ -714,12 +723,21 @@ func (u *UserUsecase) ProtoUser2User(user *userProto.User) model.User {
 		DatePreference: user.GetDatePreference(),
 		IsDeleted:      user.IsDeleted,
 		IsActive:       user.IsActive,
-		Photos:         nil,
+		Photos:         photos,
 		CaptchaToken:   user.CaptchaToken,
-	}
+	}, true
 }
 
-func (u *UserUsecase) User2ProtoUser(user model.User) *userProto.User {
+func (u *UserUsecase) User2ProtoUser(user model.User) (*userProto.User, bool) {
+	var photos [][]byte
+	for _, photo := range user.Photos {
+		binaryPhoto, err := photo.MarshalBinary()
+		if err != nil {
+			return nil, false
+		}
+		photos = append(photos, binaryPhoto)
+	}
+
 	return &userProto.User{
 		Id:             int32(user.Id),
 		Email:          user.Email,
@@ -736,9 +754,9 @@ func (u *UserUsecase) User2ProtoUser(user model.User) *userProto.User {
 		DatePreference: user.DatePreference,
 		IsDeleted:      user.IsDeleted,
 		IsActive:       user.IsActive,
-		Photos:         nil,
+		Photos:         photos,
 		CaptchaToken:   user.CaptchaToken,
-	}
+	}, true
 }
 
 func (u *UserUsecase) GetParamFromContext(ctx context.Context, param string) (int, bool) {
@@ -768,4 +786,27 @@ func (u *UserUsecase) DeleteSession(cookie *http.Cookie) {
 	cookie.HttpOnly = true
 	cookie.Domain = "localhost:3000"
 	cookie.Value = ""
+}
+
+func (u *UserUsecase) CheckIds(ctx context.Context) (int, int, error) {
+	cookieId, ok := u.GetParamFromContext(ctx, "cookieId")
+	if !ok {
+		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
+		return 0, 403, response
+	}
+
+	urlId, ok := u.GetParamFromContext(ctx, "urlId")
+	if !ok {
+		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
+		response.Description["id"] = "Юзера с таким id нет"
+		return 0, 403, response
+	}
+
+	if cookieId != urlId {
+		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
+		response.Description["id"] = "Пытаешься удалить не себя"
+		return 0, 403, response
+	}
+
+	return cookieId, 200, nil
 }
