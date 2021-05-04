@@ -3,6 +3,7 @@ package middleware
 import (
 	"math/rand"
 	"net/http"
+	"time"
 
 	model "server/internal/pkg/models"
 )
@@ -18,21 +19,21 @@ func keyGen() string {
 
 func CSRFMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		/*if r.RequestURI == "/ws" {
+		if r.RequestURI == "/ws" {
 			next.ServeHTTP(w, r)
 			return
 		}
-		if (r.RequestURI == "/login" || r.RequestURI == "/users") && r.Method == "POST" {
+		if (r.RequestURI == "/login" || r.RequestURI == "/users") && r.Method == "POST" || r.RequestURI == "/auth" {
 			key := keyGen()
 			expiration := time.Now().Add(24 * time.Hour)
 			cookie := http.Cookie{
 				Name:     "csrf-token",
 				Value:    key,
 				Expires:  expiration,
-				SameSite: http.SameSiteLaxMode,
-				//Domain:   "p1ckle.herokuapp.com",
-				Domain: "localhost:8000",
-				//Secure:   true,
+				SameSite: http.SameSiteNoneMode,
+				Domain:   "p1ckle.herokuapp.com",
+				//Domain: "localhost:8000",
+				Secure:   true,
 				HttpOnly: true,
 			}
 			http.SetCookie(w, &cookie)
@@ -51,7 +52,7 @@ func CSRFMiddleware(next http.Handler) http.Handler {
 				model.ResponseWithJson(w, 403, response)
 				return
 			}
-		}*/
+		}
 
 		next.ServeHTTP(w, r)
 	})
