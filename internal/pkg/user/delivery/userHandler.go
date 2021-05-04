@@ -16,7 +16,6 @@ type UserHandler struct {
 
 type UserHandlerInterface interface {
 	GetUserInfo(w http.ResponseWriter, r *http.Request)
-
 	SignUp(w http.ResponseWriter, r *http.Request)
 	DeleteUser(w http.ResponseWriter, r *http.Request)
 	ChangeUserInfo(w http.ResponseWriter, r *http.Request)

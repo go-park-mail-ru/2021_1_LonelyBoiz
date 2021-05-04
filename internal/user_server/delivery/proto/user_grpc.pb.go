@@ -24,7 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 type UserServiceClient interface {
 	CreateUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*UserResponse, error)
 	ChangeUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*User, error)
-	CheckUser(ctx context.Context, in *UserLogin, opts ...grpc.CallOption) (*User, error)
+	CheckUser(ctx context.Context, in *UserLogin, opts ...grpc.CallOption) (*UserResponse, error)
 	// метаданные
 	DeleteUser(ctx context.Context, in *UserNothing, opts ...grpc.CallOption) (*UserNothing, error)
 	// достает из метаданных id. В метаданные кладет в интерсепторе
@@ -59,8 +59,8 @@ func (c *userServiceClient) ChangeUser(ctx context.Context, in *User, opts ...gr
 	return out, nil
 }
 
-func (c *userServiceClient) CheckUser(ctx context.Context, in *UserLogin, opts ...grpc.CallOption) (*User, error) {
-	out := new(User)
+func (c *userServiceClient) CheckUser(ctx context.Context, in *UserLogin, opts ...grpc.CallOption) (*UserResponse, error) {
+	out := new(UserResponse)
 	err := c.cc.Invoke(ctx, "/session.UserService/CheckUser", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -101,7 +101,7 @@ func (c *userServiceClient) CreateFeed(ctx context.Context, in *UserNothing, opt
 type UserServiceServer interface {
 	CreateUser(context.Context, *User) (*UserResponse, error)
 	ChangeUser(context.Context, *User) (*User, error)
-	CheckUser(context.Context, *UserLogin) (*User, error)
+	CheckUser(context.Context, *UserLogin) (*UserResponse, error)
 	// метаданные
 	DeleteUser(context.Context, *UserNothing) (*UserNothing, error)
 	// достает из метаданных id. В метаданные кладет в интерсепторе
@@ -121,7 +121,7 @@ func (UnimplementedUserServiceServer) CreateUser(context.Context, *User) (*UserR
 func (UnimplementedUserServiceServer) ChangeUser(context.Context, *User) (*User, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ChangeUser not implemented")
 }
-func (UnimplementedUserServiceServer) CheckUser(context.Context, *UserLogin) (*User, error) {
+func (UnimplementedUserServiceServer) CheckUser(context.Context, *UserLogin) (*UserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CheckUser not implemented")
 }
 func (UnimplementedUserServiceServer) DeleteUser(context.Context, *UserNothing) (*UserNothing, error) {
