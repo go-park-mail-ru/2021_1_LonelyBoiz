@@ -23,7 +23,7 @@ func CSRFMiddleware(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 			return
 		}
-		if (r.RequestURI == "/login" || r.RequestURI == "/users") && r.Method == "POST" {
+		if (r.RequestURI == "/login" || r.RequestURI == "/users") && r.Method == "POST" || r.RequestURI == "/auth" {
 			key := keyGen()
 			expiration := time.Now().Add(24 * time.Hour)
 			cookie := http.Cookie{
