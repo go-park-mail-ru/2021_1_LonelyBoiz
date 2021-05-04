@@ -3,9 +3,11 @@ package repository
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	model "server/internal/pkg/models"
 
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 
 	"github.com/jmoiron/sqlx"
 
@@ -41,10 +43,60 @@ type UserRepositoryInterface interface {
 	//реакция
 	Rating(userIdFrom int, userIdTo int, reaction string) (int64, error)
 	CheckReciprocity(userId1 int, userId2 int) (bool, error)
+
+	// секретный альбом
+	UnblockSecreteAlbum(ownerId int, getterId int) error
+	CheckPermission(ownerId int, getterId int) (bool, error)
+	GetSecretePhotos(ownerId int) ([]uuid.UUID, error)
+	AddToSecreteAlbum(ownerId int, photos []string) error
 }
 
 type UserRepository struct {
 	DB *sqlx.DB
+}
+
+func (repo *UserRepository) AddToSecreteAlbum(ownerId int, photos []string) error {
+	err := repo.DB.QueryRowx(
+		`INSERT INTO secretePhotos (userId, photos) Values ($1, $2)`,
+		ownerId, photos)
+	return err.Err()
+}
+
+func (repo *UserRepository) GetSecretePhotos(ownerId int) ([]uuid.UUID, error) {
+	var photos []uuid.UUID
+	err := repo.DB.Select(&photos,
+		`SELECT photoUuid FROM secretPhotos WHERE ownerId = $1`,
+		ownerId)
+	if err != nil {
+		return nil, err
+	}
+	if len(photos) == 0 {
+		return make([]uuid.UUID, 0), nil
+	}
+
+	return photos, nil
+}
+
+func (repo *UserRepository) CheckPermission(ownerId int, getterId int) (bool, error) {
+	var ids []int
+	err := repo.DB.Select(&ids,
+		`SELECT ownerId FROM secretePermission WHERE ownerId = $1 AND getterId = $2`,
+		ownerId, getterId)
+	if err != nil {
+		return false, err
+	}
+	if len(ids) == 0 {
+		return false, nil
+	}
+
+	return true, nil
+}
+
+func (repo *UserRepository) UnblockSecreteAlbum(ownerId int, getterId int) error {
+	err := repo.DB.QueryRowx(
+		`INSERT INTO secretePermition (ownerId, getterId) Values ($1, $2)`,
+		ownerId, getterId)
+	return err.Err()
 }
 
 func (repo *UserRepository) AddUser(newUser model.User) (int, error) {
@@ -62,7 +114,8 @@ func (repo *UserRepository) AddUser(newUser model.User) (int, error) {
 			datePreference,
 			isActive,
 			isDeleted,
-			instagram
+			instagram,
+			photos
 		) VALUES (
 			$1, 
 			$2,
@@ -74,7 +127,8 @@ func (repo *UserRepository) AddUser(newUser model.User) (int, error) {
 			$8,
 			$9,
 			$10,
-			$11
+			$11,
+			$12
 		) RETURNING id`,
 		newUser.Email,
 		newUser.Name,
@@ -87,6 +141,7 @@ func (repo *UserRepository) AddUser(newUser model.User) (int, error) {
 		newUser.IsActive,
 		newUser.IsDeleted,
 		newUser.Instagram,
+		pq.Array(newUser.Photos),
 	).Scan(&id)
 	if err != nil {
 		return -1, err
@@ -97,6 +152,7 @@ func (repo *UserRepository) AddUser(newUser model.User) (int, error) {
 
 func (repo *UserRepository) GetUser(id int) (model.User, error) {
 	var user []model.User
+	fmt.Println("here")
 	err := repo.DB.Select(&user,
 		`SELECT id, 
 			email,
@@ -108,7 +164,8 @@ func (repo *UserRepository) GetUser(id int) (model.User, error) {
     		sex,
     		datepreference,
     		isactive,
-    		isdeleted
+    		isdeleted,
+			photos
 		FROM users WHERE id = $1`,
 		id)
 	if err != nil {
@@ -118,10 +175,6 @@ func (repo *UserRepository) GetUser(id int) (model.User, error) {
 		return model.User{}, sql.ErrNoRows
 	}
 
-	err = repo.DB.Select(&user[0].Photos, `SELECT photoUuid FROM photos WHERE userid = $1`, id)
-	if err != nil {
-		return model.User{}, err
-	}
 	if len(user[0].Photos) == 0 {
 		user[0].Photos = make([]uuid.UUID, 0)
 	}
@@ -145,11 +198,11 @@ func (repo *UserRepository) ChangeUser(newUser model.User) error {
 		`UPDATE users 
 			SET email = $1, name = $2, birthday = $3, 
 			description = $4, city = $5, sex = $6, 
-			datePreference = $7, isActive = $8, instagram = $9
-		WHERE id = $10`,
+			datePreference = $7, isActive = $8, instagram = $9, photots = $10
+		WHERE id = $11`,
 		newUser.Email, newUser.Name, newUser.Birthday,
 		newUser.Description, newUser.City, newUser.Sex,
-		newUser.DatePreference, newUser.IsActive, newUser.Instagram,
+		newUser.DatePreference, newUser.IsActive, newUser.Instagram, newUser.Photos,
 		newUser.Id,
 	)
 
@@ -215,7 +268,8 @@ func (repo *UserRepository) SignIn(email string) (model.User, error) {
 			passwordhash,
     		datepreference,
     		isactive,
-    		isdeleted
+    		isdeleted,
+			photos
 		FROM users WHERE email = $1`, email)
 	if err != nil {
 		return model.User{}, err
@@ -317,7 +371,7 @@ func (repo *UserRepository) GetNewChatById(chatId int, userId int) (model.Chat, 
 		return model.Chat{}, nil
 	}
 
-	err = repo.DB.Select(&chats[0].Photos, `SELECT photoUuid FROM photos WHERE userid = $1`, chats[0].PartnerId)
+	err = repo.DB.Select(&chats[0].Photos, `SELECT photos FROM users WHERE userid = $1`, chats[0].PartnerId)
 	if err != nil {
 		return model.Chat{}, err
 	}
@@ -332,6 +386,7 @@ func (repo *UserRepository) GetChatById(chatId int, userId int) (model.Chat, err
 		`SELECT chats.id AS chatid,
     		users.id AS partnerid,
     		users.name AS partnername,
+			users.photos AS photos,
     		lastMessage.text AS lastmessage,
     		lastMessage.time AS lastmessagetime,
     		lastMessage.authorid AS lastmessageauthorid
@@ -359,11 +414,6 @@ func (repo *UserRepository) GetChatById(chatId int, userId int) (model.Chat, err
 	}
 	if len(chats) == 0 {
 		return model.Chat{}, nil
-	}
-
-	err = repo.DB.Select(&chats[0].Photos, `SELECT photoUuid FROM photos WHERE userid = $1`, chats[0].PartnerId)
-	if err != nil {
-		return model.Chat{}, err
 	}
 
 	return chats[0], nil

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"database/sql"
 	"errors"
+	"fmt"
 	"server/internal/pkg/models"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -43,6 +44,7 @@ type AwsImageRepository struct {
 
 func (r *PostgresRepository) AddImage(userId int, uuid uuid.UUID) (models.Image, error) {
 	_, err := r.Db.Exec("INSERT INTO photos (photoUuid, userId) VALUES ($1, $2)", uuid, userId)
+	fmt.Println(err)
 	if err == sql.ErrConnDone {
 		return models.Image{}, ErrRepositoryConnection
 	} else if err != nil {

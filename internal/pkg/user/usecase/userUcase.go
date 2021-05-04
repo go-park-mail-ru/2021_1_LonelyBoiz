@@ -47,6 +47,10 @@ type UserUseCaseInterface interface {
 	WebsocketChat(newChat *model.Chat)
 	SetChat(ws *websocket.Conn, id int)
 
+	UnblockSecreteAlbum(ownerId int, getterId int) (int, error)
+	GetSecreteAlbum(ownerId int, getterId int) ([]uuid.UUID, int, error)
+	AddToSecreteAlbum(ownerId int, photos []string) (int, error)
+
 	model.LoggerInterface
 }
 
@@ -61,6 +65,44 @@ var googleCaptchaSecret string = os.Getenv("DATABASE_URL")
 
 func (u *UserUsecase) SetChat(ws *websocket.Conn, id int) {
 	(*u.Clients)[id] = ws
+}
+
+func (u *UserUsecase) AddToSecreteAlbum(ownerId int, photos []string) (int, error) {
+	err := u.Db.AddToSecreteAlbum(ownerId, photos)
+	if err != nil {
+		return 500, err
+	}
+
+	return 204, nil
+}
+
+func (u *UserUsecase) GetSecreteAlbum(ownerId int, getterId int) ([]uuid.UUID, int, error) {
+	if ownerId != getterId {
+		ok, err := u.Db.CheckPermission(ownerId, getterId)
+		if err != nil {
+			return make([]uuid.UUID, 0), 500, err
+		}
+		if !ok {
+			return make([]uuid.UUID, 0), 403, nil
+		}
+	}
+
+	photos, err := u.Db.GetSecretePhotos(ownerId)
+	if err != nil {
+		return make([]uuid.UUID, 0), 500, err
+	}
+
+	return photos, 200, err
+}
+
+func (u *UserUsecase) UnblockSecreteAlbum(ownerId int, getterId int) (int, error) {
+	err := u.Db.UnblockSecreteAlbum(ownerId, getterId)
+	if err != nil {
+		u.LogError("Не удалось составить чат : " + err.Error())
+		return 500, err
+	}
+
+	return 204, nil
 }
 
 func (u *UserUsecase) WebsocketChat(newChat *model.Chat) {
@@ -192,6 +234,7 @@ func (u *UserUsecase) ChangeUserInfo(newUser model.User, id int) (user model.Use
 	err = u.ChangeUserProperties(&newUser)
 	if err != nil {
 		if reflect.TypeOf(err) != reflect.TypeOf(model.ErrorDescriptionResponse{}) {
+			u.LogError(err)
 			return user, 500, nil
 		}
 		return user, 400, err
@@ -425,6 +468,10 @@ func (u *UserUsecase) ChangeUserProperties(newUser *model.User) error {
 
 	if newUser.Instagram != "" {
 		bufUser.Instagram = newUser.Instagram
+	}
+
+	if len(newUser.Photos) != 0 {
+		bufUser.Photos = newUser.Photos
 	}
 
 	response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Не удалось поменять данные"}

@@ -1,10 +1,8 @@
 package repository
 
 import (
-	"fmt"
 	model "server/internal/pkg/models"
 
-	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -30,6 +28,7 @@ func (repo *ChatRepository) GetChats(userId int, limit int, offset int) ([]model
 		`SELECT chats.id AS chatId,
     		users.id AS partnerId,
     		users.name AS partnerName,
+			users.photos AS photos,
     		COALESCE(lastMessage.text, '') AS lastMessage,
     		COALESCE(lastMessage.time, 0) AS lastMessageTime,
     		COALESCE(lastMessage.authorid, -1) AS lastMessageAuthorid
@@ -61,17 +60,6 @@ func (repo *ChatRepository) GetChats(userId int, limit int, offset int) ([]model
 	if len(chats) == 0 {
 		chats = make([]model.Chat, 0)
 		return chats, nil
-	}
-
-	for i, _ := range chats {
-		err = repo.DB.Select(&chats[i].Photos, `SELECT photoUuid FROM photos WHERE userid = $1`, chats[i].PartnerId)
-		if err != nil {
-			fmt.Println(err)
-			return nil, err
-		}
-		if len(chats[i].Photos) == 0 {
-			chats[i].Photos = make([]uuid.UUID, 0)
-		}
 	}
 
 	return repo.reverseChats(chats), nil

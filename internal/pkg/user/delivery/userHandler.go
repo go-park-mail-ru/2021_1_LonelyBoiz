@@ -24,6 +24,9 @@ type UserHandlerInterface interface {
 	GetUsers(w http.ResponseWriter, r *http.Request)
 	GetLogin(w http.ResponseWriter, r *http.Request)
 
+	UnblockSecreteAlbum(w http.ResponseWriter, r *http.Request)
+	GetSecreteAlbum(w http.ResponseWriter, r *http.Request)
+
 	WsHandler(w http.ResponseWriter, r *http.Request)
 	LikesHandler(w http.ResponseWriter, r *http.Request)
 }
@@ -42,6 +45,13 @@ func (a *UserHandler) SetHandlersWithCheckCookie(subRouter *mux.Router) {
 	subRouter.HandleFunc("/likes", a.LikesHandler).Methods("POST")
 	// открытие вэбсокетного соединения
 	subRouter.HandleFunc("/ws", a.WsHandler).Methods("GET")
+
+	// добавить фотки в секретный альбом
+	subRouter.HandleFunc("/secreteAlbum", a.AddToSecreteAlbum).Methods("POST")
+	// разблокировать секретный альбом
+	subRouter.HandleFunc("/unblockSecreteAlbum/{getterId:[0-9]+}", a.UnblockSecreteAlbum).Methods("POST")
+	// посмотреть секретный альбом
+	subRouter.HandleFunc("/secreteAlbum/{ownerId:[0-9]+}", a.GetSecreteAlbum).Methods("Get")
 }
 
 func (a *UserHandler) SetHandlersWithoutCheckCookie(subRouter *mux.Router) {
