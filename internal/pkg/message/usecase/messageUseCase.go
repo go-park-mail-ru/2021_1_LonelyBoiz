@@ -7,6 +7,7 @@ import (
 	"io"
 	messageRepository "server/internal/pkg/message/repository"
 	model "server/internal/pkg/models"
+	userProto "server/internal/user_server/delivery/proto"
 
 	"github.com/microcosm-cc/bluemonday"
 
@@ -22,6 +23,8 @@ type MessageUsecaseInterface interface {
 	WebsocketMessage(message model.Message)
 	WebsocketReactMessage(message model.Message)
 	GetIdFromContext(ctx context.Context) (int, bool)
+	ProtoMessage2Message(message *userProto.Message) model.Message
+	Message2ProtoMessage(message model.Message) *userProto.Message
 }
 
 type MessageUsecase struct {
@@ -199,4 +202,28 @@ func (u *MessageUsecase) GetIdFromContext(ctx context.Context) (int, bool) {
 		return 0, false
 	}
 	return id, true
+}
+
+func (u *MessageUsecase) Message2ProtoMessage(message model.Message) *userProto.Message {
+	return &userProto.Message{
+		MessageId:    int32(message.MessageId),
+		AuthorId:     int32(message.AuthorId),
+		ChatId:       int32(message.ChatId),
+		Text:         message.Text,
+		Reaction:     int32(message.Reaction),
+		Time:         message.Time,
+		MessageOrder: int32(message.MessageOrder),
+	}
+}
+
+func (u *MessageUsecase) ProtoMessage2Message(message *userProto.Message) model.Message {
+	return model.Message{
+		MessageId:    int(message.GetMessageId()),
+		AuthorId:     int(message.GetAuthorId()),
+		ChatId:       int(message.GetChatId()),
+		Text:         message.GetText(),
+		Reaction:     int(message.GetReaction()),
+		Time:         message.GetTime(),
+		MessageOrder: int(message.GetMessageOrder()),
+	}
 }

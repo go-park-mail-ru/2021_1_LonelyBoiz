@@ -19,22 +19,27 @@ type SessionManagerInterface interface {
 }
 
 type SessionsManager struct {
-	DB repository.SessionRepositoryInterface
+	DB     repository.SessionRepositoryInterface
+	Logger model.LoggerInterface
 }
 
 func (session *SessionsManager) CheckSession(tokens []string) (int, bool) {
+	session.Logger.LogInfo("Check Session")
 	for _, token := range tokens {
 		id, _ := session.DB.GetCookie(token)
 
 		if id != -1 {
+			session.Logger.LogInfo("Find Session for id" + string(rune(id)))
 			return id, true
 		}
 	}
 
+	session.Logger.LogInfo("Session Not Found")
 	return -1, false
 }
 
 func (session *SessionsManager) keyGen() string {
+	session.Logger.LogInfo("Generate token")
 	b := make([]byte, 40)
 	for i := range b {
 		b[i] = model.CharSet[rand.Intn(len(model.CharSet))]
@@ -67,25 +72,32 @@ func (session *SessionsManager) SetSession(id int) (string, error) {
 
 	err := session.DB.AddCookie(id, key)
 	if err != nil {
+		session.Logger.LogError(err)
 		return "", err
 	}
 
+	session.Logger.LogInfo("Add Cookie to DB")
 	return key, nil
 }
 
 func (session *SessionsManager) DeleteSessionById(id int) error {
+	session.Logger.LogInfo("Delete")
 	if err := session.DB.DeleteCookie(id, ""); err != nil {
-		//session.Logger.Info("Delete Cookie : " + err.Error())
+		session.Logger.LogInfo("Delete Cookie error: " + err.Error())
 		return err
 	}
+
+	session.Logger.LogInfo("Delete Session for " + string(rune(id)))
 	return nil
 }
 
 func (session *SessionsManager) DeleteSessionByToken(token string) error {
 	if err := session.DB.DeleteCookie(-1, token); err != nil {
-		//session.Logger.Info("Delete Cookie : " + err.Error())
+		session.Logger.LogInfo("Delete Cookie error: " + err.Error())
 		return err
 	}
+
+	session.Logger.LogInfo("Delete Session by token")
 	return nil
 }
 

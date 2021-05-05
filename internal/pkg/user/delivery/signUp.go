@@ -15,11 +15,8 @@ func (a *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	protoUser, ok := a.UserCase.User2ProtoUser(newUser)
-	if !ok {
-		models.Process(models.LoggerFunc("Proto User Error", a.UserCase.LogError), models.ResponseFunc(w, 500, nil))
-	}
-	userResponse, err := a.Server.CreateUser(r.Context(), protoUser)
+	a.UserCase.LogInfo("Передано на сервер USER")
+	userResponse, err := a.Server.CreateUser(r.Context(), a.UserCase.User2ProtoUser(newUser))
 	if err != nil {
 		st, _ := status.FromError(err)
 		if st.Code() != 200 {
@@ -27,6 +24,7 @@ func (a *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	a.UserCase.LogInfo("Получен результат из сервера USER")
 
 	cookie := a.UserCase.SetCookie(userResponse.GetToken())
 	http.SetCookie(w, &cookie)

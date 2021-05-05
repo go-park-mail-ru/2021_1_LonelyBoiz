@@ -7,6 +7,7 @@ import (
 )
 
 func (a *UserHandler) GetUserInfo(w http.ResponseWriter, r *http.Request) {
+	a.UserCase.LogInfo("Передано на сервер USER")
 	user, err := a.Server.GetUserById(r.Context(), &user_proto.UserNothing{Dummy: true})
 	if err != nil {
 		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Неправильные входные данные"}
@@ -14,11 +15,6 @@ func (a *UserHandler) GetUserInfo(w http.ResponseWriter, r *http.Request) {
 		model.Process(model.LoggerFunc(err, a.UserCase.LogError), model.ResponseFunc(w, 401, response))
 		return
 	}
-
-	nUser, ok := a.UserCase.ProtoUser2User(user)
-	if !ok {
-		model.Process(model.LoggerFunc("User Proto Error", a.UserCase.LogError), model.ResponseFunc(w, 500, nil))
-	}
-
-	model.Process(model.LoggerFunc("Get User Info", a.UserCase.LogInfo), model.ResponseFunc(w, 200, nUser))
+	a.UserCase.LogInfo("Получен результат из сервера USER")
+	model.Process(model.LoggerFunc("Get User Info", a.UserCase.LogInfo), model.ResponseFunc(w, 200, a.UserCase.ProtoUser2User(user)))
 }

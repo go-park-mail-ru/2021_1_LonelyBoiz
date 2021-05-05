@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"google.golang.org/grpc/metadata"
 	"math/rand"
 	"net/http"
 	chatUsecase "server/internal/pkg/chat/usecase"
@@ -8,6 +9,7 @@ import (
 	messageUsecase "server/internal/pkg/message/usecase"
 	"server/internal/pkg/models"
 	"server/internal/pkg/user/usecase"
+	"strconv"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -50,6 +52,8 @@ func (logger *LoggerMiddleware) Middleware(next http.Handler) http.Handler {
 		logger.Chat.LoggerInterface = logger.Logger
 		logger.Message.LoggerInterface = logger.Logger
 
-		next.ServeHTTP(w, r)
+		ctx := r.Context()
+		ctx = metadata.AppendToOutgoingContext(ctx, "requestId", strconv.FormatInt(reqId, 10))
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

@@ -1,7 +1,6 @@
 package delivery
 
 import (
-	"github.com/gorilla/mux"
 	"golang.org/x/net/context"
 	codes "google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -11,7 +10,6 @@ import (
 	model "server/internal/pkg/models"
 	"server/internal/pkg/user/usecase"
 	userProto "server/internal/user_server/delivery/proto"
-	"strconv"
 )
 
 type UserServer struct {
@@ -23,12 +21,7 @@ type UserServer struct {
 }
 
 func (u UserServer) CreateUser(ctx context.Context, user *userProto.User) (*userProto.UserResponse, error) {
-	nUser, ok := u.UserUsecase.ProtoUser2User(user)
-	if !ok {
-		return &userProto.UserResponse{}, status.Error(500, "")
-	}
-
-	newUser, code, responseError := u.UserUsecase.CreateNewUser(nUser)
+	newUser, code, responseError := u.UserUsecase.CreateNewUser(u.UserUsecase.ProtoUser2User(user))
 	if code != 200 {
 		return &userProto.UserResponse{}, status.Error(codes.Code(code), responseError.Error())
 	}
@@ -38,13 +31,8 @@ func (u UserServer) CreateUser(ctx context.Context, user *userProto.User) (*user
 		return &userProto.UserResponse{}, status.Error(codes.Code(code), err.Error())
 	}
 
-	protoUser, ok := u.UserUsecase.User2ProtoUser(newUser)
-	if !ok {
-		return &userProto.UserResponse{}, status.Error(500, "")
-	}
-
 	return &userProto.UserResponse{
-		User:  protoUser,
+		User:  u.UserUsecase.User2ProtoUser(newUser),
 		Token: token.GetToken(),
 	}, nil
 }
@@ -74,12 +62,7 @@ func (u UserServer) ChangeUser(ctx context.Context, user *userProto.User) (*user
 		return &userProto.User{}, status.Error(codes.Code(code), err.Error())
 	}
 
-	nUser, ok := u.UserUsecase.ProtoUser2User(user)
-	if !ok {
-		return &userProto.User{}, status.Error(500, "")
-	}
-
-	newUser, code, err := u.UserUsecase.ChangeUserInfo(nUser, id)
+	newUser, code, err := u.UserUsecase.ChangeUserInfo(u.UserUsecase.ProtoUser2User(user), id)
 	if code != 200 {
 		if err != nil {
 			return &userProto.User{}, status.Error(codes.Code(code), err.Error())
@@ -87,16 +70,7 @@ func (u UserServer) ChangeUser(ctx context.Context, user *userProto.User) (*user
 		return &userProto.User{}, status.Error(codes.Code(code), "")
 	}
 
-	protoUser, ok := u.UserUsecase.User2ProtoUser(newUser)
-	if !ok {
-		return &userProto.User{}, status.Error(500, "")
-	}
-
-	if protoUser == nil {
-		return &userProto.User{}, status.Error(500, "")
-	}
-
-	return protoUser, nil
+	return u.UserUsecase.User2ProtoUser(newUser), nil
 }
 
 func (u UserServer) CheckUser(ctx context.Context, login *userProto.UserLogin) (*userProto.UserResponse, error) {
@@ -119,12 +93,7 @@ func (u UserServer) CheckUser(ctx context.Context, login *userProto.UserLogin) (
 		return &userProto.UserResponse{}, status.Error(500, "")
 	}
 
-	protoUser, ok := u.UserUsecase.User2ProtoUser(newUser)
-	if !ok {
-		return &userProto.UserResponse{}, status.Error(500, "")
-	}
-
-	return &userProto.UserResponse{User: protoUser, Token: token.GetToken()}, nil
+	return &userProto.UserResponse{User: u.UserUsecase.User2ProtoUser(newUser), Token: token.GetToken()}, nil
 }
 
 func (u UserServer) GetUserById(ctx context.Context, nothing *userProto.UserNothing) (*userProto.User, error) {
@@ -143,12 +112,7 @@ func (u UserServer) GetUserById(ctx context.Context, nothing *userProto.UserNoth
 		return &userProto.User{}, status.Error(401, response.Error())
 	}
 
-	protoUser, ok := u.UserUsecase.User2ProtoUser(userInfo)
-	if !ok {
-		return &userProto.User{}, status.Error(500, "")
-	}
-
-	return protoUser, nil
+	return u.UserUsecase.User2ProtoUser(userInfo), nil
 }
 
 func (u UserServer) CreateFeed(ctx context.Context, nothing *userProto.UserNothing) (*userProto.Feed, error) {
@@ -205,11 +169,6 @@ func (u UserServer) CreateChat(ctx context.Context, like *userProto.Like) (*user
 		return &userProto.Chat{}, status.Error(codes.Code(code), err.Error())
 	}
 
-	photos, ok := u.UserUsecase.Photos2ProtoPhotos(chat.Photos)
-	if !ok {
-		return &userProto.Chat{}, status.Error(500, "")
-	}
-
 	return &userProto.Chat{
 		ChatId:              int32(chat.ChatId),
 		PartnerId:           int32(chat.PartnerId),
@@ -217,7 +176,7 @@ func (u UserServer) CreateChat(ctx context.Context, like *userProto.Like) (*user
 		LastMessage:         chat.LastMessage,
 		LastMessageTime:     chat.LastMessageTime,
 		LastMessageAuthorId: int32(chat.LastMessageAuthorId),
-		Photos:              photos,
+		Photos:              u.UserUsecase.Photos2ProtoPhotos(chat.Photos),
 	}, nil
 }
 
@@ -245,8 +204,12 @@ func (u UserServer) GetChats(ctx context.Context, nothing *userProto.UserNothing
 		return &userProto.ChatsResponse{}, status.Error(500, "")
 	}
 
-	//TODO: пункт 1
-	return chats, nil
+	var protoChats []*userProto.Chat
+	for _, chat := range chats {
+		protoChats = append(protoChats, u.ChatUsecase.Chat2ProtoChat(chat))
+	}
+
+	return &userProto.ChatsResponse{Chats: protoChats}, nil
 }
 
 func (u UserServer) GetMessages(ctx context.Context, nothing *userProto.UserNothing) (*userProto.MessagesResponse, error) {
@@ -280,8 +243,13 @@ func (u UserServer) GetMessages(ctx context.Context, nothing *userProto.UserNoth
 	if code != 200 {
 		return &userProto.MessagesResponse{}, status.Error(codes.Code(code), err.Error())
 	}
-	// TODO::
-	return messages, nil
+
+	var protoMessages []*userProto.Message
+	for _, message := range messages {
+		protoMessages = append(protoMessages, u.MessageUsecase.Message2ProtoMessage(message))
+	}
+
+	return &userProto.MessagesResponse{Messages: protoMessages}, nil
 }
 
 func (u UserServer) CreateMessage(ctx context.Context, message *userProto.Message) (*userProto.Message, error) {
@@ -298,22 +266,14 @@ func (u UserServer) CreateMessage(ctx context.Context, message *userProto.Messag
 		return &userProto.Message{}, status.Error(400, response.Error())
 	}
 
-	newMessage, code, err := u.MessageUsecase.CreateMessage(model.Message{
-		MessageId:    int(message.GetMessageId()),
-		AuthorId:     int(message.GetAuthorId()),
-		ChatId:       int(message.GetChatId()),
-		Text:         message.GetText(),
-		Reaction:     int(message.GetReaction()),
-		Time:         message.GetTime(),
-		MessageOrder: int(message.GetMessageOrder()),
-	}, chatId, id)
+	newMessage, code, err := u.MessageUsecase.CreateMessage(u.MessageUsecase.ProtoMessage2Message(message), chatId, id)
 
 	if code != 200 {
-		return &userProto.MessagesResponse{}, status.Error(codes.Code(code), err.Error())
+		return &userProto.Message{}, status.Error(codes.Code(code), err.Error())
 	}
 
-	// TODO::
-	return newMessage, nil
+	u.MessageUsecase.WebsocketMessage(newMessage)
+	return u.MessageUsecase.Message2ProtoMessage(newMessage), nil
 }
 
 func (u UserServer) ChangeMessage(ctx context.Context, message *userProto.Message) (*userProto.Message, error) {
@@ -330,10 +290,11 @@ func (u UserServer) ChangeMessage(ctx context.Context, message *userProto.Messag
 		return &userProto.Message{}, status.Error(400, response.Error())
 	}
 
-	newMessage, code, err := u.MessageUsecase.ChangeMessage(userId, messageId, message)
+	newMessage, code, err := u.MessageUsecase.ChangeMessage(userId, messageId, u.MessageUsecase.ProtoMessage2Message(message))
 	if code != 204 {
 		return &userProto.Message{}, status.Error(codes.Code(code), err.Error())
 	}
 
-	return newMessage, nil
+	u.MessageUsecase.WebsocketMessage(newMessage)
+	return u.MessageUsecase.Message2ProtoMessage(newMessage), nil
 }
