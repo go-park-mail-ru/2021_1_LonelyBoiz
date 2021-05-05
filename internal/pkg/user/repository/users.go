@@ -51,10 +51,19 @@ type UserRepositoryInterface interface {
 	CheckPermission(ownerId int, getterId int) (bool, error)
 	GetSecretePhotos(ownerId int) ([]string, error)
 	AddToSecreteAlbum(ownerId int, photos []string) error
+	// создать секретный альбом
+	CreateSecretAlbum(id int) error
 }
 
 type UserRepository struct {
 	DB *sqlx.DB
+}
+
+func (repo *UserRepository) CreateSecretAlbum(id int) error {
+	err := repo.DB.QueryRowx(
+		`INSERT INTO secretPhotos (userId) Values ($1)`,
+		id)
+	return err.Err()
 }
 
 func (repo *UserRepository) ReduceScrolls(userId int) (int, error) {
@@ -88,8 +97,8 @@ func (repo *UserRepository) UpdatePayment(userId int, amount int) error {
 
 func (repo *UserRepository) AddToSecreteAlbum(ownerId int, photos []string) error {
 	err := repo.DB.QueryRowx(
-		`INSERT INTO secretPhotos (userId, photos) Values ($1, $2)`,
-		ownerId, pq.Array(photos))
+		`UPDATE secretPhotos set photos=$1 WHERE userId = $2`,
+		pq.Array(photos), ownerId)
 	return err.Err()
 }
 

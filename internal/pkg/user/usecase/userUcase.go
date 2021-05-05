@@ -647,6 +647,12 @@ func (u *UserUsecase) AddNewUser(newUser *model.User) error {
 		return err
 	}
 
+	err = u.Db.CreateSecretAlbum(id)
+	if err != nil {
+		u.LogError("Не удалось создать секретный альбом: " + err.Error())
+		return err
+	}
+
 	newUser.Id = id
 
 	return nil
