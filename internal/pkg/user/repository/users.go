@@ -74,7 +74,12 @@ func (repo *UserRepository) ReduceScrolls(userId int) (int, error) {
 
 func (repo *UserRepository) UpdatePayment(userId int, amount int) error {
 	_, err := repo.DB.Exec(
-		`UPDATE users SET scrolls = $1 WHERE id = $2`,
+		`UPDATE users
+			SET scrolls = case
+        		when scrolls < 1 then $1
+        		when scrolls > 0 then scrolls + $1
+    		end
+		WHERE id = $2;`,
 		amount, userId,
 	)
 
