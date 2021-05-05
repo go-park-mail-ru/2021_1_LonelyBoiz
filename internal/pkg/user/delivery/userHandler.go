@@ -32,8 +32,6 @@ type UserHandlerInterface interface {
 }
 
 func (a *UserHandler) SetRawRouter(subRouter *mux.Router) {
-	// открытие вэбсокетного соединения
-	subRouter.HandleFunc("/ws", a.WsHandler).Methods("GET")
 	// оплата
 	subRouter.HandleFunc("/pay", a.Payment).Methods("POST")
 }
@@ -57,6 +55,8 @@ func (a *UserHandler) SetHandlersWithCheckCookie(subRouter *mux.Router) {
 	subRouter.HandleFunc("/unblockSecreteAlbum/{getterId:[0-9]+}", a.UnblockSecreteAlbum).Methods("POST")
 	// посмотреть секретный альбом
 	subRouter.HandleFunc("/secreteAlbum/{ownerId:[0-9]+}", a.GetSecreteAlbum).Methods("Get")
+	// открытие вэбсокетного соединения
+	subRouter.HandleFunc("/ws", a.WsHandler).Methods("GET")
 }
 
 func (a *UserHandler) SetHandlersWithoutCheckCookie(subRouter *mux.Router) {

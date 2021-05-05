@@ -163,7 +163,9 @@ func (a *App) InitializeRoutes(currConfig Config) {
 
 	checkcookiem := middleware.ValidateCookieMiddleware{Session: &sessionManager}
 
-	userHandler.SetRawRouter(a.router)
+	rawRouter := a.router
+
+	userHandler.SetRawRouter(rawRouter)
 
 	a.router.Use(loggerm.Middleware)
 	a.router.Use(middleware.CSRFMiddleware)
