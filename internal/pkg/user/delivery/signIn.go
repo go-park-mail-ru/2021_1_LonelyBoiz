@@ -16,6 +16,7 @@ func (a *UserHandler) SignIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	a.UserCase.LogInfo("Передано на сервер USER")
 	userResponse, err := a.Server.CheckUser(r.Context(), &userProto.UserLogin{
 		Email:          newUser.Email,
 		Password:       newUser.Password,
@@ -27,13 +28,9 @@ func (a *UserHandler) SignIn(w http.ResponseWriter, r *http.Request) {
 		models.Process(models.LoggerFunc(st.Message(), a.UserCase.LogError), models.ResponseFunc(w, int(st.Code()), st.Message()))
 		return
 	}
-
-	user, ok := a.UserCase.ProtoUser2User(userResponse.GetUser())
-	if !ok {
-		models.Process(models.LoggerFunc("Proto Error", a.UserCase.LogError), models.ResponseFunc(w, 500, nil))
-	}
+	a.UserCase.LogInfo("Получен результат из сервера USER")
 
 	cookie := a.UserCase.SetCookie(userResponse.GetToken())
 	http.SetCookie(w, &cookie)
-	models.Process(models.LoggerFunc("Success LogIn", a.UserCase.LogInfo), models.ResponseFunc(w, 200, user))
+	models.Process(models.LoggerFunc("Success LogIn", a.UserCase.LogInfo), models.ResponseFunc(w, 200, a.UserCase.ProtoUser2User(userResponse.GetUser())))
 }

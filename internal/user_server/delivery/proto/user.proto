@@ -13,7 +13,7 @@ message Chat {
   string LastMessage = 3;
   int64 LastMessageTime = 4;
   int32 LastMessageAuthorId = 5;
-  repeated bytes Photos = 6;
+  repeated string Photos = 6;
 }
 
 message Like {
@@ -37,7 +37,7 @@ message User {
   string DatePreference = 13;
   bool IsDeleted = 14;
   bool IsActive = 15;
-  repeated bytes Photos = 16;
+  repeated string Photos = 16;
   string CaptchaToken = 17;
 }
 

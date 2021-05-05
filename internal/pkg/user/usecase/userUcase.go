@@ -50,15 +50,15 @@ type UserUseCaseInterface interface {
 	WebsocketChat(newChat *model.Chat)
 	SetChat(ws *websocket.Conn, id int)
 	SetCookie(token string) http.Cookie
-	User2ProtoUser(user model.User) (*userProto.User, bool)
-	ProtoUser2User(user *userProto.User) (model.User, bool)
+	ProtoUser2User(user *userProto.User) model.User
+	User2ProtoUser(user model.User) *userProto.User
 	model.LoggerInterface
 	GetIdFromContext(ctx context.Context) (int, bool)
 	GetParamFromContext(ctx context.Context, param string) (int, bool)
 	DeleteSession(cookie *http.Cookie)
 	CheckIds(ctx context.Context) (int, int, error)
-	ProtoPhotos2Photos(userPhotos [][]byte) ([]uuid.UUID, bool)
-	Photos2ProtoPhotos(userPhotos []uuid.UUID) ([][]byte, bool)
+	ProtoPhotos2Photos(userPhotos []string) (photos []uuid.UUID)
+	Photos2ProtoPhotos(userPhotos []uuid.UUID) (photos []string)
 }
 
 type UserUsecase struct {
@@ -634,38 +634,21 @@ func (u *UserUsecase) GetIdFromContext(ctx context.Context) (int, bool) {
 	return id, true
 }
 
-func (u *UserUsecase) Photos2ProtoPhotos(userPhotos []uuid.UUID) ([][]byte, bool) {
-	var photos [][]byte
+func (u *UserUsecase) Photos2ProtoPhotos(userPhotos []uuid.UUID) (photos []string) {
 	for _, photo := range userPhotos {
-		binaryPhoto, err := photo.MarshalBinary()
-		if err != nil {
-			return nil, false
-		}
-		photos = append(photos, binaryPhoto)
+		photos = append(photos, photo.String())
 	}
-
-	return photos, true
+	return photos
 }
 
-func (u *UserUsecase) ProtoPhotos2Photos(userPhotos [][]byte) ([]uuid.UUID, bool) {
-	var photos []uuid.UUID
+func (u *UserUsecase) ProtoPhotos2Photos(userPhotos []string) (photos []uuid.UUID) {
 	for _, photo := range userPhotos {
-		uuidPhoto, err := uuid.FromBytes(photo)
-		if err != nil {
-			return nil, false
-		}
-		photos = append(photos, uuidPhoto)
+		photos = append(photos, uuid.MustParse(photo))
 	}
-
-	return photos, true
+	return photos
 }
 
-func (u *UserUsecase) ProtoUser2User(user *userProto.User) (model.User, bool) {
-	photos, ok := u.ProtoPhotos2Photos(user.Photos)
-	if !ok {
-		return model.User{}, false
-	}
-
+func (u *UserUsecase) ProtoUser2User(user *userProto.User) model.User {
 	return model.User{
 		Id:             int(user.GetId()),
 		Email:          user.GetEmail(),
@@ -682,17 +665,12 @@ func (u *UserUsecase) ProtoUser2User(user *userProto.User) (model.User, bool) {
 		DatePreference: user.GetDatePreference(),
 		IsDeleted:      user.IsDeleted,
 		IsActive:       user.IsActive,
-		Photos:         photos,
+		Photos:         u.ProtoPhotos2Photos(user.Photos),
 		CaptchaToken:   user.CaptchaToken,
-	}, true
+	}
 }
 
-func (u *UserUsecase) User2ProtoUser(user model.User) (*userProto.User, bool) {
-	photos, ok := u.Photos2ProtoPhotos(user.Photos)
-	if !ok {
-		return nil, false
-	}
-
+func (u *UserUsecase) User2ProtoUser(user model.User) *userProto.User {
 	return &userProto.User{
 		Id:             int32(user.Id),
 		Email:          user.Email,
@@ -709,9 +687,9 @@ func (u *UserUsecase) User2ProtoUser(user model.User) (*userProto.User, bool) {
 		DatePreference: user.DatePreference,
 		IsDeleted:      user.IsDeleted,
 		IsActive:       user.IsActive,
-		Photos:         photos,
+		Photos:         u.Photos2ProtoPhotos(user.Photos),
 		CaptchaToken:   user.CaptchaToken,
-	}, true
+	}
 }
 
 func (u *UserUsecase) GetParamFromContext(ctx context.Context, param string) (int, bool) {

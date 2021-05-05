@@ -7,7 +7,6 @@ import (
 	"server/internal/pkg/chat/usecase"
 	model "server/internal/pkg/models"
 	userProto "server/internal/user_server/delivery/proto"
-	"strconv"
 )
 
 type ChatHandlerInterface interface {
@@ -24,12 +23,16 @@ func (c *ChatHandler) GetChats(w http.ResponseWriter, r *http.Request) {
 	chats, err := c.Server.GetChats(r.Context(), &userProto.UserNothing{})
 	if err != nil {
 		st, _ := status.FromError(err)
-		model.Process(model.LoggerFunc(st.Message(), a.UserCase.LogError), model.ResponseFunc(w, int(st.Code()), st.Message()))
+		model.Process(model.LoggerFunc(st.Message(), c.Usecase.LogError), model.ResponseFunc(w, int(st.Code()), st.Message()))
 		return
 	}
 
-	//TODO:: конвертация в обычный чат из прото
-	model.Process(model.LoggerFunc("Success Get Chat", c.Usecase.LogInfo), model.ResponseFunc(w, 200, chats))
+	var nChats []model.Chat
+	for _, chat := range chats.GetChats() {
+		nChats = append(nChats, c.Usecase.ProtoChat2Chat(chat))
+	}
+
+	model.Process(model.LoggerFunc("Success Get Chat", c.Usecase.LogInfo), model.ResponseFunc(w, 200, nChats))
 }
 
 func (c *ChatHandler) SetChatHandlers(subRouter *mux.Router) {

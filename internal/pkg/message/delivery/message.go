@@ -6,7 +6,6 @@ import (
 	"server/internal/pkg/message/usecase"
 	model "server/internal/pkg/models"
 	userProto "server/internal/user_server/delivery/proto"
-	"strconv"
 
 	"github.com/gorilla/mux"
 )
@@ -33,8 +32,12 @@ func (m *MessageHandler) GetMessages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//TODO:: добавить перевод из прото
-	model.Process(model.LoggerFunc("Success: Get Messages", m.Usecase.LogInfo), model.ResponseFunc(w, 200, protoMessages))
+	var nMesssages []model.Message
+	for _, message := range protoMessages.GetMessages() {
+		nMesssages = append(nMesssages, m.Usecase.ProtoMessage2Message(message))
+	}
+
+	model.Process(model.LoggerFunc("Success: Get Messages", m.Usecase.LogInfo), model.ResponseFunc(w, 200, nMesssages))
 }
 
 func (m *MessageHandler) SendMessage(w http.ResponseWriter, r *http.Request) {
@@ -45,18 +48,15 @@ func (m *MessageHandler) SendMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	message, err := m.Server.CreateMessage(r.Context(), newMessage)
+	message, err := m.Server.CreateMessage(r.Context(), m.Usecase.Message2ProtoMessage(newMessage))
 	if err != nil {
 		st, _ := status.FromError(err)
 		model.Process(model.LoggerFunc(st.Message(), m.Usecase.LogError), model.ResponseFunc(w, int(st.Code()), st.Message()))
 		return
 	}
 
-	//TODO:: добавить перевод из прото
-	model.Process(model.LoggerFunc("Success Create Message", m.Usecase.LogInfo), model.ResponseFunc(w, 200, message))
-
-	// отправить сообщение по вэбсокету
-	m.Usecase.WebsocketMessage(message)
+	nMessage := m.Usecase.ProtoMessage2Message(message)
+	model.Process(model.LoggerFunc("Success Create Message", m.Usecase.LogInfo), model.ResponseFunc(w, 200, nMessage))
 }
 
 func (m *MessageHandler) ChangeMessage(w http.ResponseWriter, r *http.Request) {
@@ -67,17 +67,13 @@ func (m *MessageHandler) ChangeMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//todo::
-	protoMessage, err := m.Server.ChangeMessage(r.Context(), &userProto.Message{})
+	protoMessage, err := m.Server.ChangeMessage(r.Context(), m.Usecase.Message2ProtoMessage(newMessage))
 	if err != nil {
 		st, _ := status.FromError(err)
 		model.Process(model.LoggerFunc(st.Message(), m.Usecase.LogError), model.ResponseFunc(w, int(st.Code()), st.Message()))
 		return
 	}
 
-	//TODO:: добавить перевод из прото
-	model.Process(model.LoggerFunc("New message", m.Usecase.LogInfo), model.ResponseFunc(w, 204, protoMessage))
-
-	// отправить сообщение в вэбсокет
-	m.Usecase.WebsocketMessage(protoMessage)
+	nMessage := m.Usecase.ProtoMessage2Message(protoMessage)
+	model.Process(model.LoggerFunc("New message", m.Usecase.LogInfo), model.ResponseFunc(w, 204, nMessage))
 }

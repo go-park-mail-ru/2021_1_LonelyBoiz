@@ -1,26 +1,53 @@
 package main
 
 import (
+	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/grpclog"
+	"google.golang.org/grpc/metadata"
 	"log"
 	"math/rand"
 	"net"
 	"server/internal/auth_server/delivery"
 	"server/internal/auth_server/delivery/session"
 	"server/internal/pickleapp/repository"
+	"server/internal/pkg/models"
 	authserver "server/internal/pkg/session"
 	sesrep "server/internal/pkg/session/repository"
 	"time"
 )
 
-func serverInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
-	log.Println("hi from interceptor")
-	log.Println(info.FullMethod)
-	h, err := handler(ctx, req)
+type ServerInterceptor struct {
+	Logger *models.Logger
+}
 
-	return h, nil
+func (s *ServerInterceptor) logger(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
+	start := time.Now()
+
+	md, _ := metadata.FromIncomingContext(ctx)
+
+	reqIds := md.Get("requestId")
+	var reqId string
+	if len(reqIds) != 0 {
+		reqId = reqIds[0]
+	}
+
+	s.Logger.Logger = s.Logger.Logger.WithFields(logrus.Fields{
+		"server":    "[AUTH]",
+		"requestId": reqId,
+		"method":    info.FullMethod,
+		"context":   md,
+		"request":   req,
+		"response":  resp,
+		"error":     err,
+		"work_time": time.Since(start),
+	})
+
+	reply, err := handler(ctx, req)
+
+	s.Logger.LogInfo("Auth Interceptor")
+	return reply, err
 }
 
 func main() {
@@ -31,11 +58,14 @@ func main() {
 		grpclog.Fatalf("failed to listen: %v", err)
 	}
 
-	grpcServer := grpc.NewServer()
+	ServerInterceptor := ServerInterceptor{&models.Logger{Logger: logrus.NewEntry(logrus.StandardLogger())}}
+
+	grpcServer := grpc.NewServer(grpc.UnaryInterceptor(ServerInterceptor.logger))
 
 	authServer := delivery.AuthServer{
 		Usecase: &authserver.SessionsManager{
-			DB: &sesrep.SessionRepository{DB: repository.Init()},
+			Logger: ServerInterceptor.Logger,
+			DB:     &sesrep.SessionRepository{DB: repository.Init()},
 		},
 	}
 

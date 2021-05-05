@@ -19,6 +19,7 @@ func (a *UserHandler) LikesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	a.UserCase.LogInfo("Передано на сервер USER")
 	chat, err := a.Server.CreateChat(r.Context(), &userproto.Like{
 		UserId:   int32(like.UserId),
 		Reaction: like.Reaction,
@@ -30,15 +31,10 @@ func (a *UserHandler) LikesHandler(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(204)
 			return
 		}
-
 		models.Process(models.LoggerFunc(st.Message(), a.UserCase.LogError), models.ResponseFunc(w, int(st.Code()), st.Message()))
 		return
 	}
-
-	photos, ok := a.UserCase.ProtoPhotos2Photos(chat.GetPhotos())
-	if !ok {
-		models.Process(models.LoggerFunc("Proto error", a.UserCase.LogError), models.ResponseFunc(w, 500, nil))
-	}
+	a.UserCase.LogInfo("Получен результат из сервера USER")
 
 	nChat := models.Chat{
 		ChatId:              int(chat.GetChatId()),
@@ -47,7 +43,7 @@ func (a *UserHandler) LikesHandler(w http.ResponseWriter, r *http.Request) {
 		LastMessage:         chat.GetLastMessage(),
 		LastMessageTime:     chat.GetLastMessageTime(),
 		LastMessageAuthorId: int(chat.GetLastMessageAuthorId()),
-		Photos:              photos,
+		Photos:              a.UserCase.ProtoPhotos2Photos(chat.GetPhotos()),
 	}
 
 	models.Process(models.LoggerFunc("Create Feed", a.UserCase.LogInfo), models.ResponseFunc(w, 200, nChat))

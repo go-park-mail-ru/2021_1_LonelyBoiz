@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/gorilla/websocket"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
@@ -12,6 +13,10 @@ import (
 	"net"
 	session_proto2 "server/internal/auth_server/delivery/session"
 	"server/internal/pickleapp/repository"
+	chatRepository "server/internal/pkg/chat/repository"
+	chatUsecase "server/internal/pkg/chat/usecase"
+	repository3 "server/internal/pkg/message/repository"
+	messageUsecase "server/internal/pkg/message/usecase"
 	"server/internal/pkg/models"
 	repository2 "server/internal/pkg/user/repository"
 	"server/internal/pkg/user/usecase"
@@ -20,15 +25,35 @@ import (
 	"time"
 )
 
-func serverInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
-	log.Println("hi from interceptor")
+type UserServerInterceptor struct {
+	Logger *models.Logger
+}
 
-	d, _ := metadata.FromIncomingContext(ctx)
+func (s *UserServerInterceptor) logger(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
+	start := time.Now()
+	md, _ := metadata.FromIncomingContext(ctx)
 
-	log.Println(d)
-	h, err := handler(ctx, req)
+	reqIds := md.Get("requestId")
+	var reqId string
+	if len(reqIds) != 0 {
+		reqId = reqIds[0]
+	}
 
-	return h, nil
+	s.Logger.Logger = s.Logger.Logger.WithFields(logrus.Fields{
+		"server":    "[USER]",
+		"requestId": reqId,
+		"method":    info.FullMethod,
+		"context":   md,
+		"request":   req,
+		"response":  resp,
+		"error":     err,
+		"work_time": time.Since(start),
+	})
+
+	reply, err := handler(ctx, req)
+
+	s.Logger.LogInfo("USER Interceptor")
+	return reply, err
 }
 
 func main() {
@@ -55,23 +80,36 @@ func main() {
 		grpclog.Fatalf("failed to listen: %v", err)
 	}
 
-	grpcServer := grpc.NewServer()
+	ServerInterceptor := UserServerInterceptor{&models.Logger{Logger: logrus.NewEntry(logrus.StandardLogger())}}
+	grpcServer := grpc.NewServer(grpc.UnaryInterceptor(ServerInterceptor.logger))
 
 	db := repository.Init()
 
-	loger := logrus.Logger{}
+	clients := make(map[int]*websocket.Conn)
 
 	userServer := delivery2.UserServer{
 		UserUsecase: &usecase.UserUsecase{
 			Db:              &repository2.UserRepository{DB: db},
-			LoggerInterface: &models.Logger{Logger: loger.WithField("key", "value")},
+			LoggerInterface: ServerInterceptor.Logger,
+			Sanitizer:       bluemonday.NewPolicy(),
+			Clients:         &clients,
+		},
+		ChatUsecase: &chatUsecase.ChatUsecase{
+			Clients:         &clients,
+			LoggerInterface: ServerInterceptor.Logger,
+			Db:              &chatRepository.ChatRepository{DB: db},
+		},
+		MessageUsecase: &messageUsecase.MessageUsecase{
+			Clients:         &clients,
+			Db:              &repository3.MessageRepository{DB: db},
+			LoggerInterface: ServerInterceptor.Logger,
 			Sanitizer:       bluemonday.NewPolicy(),
 		},
 		Sessions: auth,
 	}
 
 	userProto.RegisterUserServiceServer(grpcServer, &userServer)
-	log.Print("Auth Server START at 5500")
+	log.Print("User Server START at 5500")
 	err = grpcServer.Serve(listener)
 
 	if err != nil {

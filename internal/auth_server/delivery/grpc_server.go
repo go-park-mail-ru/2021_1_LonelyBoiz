@@ -18,11 +18,8 @@ func (a AuthServer) Create(ctx context.Context, id *session_proto.SessionId) (*s
 	token, err := a.Usecase.SetSession(int(id.GetId()))
 
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
-
-	fmt.Println(token)
 
 	return &session_proto.SessionToken{Token: token}, nil
 }
@@ -32,7 +29,7 @@ func (a AuthServer) Check(ctx context.Context, token *session_proto.SessionToken
 	fmt.Println(token.GetToken())
 	id, ok := a.Usecase.CheckSession([]string{token.GetToken()})
 	if ok == false {
-		return nil, errors.New("user Not Found")
+		return nil, errors.New("Пользователь не найден")
 	}
 	fmt.Println(id)
 	return &session_proto.SessionId{Id: int32(id)}, nil
