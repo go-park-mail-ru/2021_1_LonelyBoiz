@@ -31,6 +31,6 @@ func (a *UserHandler) AddToSecreteAlbum(w http.ResponseWriter, r *http.Request) 
 		model.Process(model.LoggerFunc(err, a.UserCase.LogError), model.ResponseFunc(w, code, nil))
 	}
 
-	model.ResponseFunc(w, code, nil)
+	model.ResponseFunc(w, 204, nil)
 	a.UserCase.LogInfo("Success add photo to secrete album")
 }
