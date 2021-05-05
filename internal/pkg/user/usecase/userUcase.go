@@ -4,9 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/lib/pq"
-	"github.com/microcosm-cc/bluemonday"
-	"google.golang.org/grpc/metadata"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -17,6 +14,10 @@ import (
 	userProto "server/internal/user_server/delivery/proto"
 	"strconv"
 	"time"
+
+	"github.com/lib/pq"
+	"github.com/microcosm-cc/bluemonday"
+	"google.golang.org/grpc/metadata"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/gorilla/websocket"

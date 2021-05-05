@@ -1,15 +1,16 @@
 package delivery
 
 import (
-	"golang.org/x/net/context"
-	codes "google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	session_proto2 "server/internal/auth_server/delivery/session"
 	chatUsecase "server/internal/pkg/chat/usecase"
 	messageUsecase "server/internal/pkg/message/usecase"
 	model "server/internal/pkg/models"
 	"server/internal/pkg/user/usecase"
 	userProto "server/internal/user_server/delivery/proto"
+
+	"golang.org/x/net/context"
+	codes "google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type UserServer struct {
@@ -295,6 +296,21 @@ func (u UserServer) ChangeMessage(ctx context.Context, message *userProto.Messag
 		return &userProto.Message{}, status.Error(codes.Code(code), err.Error())
 	}
 
-	u.MessageUsecase.WebsocketMessage(newMessage)
+	u.MessageUsecase.WebsocketReactMessage(newMessage)
 	return u.MessageUsecase.Message2ProtoMessage(newMessage), nil
+}
+
+func (u UserServer) AddToSecreteAlbum(ctx context.Context, message *userProto.User) (*userProto.UserNothing, error) {
+	ownerId, ok := u.UserUsecase.GetParamFromContext(ctx, "cookieId")
+	if !ok {
+		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
+		return &userProto.UserNothing{}, status.Error(403, response.Err)
+	}
+
+	code, err := u.UserUsecase.AddToSecreteAlbum(ownerId, u.UserUsecase.ProtoPhotos2Photos(message.Photos))
+	if code != 204 {
+		return &userProto.UserNothing{}, status.Error(codes.Code(code), err.Error())
+	}
+
+	return &userProto.UserNothing{}, nil
 }
