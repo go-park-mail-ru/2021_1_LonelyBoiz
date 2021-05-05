@@ -1,7 +1,7 @@
 package usecase
 
 import (
-	"github.com/google/uuid"
+	"github.com/lib/pq"
 	"golang.org/x/net/context"
 	"server/internal/pkg/chat/repository"
 	model "server/internal/pkg/models"
@@ -15,8 +15,8 @@ type ChatUsecaseInterface interface {
 	ChatsWriter(newChat *model.Chat)
 	GetChat(userId, limitInt, offsetInt int) ([]model.Chat, error)
 	GetIdFromContext(ctx context.Context) (int, bool)
-	Photos2ProtoPhotos(userPhotos []uuid.UUID) (photos []string)
-	ProtoPhotos2Photos(userPhotos []string) (photos []uuid.UUID)
+	Photos2ProtoPhotos(userPhotos pq.StringArray) (photos []string)
+	ProtoPhotos2Photos(userPhotos []string) (photos pq.StringArray)
 	ProtoChat2Chat(chat *userProto.Chat) model.Chat
 	Chat2ProtoChat(chat model.Chat) *userProto.Chat
 }
@@ -44,16 +44,16 @@ func (u *ChatUsecase) GetIdFromContext(ctx context.Context) (int, bool) {
 	return id, true
 }
 
-func (u *ChatUsecase) Photos2ProtoPhotos(userPhotos []uuid.UUID) (photos []string) {
+func (u *ChatUsecase) Photos2ProtoPhotos(userPhotos pq.StringArray) (photos []string) {
 	for _, photo := range userPhotos {
-		photos = append(photos, photo.String())
+		photos = append(photos, photo)
 	}
 	return photos
 }
 
-func (u *ChatUsecase) ProtoPhotos2Photos(userPhotos []string) (photos []uuid.UUID) {
+func (u *ChatUsecase) ProtoPhotos2Photos(userPhotos []string) (photos pq.StringArray) {
 	for _, photo := range userPhotos {
-		photos = append(photos, uuid.MustParse(photo))
+		photos = append(photos, photo)
 	}
 	return photos
 }

@@ -3,6 +3,8 @@ package usecase
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"github.com/lib/pq"
 	"github.com/microcosm-cc/bluemonday"
 	"google.golang.org/grpc/metadata"
 	"io"
@@ -17,7 +19,6 @@ import (
 	"time"
 
 	"github.com/asaskevich/govalidator"
-	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/crypto/sha3"
@@ -56,13 +57,13 @@ type UserUseCaseInterface interface {
 	UpdatePayment(userid int, amount int) error
 	ProtoUser2User(user *userProto.User) model.User
 	User2ProtoUser(user model.User) *userProto.User
-	model.LoggerInterface
 	GetIdFromContext(ctx context.Context) (int, bool)
 	GetParamFromContext(ctx context.Context, param string) (int, bool)
 	DeleteSession(cookie *http.Cookie)
 	CheckIds(ctx context.Context) (int, int, error)
-	ProtoPhotos2Photos(userPhotos []string) (photos []uuid.UUID)
-	Photos2ProtoPhotos(userPhotos []uuid.UUID) (photos []string)
+	ProtoPhotos2Photos(userPhotos []string) (photos pq.StringArray)
+	Photos2ProtoPhotos(userPhotos pq.StringArray) (photos []string)
+	model.LoggerInterface
 }
 
 type UserUsecase struct {
@@ -313,7 +314,7 @@ func (u *UserUsecase) CreateNewUser(newUser model.User) (user model.User, code i
 	newUser.SecondPassword = ""
 	newUser.PasswordHash = nil
 	if len(newUser.Photos) == 0 {
-		newUser.Photos = make([]uuid.UUID, 0)
+		newUser.Photos = make([]string, 0)
 	}
 
 	return newUser, 200, nil
@@ -392,7 +393,7 @@ func (u *UserUsecase) SignIn(user model.User) (newUser model.User, code int, err
 	}
 
 	if len(newUser.Photos) == 0 {
-		newUser.Photos = make([]uuid.UUID, 0)
+		newUser.Photos = make([]string, 0)
 	}
 
 	newUser.PasswordHash = nil
@@ -699,25 +700,19 @@ func (u *UserUsecase) GetIdFromContext(ctx context.Context) (int, bool) {
 	return id, true
 }
 
-func (u *UserUsecase) Photos2ProtoPhotos(userPhotos []uuid.UUID) (photos []string) {
+func (u *UserUsecase) Photos2ProtoPhotos(userPhotos pq.StringArray) (photos []string) {
 	for _, photo := range userPhotos {
-		photos = append(photos, photo.String())
+		photos = append(photos, photo)
 	}
 	return photos
 }
 
-func (u *UserUsecase) ProtoPhotos2Photos(userPhotos []string) (photos []uuid.UUID) {
+func (u *UserUsecase) ProtoPhotos2Photos(userPhotos []string) (photos pq.StringArray) {
 	for _, photo := range userPhotos {
-		photos = append(photos, uuid.MustParse(photo))
+		photos = append(photos, photo)
 	}
 	return photos
 }
-
-func (u *UserUsecase) ProtoUser2User(user *userProto.User) (model.User, bool) {
-	photos, ok := u.ProtoPhotos2Photos(user.Photos)
-	if !ok {
-		return model.User{}, false
-	}
 
 func (u *UserUsecase) ProtoUser2User(user *userProto.User) model.User {
 	return model.User{
