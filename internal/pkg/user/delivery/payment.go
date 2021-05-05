@@ -22,6 +22,18 @@ func (a *UserHandler) Payment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	amountString := r.PostFormValue("withdraw_amount")
+	var tarif map[string]int
+	tarif["1.00"] = 10
+	tarif["2.00"] = 20
+	tarif["3.00"] = 40
+	amountInt, ok := tarif[amountString]
+	if !ok {
+		a.UserCase.LogError("Неправильный amount")
+		w.WriteHeader(400)
+		return
+	}
+
 	var labelStruct models.Label
 	err = json.Unmarshal([]byte(labelString), labelStruct)
 	if err != nil {
@@ -32,7 +44,7 @@ func (a *UserHandler) Payment(w http.ResponseWriter, r *http.Request) {
 	}
 	a.UserCase.LogInfo(labelStruct)
 
-	err = a.UserCase.UpdatePayment(labelStruct.UserId, labelStruct.Amount)
+	err = a.UserCase.UpdatePayment(labelStruct.UserId, amountInt)
 	if err != nil {
 		a.UserCase.LogError(err)
 		w.WriteHeader(400)

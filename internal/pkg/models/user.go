@@ -36,7 +36,6 @@ type User struct {
 
 type Label struct {
 	UserId int `json:"userId"`
-	Amount int `json:"amount"`
 }
 
 type Like struct {
