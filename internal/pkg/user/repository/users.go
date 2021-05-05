@@ -370,7 +370,7 @@ func (repo *UserRepository) GetNewChatById(chatId int, userId int) (model.Chat, 
 		return model.Chat{}, nil
 	}
 
-	err = repo.DB.Select(&chats[0].Photos, `SELECT photos FROM users WHERE userid = $1`, chats[0].PartnerId)
+	err = repo.DB.Select(&chats[0].Photos, `SELECT photos FROM users WHERE id = $1`, chats[0].PartnerId)
 	if err != nil {
 		return model.Chat{}, err
 	}
