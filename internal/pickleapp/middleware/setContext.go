@@ -1,16 +1,17 @@
 package middleware
 
 import (
+	"net/http"
+
 	"github.com/gorilla/mux"
 	"google.golang.org/grpc/metadata"
-	"net/http"
 )
 
 func SetContextMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		_, ok := vars["id"]
 		ctx := r.Context()
+		_, ok := vars["id"]
 		if ok {
 			ctx = metadata.AppendToOutgoingContext(r.Context(), "urlId", vars["id"])
 		}
@@ -34,6 +35,16 @@ func SetContextMiddleware(next http.Handler) http.Handler {
 		limit, ok = query["offset"]
 		if ok && len(limit) != 0 {
 			ctx = metadata.AppendToOutgoingContext(r.Context(), "urlOffset", limit[0])
+		}
+
+		_, ok = vars["ownerId"]
+		if ok {
+			ctx = metadata.AppendToOutgoingContext(r.Context(), "ownerId", vars["ownerId"])
+		}
+
+		_, ok = vars["getterId"]
+		if ok {
+			ctx = metadata.AppendToOutgoingContext(r.Context(), "getterId", vars["getterId"])
 		}
 
 		next.ServeHTTP(w, r.WithContext(ctx))

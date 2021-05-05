@@ -33,6 +33,8 @@ type UserServiceClient interface {
 	ChangeMessage(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Message, error)
 	// secret album
 	AddToSecreteAlbum(ctx context.Context, in *User, opts ...grpc.CallOption) (*UserNothing, error)
+	UnlockSecretAlbum(ctx context.Context, in *UserNothing, opts ...grpc.CallOption) (*UserNothing, error)
+	GetSecreteAlbum(ctx context.Context, in *UserNothing, opts ...grpc.CallOption) (*Photos, error)
 }
 
 type userServiceClient struct {
@@ -151,6 +153,24 @@ func (c *userServiceClient) AddToSecreteAlbum(ctx context.Context, in *User, opt
 	return out, nil
 }
 
+func (c *userServiceClient) UnlockSecretAlbum(ctx context.Context, in *UserNothing, opts ...grpc.CallOption) (*UserNothing, error) {
+	out := new(UserNothing)
+	err := c.cc.Invoke(ctx, "/session.UserService/UnlockSecretAlbum", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) GetSecreteAlbum(ctx context.Context, in *UserNothing, opts ...grpc.CallOption) (*Photos, error) {
+	out := new(Photos)
+	err := c.cc.Invoke(ctx, "/session.UserService/GetSecreteAlbum", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility
@@ -170,6 +190,8 @@ type UserServiceServer interface {
 	ChangeMessage(context.Context, *Message) (*Message, error)
 	// secret album
 	AddToSecreteAlbum(context.Context, *User) (*UserNothing, error)
+	UnlockSecretAlbum(context.Context, *UserNothing) (*UserNothing, error)
+	GetSecreteAlbum(context.Context, *UserNothing) (*Photos, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -212,6 +234,12 @@ func (UnimplementedUserServiceServer) ChangeMessage(context.Context, *Message) (
 }
 func (UnimplementedUserServiceServer) AddToSecreteAlbum(context.Context, *User) (*UserNothing, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddToSecreteAlbum not implemented")
+}
+func (UnimplementedUserServiceServer) UnlockSecretAlbum(context.Context, *UserNothing) (*UserNothing, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UnlockSecretAlbum not implemented")
+}
+func (UnimplementedUserServiceServer) GetSecreteAlbum(context.Context, *UserNothing) (*Photos, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSecreteAlbum not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 
@@ -442,6 +470,42 @@ func _UserService_AddToSecreteAlbum_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_UnlockSecretAlbum_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UserNothing)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).UnlockSecretAlbum(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/session.UserService/UnlockSecretAlbum",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).UnlockSecretAlbum(ctx, req.(*UserNothing))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_GetSecreteAlbum_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UserNothing)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).GetSecreteAlbum(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/session.UserService/GetSecreteAlbum",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).GetSecreteAlbum(ctx, req.(*UserNothing))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -496,6 +560,14 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AddToSecreteAlbum",
 			Handler:    _UserService_AddToSecreteAlbum_Handler,
+		},
+		{
+			MethodName: "UnlockSecretAlbum",
+			Handler:    _UserService_UnlockSecretAlbum_Handler,
+		},
+		{
+			MethodName: "GetSecreteAlbum",
+			Handler:    _UserService_GetSecreteAlbum_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

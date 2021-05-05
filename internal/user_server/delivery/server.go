@@ -308,9 +308,55 @@ func (u UserServer) AddToSecreteAlbum(ctx context.Context, message *userProto.Us
 	}
 
 	code, err := u.UserUsecase.AddToSecreteAlbum(ownerId, u.UserUsecase.ProtoPhotos2Photos(message.Photos))
-	if code != 204 {
+	if err != nil {
 		return &userProto.UserNothing{}, status.Error(codes.Code(code), err.Error())
 	}
 
 	return &userProto.UserNothing{}, nil
+}
+
+func (u UserServer) UnlockSecretAlbum(ctx context.Context, message **userProto.UserNothing) (*userProto.UserNothing, error) {
+	ownerId, ok := u.UserUsecase.GetParamFromContext(ctx, "ownerId")
+	if !ok {
+		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
+		return &userProto.UserNothing{}, status.Error(403, response.Err)
+	}
+
+	getterId, ok := u.UserUsecase.GetParamFromContext(ctx, "getterId")
+	if !ok {
+		response := model.ErrorResponse{Err: "Пользователь не найден"}
+		return &userProto.UserNothing{}, status.Error(400, response.Error())
+	}
+
+	code, err := u.UserUsecase.UnblockSecreteAlbum(ownerId, getterId)
+	if err != nil {
+		return &userProto.UserNothing{}, status.Error(codes.Code(code), err.Error())
+	}
+
+	return &userProto.UserNothing{}, nil
+}
+
+func (u UserServer) GetSecreteAlbum(ctx context.Context, message **userProto.UserNothing) (*userProto.Photos, error) {
+	ownerId, ok := u.UserUsecase.GetParamFromContext(ctx, "ownerId")
+	if !ok {
+		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
+		return &userProto.Photos{}, status.Error(403, response.Err)
+	}
+
+	getterId, ok := u.UserUsecase.GetParamFromContext(ctx, "getterId")
+	if !ok {
+		response := model.ErrorResponse{Err: "Пользователь не найден"}
+		return &userProto.Photos{}, status.Error(400, response.Error())
+	}
+
+	photos, code, err := u.UserUsecase.GetSecreteAlbum(ownerId, getterId)
+	if err != nil {
+		return &userProto.Photos{}, status.Error(codes.Code(code), err.Error())
+	}
+
+	protoPhotos := userProto.Photos{
+		Photos: u.UserUsecase.Photos2ProtoPhotos(photos),
+	}
+
+	return &protoPhotos, nil
 }
