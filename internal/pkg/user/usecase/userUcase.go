@@ -25,7 +25,7 @@ type UserUseCaseInterface interface {
 	CheckPasswordWithId(passToCheck string, id int) (bool, error)
 	ValidateDatePreferences(pref string) bool
 	CheckPasswordWithEmail(passToCheck string, email string) (bool, error)
-	ChangeUserProperties(newUser *model.User) error
+	ChangeUserProperties(newUser *model.User) (model.User, error)
 	ChangeUserPassword(newUser *model.User) error
 	ValidatePassword(password string) bool
 	ValidateSignInData(newUser model.User) (bool, error)
@@ -250,7 +250,7 @@ func (u *UserUsecase) ChangeUserInfo(newUser model.User, id int) (user model.Use
 	}
 
 	newUser.Id = id
-	err = u.ChangeUserProperties(&newUser)
+	newUser, err = u.ChangeUserProperties(&newUser)
 	if err != nil {
 		if reflect.TypeOf(err) != reflect.TypeOf(model.ErrorDescriptionResponse{}) {
 			u.LogError(err)
@@ -444,26 +444,26 @@ func (u *UserUsecase) CheckPasswordWithEmail(passToCheck string, email string) (
 	return true, nil
 }
 
-func (u *UserUsecase) ChangeUserProperties(newUser *model.User) error {
+func (u *UserUsecase) ChangeUserProperties(newUser *model.User) (model.User, error) {
 	bufUser, err := u.Db.GetUser(newUser.Id)
 	if err != nil {
-		return err
+		return *newUser, err
 	}
 
 	if newUser.Email != "" {
 		if !govalidator.IsEmail(newUser.Email) {
 			response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Не удалось поменять данные"}
 			response.Description["mail"] = "Почта не прошла валидацию"
-			return response
+			return *newUser, response
 		}
 		isSignedUp, response := u.IsAlreadySignedUp(newUser.Email)
 		if response != nil {
-			return response
+			return *newUser, response
 		}
 		if isSignedUp {
 			response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Не удалось поменять данные"}
 			response.Description["mail"] = "Почта занята"
-			return response
+			return *newUser, response
 		}
 
 		bufUser.Email = newUser.Email
@@ -497,7 +497,7 @@ func (u *UserUsecase) ChangeUserProperties(newUser *model.User) error {
 	if newUser.Sex != "" {
 		if !u.ValidateSex(newUser.Sex) {
 			response.Description["sex"] = "Неверно введен пол"
-			return response
+			return *newUser, response
 		}
 		bufUser.Sex = newUser.Sex
 	}
@@ -505,24 +505,24 @@ func (u *UserUsecase) ChangeUserProperties(newUser *model.User) error {
 	if newUser.DatePreference != "" {
 		if !u.ValidateDatePreferences(newUser.DatePreference) {
 			response.Description["datePreferences"] = "Неверно введены предпочтения"
-			return response
+			return *newUser, response
 		}
 		bufUser.DatePreference = newUser.DatePreference
 	}
 
 	err = u.IsActive(&bufUser)
 	if err != nil {
-		return err
+		return *newUser, err
 	}
 
 	err = u.Db.ChangeUser(bufUser)
 	if err != nil {
-		return err
+		return *newUser, err
 	}
 
 	*newUser = bufUser
 
-	return nil
+	return *newUser, nil
 }
 
 func (u *UserUsecase) ChangeUserPassword(newUser *model.User) error {
