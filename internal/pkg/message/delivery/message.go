@@ -1,9 +1,11 @@
 package delivery
 
 import (
+	"google.golang.org/grpc/status"
 	"net/http"
 	"server/internal/pkg/message/usecase"
 	model "server/internal/pkg/models"
+	userProto "server/internal/user_server/delivery/proto"
 	"strconv"
 
 	"github.com/gorilla/mux"
@@ -11,6 +13,7 @@ import (
 
 type MessageHandler struct {
 	Usecase usecase.MessageUsecaseInterface
+	Server  userProto.UserServiceClient
 }
 
 func (m *MessageHandler) SetMessageHandlers(subRouter *mux.Router) {
@@ -23,76 +26,18 @@ func (m *MessageHandler) SetMessageHandlers(subRouter *mux.Router) {
 }
 
 func (m *MessageHandler) GetMessages(w http.ResponseWriter, r *http.Request) {
-	userId, ok := m.Usecase.GetIdFromContext(r.Context())
-	if !ok {
-		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
-		model.Process(model.LoggerFunc(response.Err, m.Usecase.LogError), model.ResponseFunc(w, 403, response))
+	protoMessages, err := m.Server.GetMessages(r.Context(), &userProto.UserNothing{})
+	if err != nil {
+		st, _ := status.FromError(err)
+		model.Process(model.LoggerFunc(st.Message(), m.Usecase.LogError), model.ResponseFunc(w, int(st.Code()), st.Message()))
 		return
 	}
 
-	vars := mux.Vars(r)
-	chatId, err := strconv.Atoi(vars["chatId"])
-	if err != nil {
-		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
-		response.Description["messageId"] = "Сообщения с таким id нет"
-		model.Process(model.LoggerFunc(response.Err, m.Usecase.LogInfo), model.ResponseFunc(w, 400, response))
-		return
-	}
-
-	query := r.URL.Query()
-	limit, ok := query["count"]
-	if !ok {
-		response := model.ErrorResponse{Err: "Не указан count"}
-		model.Process(model.LoggerFunc(response.Err, m.Usecase.LogInfo), model.ResponseFunc(w, 400, response))
-		return
-	}
-	limitInt, err := strconv.Atoi(limit[0])
-	if err != nil {
-		response := model.ErrorResponse{Err: "Неверный формат count"}
-		model.Process(model.LoggerFunc(response.Err, m.Usecase.LogInfo), model.ResponseFunc(w, 400, response))
-		return
-	}
-	offset, ok := query["offset"]
-	if !ok {
-		response := model.ErrorResponse{Err: "Не указан offset"}
-		model.Process(model.LoggerFunc(response.Err, m.Usecase.LogInfo), model.ResponseFunc(w, 400, response))
-		return
-	}
-	offsetInt, err := strconv.Atoi(offset[0])
-	if err != nil {
-		response := model.ErrorResponse{Err: "Неверный формат offset"}
-		model.Process(model.LoggerFunc(response.Err, m.Usecase.LogInfo), model.ResponseFunc(w, 400, response))
-		return
-	}
-
-	messages, code, err := m.Usecase.ManageMessage(userId, chatId, limitInt, offsetInt)
-	switch code {
-	case 200:
-		model.Process(model.LoggerFunc("Success: Get Messages", m.Usecase.LogInfo), model.ResponseFunc(w, code, messages))
-	case 500:
-		model.Process(model.LoggerFunc(err, m.Usecase.LogError), model.ResponseFunc(w, code, nil))
-	default:
-		model.Process(model.LoggerFunc(err, m.Usecase.LogInfo), model.ResponseFunc(w, code, err))
-	}
+	//TODO:: добавить перевод из прото
+	model.Process(model.LoggerFunc("Success: Get Messages", m.Usecase.LogInfo), model.ResponseFunc(w, 200, protoMessages))
 }
 
 func (m *MessageHandler) SendMessage(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	chatId, err := strconv.Atoi(vars["chatId"])
-	if err != nil {
-		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
-		response.Description["chatId"] = "Чата с таким id нет"
-		model.Process(model.LoggerFunc(err, m.Usecase.LogInfo), model.ResponseFunc(w, 400, response))
-		return
-	}
-
-	id, ok := m.Usecase.GetIdFromContext(r.Context())
-	if !ok {
-		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
-		model.Process(model.LoggerFunc(response.Err, m.Usecase.LogError), model.ResponseFunc(w, 401, response))
-		return
-	}
-
 	newMessage, err := m.Usecase.ParseJsonToMessage(r.Body)
 	if err != nil {
 		response := model.ErrorResponse{Err: "Не удалось прочитать тело запроса"}
@@ -100,40 +45,21 @@ func (m *MessageHandler) SendMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newMessage, code, err := m.Usecase.CreateMessage(newMessage, chatId, id)
-	switch code {
-	case 200:
-	case 500:
-		model.Process(model.LoggerFunc(err, m.Usecase.LogError), model.ResponseFunc(w, 500, nil))
-		return
-	default:
-		model.Process(model.LoggerFunc(err, m.Usecase.LogInfo), model.ResponseFunc(w, code, err))
+	message, err := m.Server.CreateMessage(r.Context(), newMessage)
+	if err != nil {
+		st, _ := status.FromError(err)
+		model.Process(model.LoggerFunc(st.Message(), m.Usecase.LogError), model.ResponseFunc(w, int(st.Code()), st.Message()))
 		return
 	}
 
-	model.Process(model.LoggerFunc("Success Create Message", m.Usecase.LogInfo), model.ResponseFunc(w, 200, newMessage))
+	//TODO:: добавить перевод из прото
+	model.Process(model.LoggerFunc("Success Create Message", m.Usecase.LogInfo), model.ResponseFunc(w, 200, message))
 
 	// отправить сообщение по вэбсокету
-	m.Usecase.WebsocketMessage(newMessage)
+	m.Usecase.WebsocketMessage(message)
 }
 
 func (m *MessageHandler) ChangeMessage(w http.ResponseWriter, r *http.Request) {
-	userId, ok := m.Usecase.GetIdFromContext(r.Context())
-	if !ok {
-		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
-		model.Process(model.LoggerFunc(response.Err, m.Usecase.LogInfo), model.ResponseFunc(w, 403, response))
-		return
-	}
-
-	vars := mux.Vars(r)
-	messageId, err := strconv.Atoi(vars["messageId"])
-	if err != nil {
-		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
-		response.Description["messageId"] = "Сообщения с таким id нет"
-		model.Process(model.LoggerFunc(response.Err, m.Usecase.LogInfo), model.ResponseFunc(w, 400, response))
-		return
-	}
-
 	newMessage, err := m.Usecase.ParseJsonToMessage(r.Body)
 	if err != nil {
 		response := model.ErrorResponse{Err: "Не удалось прочитать тело запроса"}
@@ -141,14 +67,17 @@ func (m *MessageHandler) ChangeMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newMessage, code, err := m.Usecase.ChangeMessage(userId, messageId, newMessage)
-	if code != 204 {
-		model.ResponseFunc(w, code, err)
+	//todo::
+	protoMessage, err := m.Server.ChangeMessage(r.Context(), &userProto.Message{})
+	if err != nil {
+		st, _ := status.FromError(err)
+		model.Process(model.LoggerFunc(st.Message(), m.Usecase.LogError), model.ResponseFunc(w, int(st.Code()), st.Message()))
 		return
 	}
 
-	model.Process(model.LoggerFunc("New message", m.Usecase.LogInfo), model.ResponseFunc(w, 204, err))
+	//TODO:: добавить перевод из прото
+	model.Process(model.LoggerFunc("New message", m.Usecase.LogInfo), model.ResponseFunc(w, 204, protoMessage))
 
 	// отправить сообщение в вэбсокет
-	m.Usecase.WebsocketReactMessage(newMessage)
+	m.Usecase.WebsocketReactMessage(protoMessage)
 }

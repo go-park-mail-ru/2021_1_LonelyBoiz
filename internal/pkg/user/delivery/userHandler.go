@@ -22,13 +22,13 @@ type UserHandlerInterface interface {
 	SignIn(w http.ResponseWriter, r *http.Request)
 	GetLogin(w http.ResponseWriter, r *http.Request)
 	GetUsers(w http.ResponseWriter, r *http.Request)
+	LikesHandler(w http.ResponseWriter, r *http.Request)
 
 	// TODO:: не добавлены в proto
 	UnblockSecreteAlbum(w http.ResponseWriter, r *http.Request)
 	GetSecreteAlbum(w http.ResponseWriter, r *http.Request)
 
 	WsHandler(w http.ResponseWriter, r *http.Request)
-	LikesHandler(w http.ResponseWriter, r *http.Request)
 }
 
 func (a *UserHandler) SetRawRouter(subRouter *mux.Router) {

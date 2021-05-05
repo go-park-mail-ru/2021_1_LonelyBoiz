@@ -2,43 +2,55 @@ package delivery
 
 import (
 	"encoding/json"
+	"google.golang.org/grpc/status"
 	"net/http"
-	model "server/internal/pkg/models"
+	"server/internal/pkg/models"
+	userproto "server/internal/user_server/delivery/proto"
 )
 
 func (a *UserHandler) LikesHandler(w http.ResponseWriter, r *http.Request) {
-	userId, ok := a.UserCase.GetIdFromContext(r.Context())
-	if !ok {
-		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
-		model.Process(model.LoggerFunc(response.Err, a.UserCase.LogError), model.ResponseFunc(w, 403, response))
-		return
-	}
-
-	var like model.Like
+	var like models.Like
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&like)
 	defer r.Body.Close()
 	if err != nil {
-		response := model.ErrorResponse{Err: "Не удалось прочитать тело запроса"}
-		model.Process(model.LoggerFunc(response.Err, a.UserCase.LogError), model.ResponseFunc(w, 400, response))
+		response := models.ErrorResponse{Err: "Не удалось прочитать тело запроса"}
+		models.Process(models.LoggerFunc(response.Err, a.UserCase.LogError), models.ResponseFunc(w, 400, response))
 		return
 	}
 
-	newChat, code, err := a.UserCase.CreateChat(userId, like)
-	switch code {
-	case 204:
-		a.UserCase.LogInfo("Success like")
-		w.WriteHeader(code)
-		return
-	case 402:
-		model.Process(model.LoggerFunc("Create Feed", a.UserCase.LogInfo), model.ResponseFunc(w, code, err))
-		return
-	case 500:
-		model.Process(model.LoggerFunc(err, a.UserCase.LogError), model.ResponseFunc(w, code, nil))
+	chat, err := a.Server.CreateChat(r.Context(), &userproto.Like{
+		UserId:   int32(like.UserId),
+		Reaction: like.Reaction,
+	})
+
+	if err != nil {
+		st, _ := status.FromError(err)
+		if st.Code() == 204 {
+			w.WriteHeader(204)
+			return
+		}
+
+		models.Process(models.LoggerFunc(st.Message(), a.UserCase.LogError), models.ResponseFunc(w, int(st.Code()), st.Message()))
 		return
 	}
 
-	model.Process(model.LoggerFunc("Successful like", a.UserCase.LogInfo), model.ResponseFunc(w, code, newChat))
+	photos, ok := a.UserCase.ProtoPhotos2Photos(chat.GetPhotos())
+	if !ok {
+		models.Process(models.LoggerFunc("Proto error", a.UserCase.LogError), models.ResponseFunc(w, 500, nil))
+	}
 
-	a.UserCase.WebsocketChat(&newChat)
+	nChat := models.Chat{
+		ChatId:              int(chat.GetChatId()),
+		PartnerId:           int(chat.GetPartnerId()),
+		PartnerName:         chat.GetPartnerName(),
+		LastMessage:         chat.GetLastMessage(),
+		LastMessageTime:     chat.GetLastMessageTime(),
+		LastMessageAuthorId: int(chat.GetLastMessageAuthorId()),
+		Photos:              photos,
+	}
+
+	models.Process(models.LoggerFunc("Create Feed", a.UserCase.LogInfo), models.ResponseFunc(w, 200, nChat))
+
+	a.UserCase.WebsocketChat(&nChat)
 }

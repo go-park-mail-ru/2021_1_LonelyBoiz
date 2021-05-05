@@ -1,8 +1,8 @@
 package delivery
 
 import (
-	"github.com/gorilla/websocket"
 	"fmt"
+	"github.com/gorilla/websocket"
 	"net/http"
 	model "server/internal/pkg/models"
 )
@@ -15,7 +15,7 @@ var upgrader = websocket.Upgrader{
 
 func (a *UserHandler) WsHandler(w http.ResponseWriter, r *http.Request) {
 	a.UserCase.LogError("Попытка подключиться по вэбсокету")
-	id, ok := a.UserCase.GetIdFromContext(r.Context())
+	id, ok := a.UserCase.GetParamFromContext(r.Context(), "cookieId")
 	if !ok {
 		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
 		model.Process(model.LoggerFunc(response.Err, a.UserCase.LogInfo), model.ResponseFunc(w, 403, response))

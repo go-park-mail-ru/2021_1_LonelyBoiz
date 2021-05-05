@@ -61,6 +61,8 @@ type UserUseCaseInterface interface {
 	GetParamFromContext(ctx context.Context, param string) (int, bool)
 	DeleteSession(cookie *http.Cookie)
 	CheckIds(ctx context.Context) (int, int, error)
+	ProtoPhotos2Photos(userPhotos [][]byte) ([]uuid.UUID, bool)
+	Photos2ProtoPhotos(userPhotos []uuid.UUID) ([][]byte, bool)
 }
 
 type UserUsecase struct {
@@ -697,14 +699,36 @@ func (u *UserUsecase) GetIdFromContext(ctx context.Context) (int, bool) {
 	return id, true
 }
 
-func (u *UserUsecase) ProtoUser2User(user *userProto.User) (model.User, bool) {
+func (u *UserUsecase) Photos2ProtoPhotos(userPhotos []uuid.UUID) ([][]byte, bool) {
+	var photos [][]byte
+	for _, photo := range userPhotos {
+		binaryPhoto, err := photo.MarshalBinary()
+		if err != nil {
+			return nil, false
+		}
+		photos = append(photos, binaryPhoto)
+	}
+
+	return photos, true
+}
+
+func (u *UserUsecase) ProtoPhotos2Photos(userPhotos [][]byte) ([]uuid.UUID, bool) {
 	var photos []uuid.UUID
-	for _, photo := range user.Photos {
+	for _, photo := range userPhotos {
 		uuidPhoto, err := uuid.FromBytes(photo)
 		if err != nil {
-			return model.User{}, false
+			return nil, false
 		}
 		photos = append(photos, uuidPhoto)
+	}
+
+	return photos, true
+}
+
+func (u *UserUsecase) ProtoUser2User(user *userProto.User) (model.User, bool) {
+	photos, ok := u.ProtoPhotos2Photos(user.Photos)
+	if !ok {
+		return model.User{}, false
 	}
 
 	return model.User{
@@ -729,13 +753,9 @@ func (u *UserUsecase) ProtoUser2User(user *userProto.User) (model.User, bool) {
 }
 
 func (u *UserUsecase) User2ProtoUser(user model.User) (*userProto.User, bool) {
-	var photos [][]byte
-	for _, photo := range user.Photos {
-		binaryPhoto, err := photo.MarshalBinary()
-		if err != nil {
-			return nil, false
-		}
-		photos = append(photos, binaryPhoto)
+	photos, ok := u.Photos2ProtoPhotos(user.Photos)
+	if !ok {
+		return nil, false
 	}
 
 	return &userProto.User{
