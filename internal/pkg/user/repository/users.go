@@ -125,7 +125,7 @@ func (repo *UserRepository) CheckPermission(ownerId int, getterId int) (bool, er
 
 func (repo *UserRepository) UnblockSecreteAlbum(ownerId int, getterId int) error {
 	err := repo.DB.QueryRowx(
-		`INSERT INTO secretPermition (ownerId, getterId) Values ($1, $2)`,
+		`INSERT INTO secretPermission (ownerId, getterId) Values ($1, $2)`,
 		ownerId, getterId)
 	return err.Err()
 }
