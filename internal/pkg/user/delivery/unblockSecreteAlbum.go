@@ -17,7 +17,7 @@ func (a *UserHandler) UnblockSecreteAlbum(w http.ResponseWriter, r *http.Request
 	}
 
 	vars := mux.Vars(r)
-	getterId, err := strconv.Atoi(vars["userId"])
+	getterId, err := strconv.Atoi(vars["getterId"])
 	if err != nil {
 		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Неправильные входные данные"}
 		response.Description["id"] = "Пользователя с таким id нет"
