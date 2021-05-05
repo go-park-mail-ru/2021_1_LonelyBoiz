@@ -62,7 +62,7 @@ func main() {
 	loger := logrus.Logger{}
 
 	userServer := delivery2.UserServer{
-		Usecase: &usecase.UserUsecase{
+		UserUsecase: &usecase.UserUsecase{
 			Db:              &repository2.UserRepository{DB: db},
 			LoggerInterface: &models.Logger{Logger: loger.WithField("key", "value")},
 			Sanitizer:       bluemonday.NewPolicy(),

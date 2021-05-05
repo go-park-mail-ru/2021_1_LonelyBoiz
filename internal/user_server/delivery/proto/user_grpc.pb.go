@@ -25,12 +25,16 @@ type UserServiceClient interface {
 	CreateUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*UserResponse, error)
 	ChangeUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*User, error)
 	CheckUser(ctx context.Context, in *UserLogin, opts ...grpc.CallOption) (*UserResponse, error)
-	// метаданные
 	DeleteUser(ctx context.Context, in *UserNothing, opts ...grpc.CallOption) (*UserNothing, error)
-	// достает из метаданных id. В метаданные кладет в интерсепторе
 	GetUserById(ctx context.Context, in *UserNothing, opts ...grpc.CallOption) (*User, error)
-	// метаданные
 	CreateFeed(ctx context.Context, in *UserNothing, opts ...grpc.CallOption) (*Feed, error)
+	CreateChat(ctx context.Context, in *Like, opts ...grpc.CallOption) (*Chat, error)
+	//chat
+	GetChats(ctx context.Context, in *UserNothing, opts ...grpc.CallOption) (*ChatsResponse, error)
+	//message
+	GetMessages(ctx context.Context, in *UserNothing, opts ...grpc.CallOption) (*MessagesResponse, error)
+	CreateMessage(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Message, error)
+	ChangeMessage(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Message, error)
 }
 
 type userServiceClient struct {
@@ -95,6 +99,51 @@ func (c *userServiceClient) CreateFeed(ctx context.Context, in *UserNothing, opt
 	return out, nil
 }
 
+func (c *userServiceClient) CreateChat(ctx context.Context, in *Like, opts ...grpc.CallOption) (*Chat, error) {
+	out := new(Chat)
+	err := c.cc.Invoke(ctx, "/session.UserService/CreateChat", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) GetChats(ctx context.Context, in *UserNothing, opts ...grpc.CallOption) (*ChatsResponse, error) {
+	out := new(ChatsResponse)
+	err := c.cc.Invoke(ctx, "/session.UserService/GetChats", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) GetMessages(ctx context.Context, in *UserNothing, opts ...grpc.CallOption) (*MessagesResponse, error) {
+	out := new(MessagesResponse)
+	err := c.cc.Invoke(ctx, "/session.UserService/GetMessages", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) CreateMessage(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Message, error) {
+	out := new(Message)
+	err := c.cc.Invoke(ctx, "/session.UserService/CreateMessage", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) ChangeMessage(ctx context.Context, in *Message, opts ...grpc.CallOption) (*Message, error) {
+	out := new(Message)
+	err := c.cc.Invoke(ctx, "/session.UserService/ChangeMessage", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility
@@ -102,12 +151,16 @@ type UserServiceServer interface {
 	CreateUser(context.Context, *User) (*UserResponse, error)
 	ChangeUser(context.Context, *User) (*User, error)
 	CheckUser(context.Context, *UserLogin) (*UserResponse, error)
-	// метаданные
 	DeleteUser(context.Context, *UserNothing) (*UserNothing, error)
-	// достает из метаданных id. В метаданные кладет в интерсепторе
 	GetUserById(context.Context, *UserNothing) (*User, error)
-	// метаданные
 	CreateFeed(context.Context, *UserNothing) (*Feed, error)
+	CreateChat(context.Context, *Like) (*Chat, error)
+	//chat
+	GetChats(context.Context, *UserNothing) (*ChatsResponse, error)
+	//message
+	GetMessages(context.Context, *UserNothing) (*MessagesResponse, error)
+	CreateMessage(context.Context, *Message) (*Message, error)
+	ChangeMessage(context.Context, *Message) (*Message, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -132,6 +185,21 @@ func (UnimplementedUserServiceServer) GetUserById(context.Context, *UserNothing)
 }
 func (UnimplementedUserServiceServer) CreateFeed(context.Context, *UserNothing) (*Feed, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateFeed not implemented")
+}
+func (UnimplementedUserServiceServer) CreateChat(context.Context, *Like) (*Chat, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateChat not implemented")
+}
+func (UnimplementedUserServiceServer) GetChats(context.Context, *UserNothing) (*ChatsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetChats not implemented")
+}
+func (UnimplementedUserServiceServer) GetMessages(context.Context, *UserNothing) (*MessagesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetMessages not implemented")
+}
+func (UnimplementedUserServiceServer) CreateMessage(context.Context, *Message) (*Message, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateMessage not implemented")
+}
+func (UnimplementedUserServiceServer) ChangeMessage(context.Context, *Message) (*Message, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ChangeMessage not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 
@@ -254,6 +322,96 @@ func _UserService_CreateFeed_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_CreateChat_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Like)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).CreateChat(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/session.UserService/CreateChat",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).CreateChat(ctx, req.(*Like))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_GetChats_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UserNothing)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).GetChats(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/session.UserService/GetChats",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).GetChats(ctx, req.(*UserNothing))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_GetMessages_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UserNothing)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).GetMessages(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/session.UserService/GetMessages",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).GetMessages(ctx, req.(*UserNothing))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_CreateMessage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Message)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).CreateMessage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/session.UserService/CreateMessage",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).CreateMessage(ctx, req.(*Message))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_ChangeMessage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Message)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).ChangeMessage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/session.UserService/ChangeMessage",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).ChangeMessage(ctx, req.(*Message))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -284,6 +442,26 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateFeed",
 			Handler:    _UserService_CreateFeed_Handler,
+		},
+		{
+			MethodName: "CreateChat",
+			Handler:    _UserService_CreateChat_Handler,
+		},
+		{
+			MethodName: "GetChats",
+			Handler:    _UserService_GetChats_Handler,
+		},
+		{
+			MethodName: "GetMessages",
+			Handler:    _UserService_GetMessages_Handler,
+		},
+		{
+			MethodName: "CreateMessage",
+			Handler:    _UserService_CreateMessage_Handler,
+		},
+		{
+			MethodName: "ChangeMessage",
+			Handler:    _UserService_ChangeMessage_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

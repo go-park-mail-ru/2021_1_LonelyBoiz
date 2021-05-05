@@ -22,10 +22,10 @@ type UserHandlerInterface interface {
 	SignIn(w http.ResponseWriter, r *http.Request)
 	GetLogin(w http.ResponseWriter, r *http.Request)
 	GetUsers(w http.ResponseWriter, r *http.Request)
+	LikesHandler(w http.ResponseWriter, r *http.Request)
 
 	// TODO:: не добавлены в proto
 	WsHandler(w http.ResponseWriter, r *http.Request)
-	LikesHandler(w http.ResponseWriter, r *http.Request)
 }
 
 func (a *UserHandler) SetHandlersWithCheckCookie(subRouter *mux.Router) {
