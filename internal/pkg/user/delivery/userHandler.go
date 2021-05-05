@@ -52,7 +52,7 @@ func (a *UserHandler) SetHandlersWithCheckCookie(subRouter *mux.Router) {
 	// добавить фотки в секретный альбом
 	subRouter.HandleFunc("/secreteAlbum", a.AddToSecreteAlbum).Methods("POST")
 	// разблокировать секретный альбом
-	subRouter.HandleFunc("/unblockSecreteAlbum/{getterId:[0-9]+}", a.UnblockSecreteAlbum).Methods("POST")
+	subRouter.HandleFunc("/unlockSecreteAlbum/{getterId:[0-9]+}", a.UnblockSecreteAlbum).Methods("POST")
 	// посмотреть секретный альбом
 	subRouter.HandleFunc("/secreteAlbum/{ownerId:[0-9]+}", a.GetSecreteAlbum).Methods("Get")
 	// открытие вэбсокетного соединения
