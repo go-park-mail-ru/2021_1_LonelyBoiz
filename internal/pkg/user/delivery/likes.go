@@ -34,7 +34,7 @@ func (a *UserHandler) LikesHandler(w http.ResponseWriter, r *http.Request) {
 		model.Process(model.LoggerFunc("Create Feed", a.UserCase.LogInfo), model.ResponseFunc(w, code, err))
 		return
 	case 500:
-		model.Process(model.LoggerFunc("Create Feed", a.UserCase.LogError), model.ResponseFunc(w, code, nil))
+		model.Process(model.LoggerFunc(err, a.UserCase.LogError), model.ResponseFunc(w, code, nil))
 		return
 	}
 

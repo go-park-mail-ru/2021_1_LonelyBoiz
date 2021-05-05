@@ -152,5 +152,5 @@ func (m *MessageHandler) ChangeMessage(w http.ResponseWriter, r *http.Request) {
 	model.Process(model.LoggerFunc("New message", m.Usecase.LogInfo), model.ResponseFunc(w, 204, err))
 
 	// отправить сообщение в вэбсокет
-	m.Usecase.WebsocketMessage(newMessage)
+	m.Usecase.WebsocketReactMessage(newMessage)
 }
