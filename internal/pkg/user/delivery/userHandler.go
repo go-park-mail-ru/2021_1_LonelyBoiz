@@ -25,6 +25,7 @@ type UserHandlerInterface interface {
 	LikesHandler(w http.ResponseWriter, r *http.Request)
 
 	// TODO:: не добавлены в proto
+	AddToSecreteAlbum(w http.ResponseWriter, r *http.Request)
 	UnblockSecreteAlbum(w http.ResponseWriter, r *http.Request)
 	GetSecreteAlbum(w http.ResponseWriter, r *http.Request)
 

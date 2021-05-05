@@ -1,7 +1,6 @@
 package delivery
 
 import (
-	"encoding/json"
 	"net/http"
 	"server/internal/pkg/models"
 	model "server/internal/pkg/models"
@@ -10,10 +9,7 @@ import (
 )
 
 func (a *UserHandler) AddToSecreteAlbum(w http.ResponseWriter, r *http.Request) {
-	var user models.User
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&user)
-	defer r.Body.Close()
+	user, err := a.UserCase.ParseJsonToUser(r.Body)
 	if err != nil {
 		a.UserCase.LogError(err)
 		response := model.ErrorResponse{Err: "Не удалось прочитать тело запроса"}
