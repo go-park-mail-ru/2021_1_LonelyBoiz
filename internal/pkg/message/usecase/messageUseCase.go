@@ -66,7 +66,7 @@ func (m *MessageUsecase) WebsocketReactMessage(newMessage model.Message) {
 	fmt.Println(newMessage)
 	var response model.WebsocketResponse
 
-	response.ResponseType = "edit message"
+	response.ResponseType = "editMessage"
 	response.Object = newMessage
 
 	client, ok := (*m.Clients)[newMessage.AuthorId]
