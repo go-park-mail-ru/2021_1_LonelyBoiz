@@ -1,17 +1,6 @@
 package entryPoint
 
 import (
-	awsSession "github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/gorilla/mux"
-	"github.com/gorilla/websocket"
-	"github.com/jmoiron/sqlx"
-	"github.com/microcosm-cc/bluemonday"
-	cors2 "github.com/rs/cors"
-	"github.com/sirupsen/logrus"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/grpclog"
 	"log"
 	"math/rand"
 	"net/http"
@@ -36,6 +25,18 @@ import (
 	"server/internal/pkg/user/usecase"
 	user_proto "server/internal/user_server/delivery/proto"
 	"time"
+
+	awsSession "github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/gorilla/mux"
+	"github.com/gorilla/websocket"
+	"github.com/jmoiron/sqlx"
+	"github.com/microcosm-cc/bluemonday"
+	cors2 "github.com/rs/cors"
+	"github.com/sirupsen/logrus"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/grpclog"
 )
 
 type App struct {
@@ -193,16 +194,22 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 		Session: authClient,
 	}
 
-	a.router.Use(loggerm.Middleware)
-	//a.router.Use(middleware.CSRFMiddleware)
-	a.router.Use(middleware.SetContextMiddleware)
+	rawRouter := a.router.NewRoute().Subrouter()
+
+	userHandler.SetRawRouter(rawRouter)
+
+	csrfRouter := a.router.NewRoute().Subrouter()
+
+	csrfRouter.Use(loggerm.Middleware)
+	csrfRouter.Use(middleware.CSRFMiddleware)
+	csrfRouter.Use(middleware.SetContextMiddleware)
 
 	// validate cookie router
-	subRouter := a.router.NewRoute().Subrouter()
+	subRouter := csrfRouter.NewRoute().Subrouter()
 	subRouter.Use(checkcookiem.Middleware)
 
 	userHandler.SetHandlersWithCheckCookie(subRouter)
-	userHandler.SetHandlersWithoutCheckCookie(a.router)
+	userHandler.SetHandlersWithoutCheckCookie(csrfRouter)
 	messHandler.SetMessageHandlers(subRouter)
 	chatHandler.SetChatHandlers(subRouter)
 	imageHandler.SetHandlers(subRouter)
