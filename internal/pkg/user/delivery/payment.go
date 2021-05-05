@@ -23,7 +23,7 @@ func (a *UserHandler) Payment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	amountString := r.PostFormValue("withdraw_amount")
-	var tarif map[string]int
+	tarif := make(map[string]int, 3)
 	tarif["1.00"] = 10
 	tarif["2.00"] = 20
 	tarif["3.00"] = 40
