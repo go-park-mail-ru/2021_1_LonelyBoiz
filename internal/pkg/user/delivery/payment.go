@@ -16,6 +16,7 @@ func (a *UserHandler) Payment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	labelString := r.PostFormValue("label")
+	a.UserCase.LogInfo(labelString)
 	if labelString == "" {
 		a.UserCase.LogError("Пустой лэйбл")
 		w.WriteHeader(400)
@@ -23,6 +24,7 @@ func (a *UserHandler) Payment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	amountString := r.PostFormValue("withdraw_amount")
+	a.UserCase.LogInfo(amountString)
 	tarif := make(map[string]int, 3)
 	tarif["1.00"] = 10
 	tarif["2.00"] = 20
@@ -35,7 +37,7 @@ func (a *UserHandler) Payment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var labelStruct models.Label
-	err = json.Unmarshal([]byte(labelString), labelStruct)
+	err = json.Unmarshal([]byte(labelString), &labelStruct)
 	if err != nil {
 		a.UserCase.LogError(err)
 		w.WriteHeader(400)
