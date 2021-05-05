@@ -46,7 +46,7 @@ func (a *App) Start() error {
 	a.Logger.Info("Server Start")
 
 	corsMiddleware := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000", "https://lepick.herokuapp.com"},
+		AllowedOrigins:   []string{"http://localhost:3000", "https://lepick.herokuapp.com", ""},
 		AllowCredentials: true,
 		AllowedMethods:   []string{"GET", "POST", "DELETE", "PATCH", "OPTIONS"},
 		AllowedHeaders:   []string{"Content-Type", "Access-Control-Allow-Headers", "Access-Control-Expose-Headers", "Authorization", "X-Requested-With", "X-Csrf-Token"},
@@ -163,19 +163,21 @@ func (a *App) InitializeRoutes(currConfig Config) {
 
 	checkcookiem := middleware.ValidateCookieMiddleware{Session: &sessionManager}
 
-	rawRouter := a.router
+	rawRouter := a.router.NewRoute().Subrouter()
 
 	userHandler.SetRawRouter(rawRouter)
 
-	a.router.Use(loggerm.Middleware)
-	a.router.Use(middleware.CSRFMiddleware)
+	csrfRouter := a.router.NewRoute().Subrouter()
+
+	csrfRouter.Use(loggerm.Middleware)
+	csrfRouter.Use(middleware.CSRFMiddleware)
 
 	// validate cookie router
-	subRouter := a.router.NewRoute().Subrouter()
+	subRouter := csrfRouter.NewRoute().Subrouter()
 	subRouter.Use(checkcookiem.Middleware)
 
 	userHandler.SetHandlersWithCheckCookie(subRouter)
-	userHandler.SetHandlersWithoutCheckCookie(a.router)
+	userHandler.SetHandlersWithoutCheckCookie(csrfRouter)
 	messHandler.SetMessageHandlers(subRouter)
 	chatHandler.SetChatHandlers(subRouter)
 	imageHandler.SetHandlers(subRouter)
