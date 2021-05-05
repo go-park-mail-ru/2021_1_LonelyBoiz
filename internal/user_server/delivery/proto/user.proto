@@ -86,6 +86,9 @@ message MessagesResponse {
   repeated Message Messages = 1;
 }
 
+message Photos{
+  repeated string Photos = 1;
+}
 
 // grpc-сервис работы с юзером
 service UserService {
@@ -108,4 +111,6 @@ service UserService {
 
   // secret album
   rpc AddToSecreteAlbum(User) returns (UserNothing) {}
+  rpc UnlockSecretAlbum(UserNothing) returns (UserNothing) {}
+  rpc GetSecreteAlbum(UserNothing) returns(Photos) {}
 }
