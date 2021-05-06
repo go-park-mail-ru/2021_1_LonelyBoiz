@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	sessionMocks "server/internal/auth_server/delivery/session/mocks"
 	"server/internal/pkg/models"
-	sessionMocks "server/internal/pkg/session/mocks"
 	mock_usecase "server/internal/pkg/user/usecase/mocks"
 	"testing"
 
@@ -20,7 +20,7 @@ func TestGetUserInfo(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
 	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
-	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
 
 	handlerTest := UserHandler{
 		UserCase: userUseCaseMock,
@@ -71,7 +71,7 @@ func TestGetUserInfoVarsError(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
 	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
-	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
 
 	handlerTest := UserHandler{
 		UserCase: userUseCaseMock,
@@ -116,7 +116,7 @@ func TestGetUserInfoGetUserInfoByIdError(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
 	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
-	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
 
 	handlerTest := UserHandler{
 		UserCase: userUseCaseMock,

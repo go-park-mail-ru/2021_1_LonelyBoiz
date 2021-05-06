@@ -9,8 +9,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	sessionMocks "server/internal/auth_server/delivery/session/mocks"
 	"server/internal/pkg/models"
-	sessionMocks "server/internal/pkg/session/mocks"
 	mock_usecase "server/internal/pkg/user/usecase/mocks"
 	"testing"
 
@@ -22,7 +22,7 @@ func TestGetUsers(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
 	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
-	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
 
 	handlerTest := UserHandler{
 		UserCase: userUseCaseMock,
@@ -64,7 +64,6 @@ func TestGetUsers(t *testing.T) {
 
 	rw := httptest.NewRecorder()
 
-	sessionManagerMock.EXPECT().GetIdFromContext(ctx).Return(user.Id, true)
 	userUseCaseMock.EXPECT().CreateFeed(user.Id, 20).Return(nil, 200, nil)
 	userUseCaseMock.EXPECT().LogInfo("Create Feed").Return()
 
@@ -79,7 +78,7 @@ func TestGetUsersGetIdFromContextError(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
 	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
-	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
 
 	handlerTest := UserHandler{
 		UserCase: userUseCaseMock,
@@ -121,7 +120,6 @@ func TestGetUsersGetIdFromContextError(t *testing.T) {
 
 	rw := httptest.NewRecorder()
 
-	sessionManagerMock.EXPECT().GetIdFromContext(ctx).Return(-1, false)
 	userUseCaseMock.EXPECT().LogInfo(gomock.Any()).Return()
 
 	handlerTest.GetUsers(rw, req.WithContext(ctx))
@@ -135,7 +133,7 @@ func TestGetUsersNoQuery(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
 	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
-	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
 
 	handlerTest := UserHandler{
 		UserCase: userUseCaseMock,
@@ -173,7 +171,6 @@ func TestGetUsersNoQuery(t *testing.T) {
 
 	rw := httptest.NewRecorder()
 
-	sessionManagerMock.EXPECT().GetIdFromContext(ctx).Return(user.Id, true)
 	userUseCaseMock.EXPECT().LogInfo(gomock.Any()).Return()
 
 	handlerTest.GetUsers(rw, req.WithContext(ctx))
@@ -187,7 +184,7 @@ func TestGetUsersAtoiError(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
 	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
-	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
 
 	handlerTest := UserHandler{
 		UserCase: userUseCaseMock,
@@ -229,7 +226,6 @@ func TestGetUsersAtoiError(t *testing.T) {
 
 	rw := httptest.NewRecorder()
 
-	sessionManagerMock.EXPECT().GetIdFromContext(ctx).Return(user.Id, true)
 	userUseCaseMock.EXPECT().LogError(gomock.Any()).Return()
 
 	handlerTest.GetUsers(rw, req.WithContext(ctx))
@@ -243,7 +239,7 @@ func TestGetUsersCreateFeedError(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
 	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
-	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
 
 	handlerTest := UserHandler{
 		UserCase: userUseCaseMock,
@@ -285,7 +281,6 @@ func TestGetUsersCreateFeedError(t *testing.T) {
 
 	rw := httptest.NewRecorder()
 
-	sessionManagerMock.EXPECT().GetIdFromContext(ctx).Return(user.Id, true)
 	userUseCaseMock.EXPECT().CreateFeed(user.Id, 20).Return(nil, 500, errors.New("Some error"))
 	userUseCaseMock.EXPECT().LogError(gomock.Any()).Return()
 

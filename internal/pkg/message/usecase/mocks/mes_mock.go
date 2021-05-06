@@ -5,9 +5,11 @@
 package mock_usecase
 
 import (
+	context "context"
 	io "io"
 	reflect "reflect"
 	models "server/internal/pkg/models"
+	user_proto "server/internal/user_server/delivery/proto"
 
 	gomock "github.com/golang/mock/gomock"
 )
@@ -67,6 +69,21 @@ func (mr *MockMessageUsecaseInterfaceMockRecorder) CreateMessage(newMessage, cha
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateMessage", reflect.TypeOf((*MockMessageUsecaseInterface)(nil).CreateMessage), newMessage, chatId, id)
 }
 
+// GetIdFromContext mocks base method.
+func (m *MockMessageUsecaseInterface) GetIdFromContext(ctx context.Context) (int, bool) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetIdFromContext", ctx)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(bool)
+	return ret0, ret1
+}
+
+// GetIdFromContext indicates an expected call of GetIdFromContext.
+func (mr *MockMessageUsecaseInterfaceMockRecorder) GetIdFromContext(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetIdFromContext", reflect.TypeOf((*MockMessageUsecaseInterface)(nil).GetIdFromContext), ctx)
+}
+
 // LogError mocks base method.
 func (m *MockMessageUsecaseInterface) LogError(data interface{}) {
 	m.ctrl.T.Helper()
@@ -107,6 +124,20 @@ func (mr *MockMessageUsecaseInterfaceMockRecorder) ManageMessage(userId, chatId,
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ManageMessage", reflect.TypeOf((*MockMessageUsecaseInterface)(nil).ManageMessage), userId, chatId, limitInt, offsetInt)
 }
 
+// Message2ProtoMessage mocks base method.
+func (m *MockMessageUsecaseInterface) Message2ProtoMessage(message models.Message) *user_proto.Message {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Message2ProtoMessage", message)
+	ret0, _ := ret[0].(*user_proto.Message)
+	return ret0
+}
+
+// Message2ProtoMessage indicates an expected call of Message2ProtoMessage.
+func (mr *MockMessageUsecaseInterfaceMockRecorder) Message2ProtoMessage(message interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Message2ProtoMessage", reflect.TypeOf((*MockMessageUsecaseInterface)(nil).Message2ProtoMessage), message)
+}
+
 // ParseJsonToMessage mocks base method.
 func (m *MockMessageUsecaseInterface) ParseJsonToMessage(body io.ReadCloser) (models.Message, error) {
 	m.ctrl.T.Helper()
@@ -120,6 +151,20 @@ func (m *MockMessageUsecaseInterface) ParseJsonToMessage(body io.ReadCloser) (mo
 func (mr *MockMessageUsecaseInterfaceMockRecorder) ParseJsonToMessage(body interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ParseJsonToMessage", reflect.TypeOf((*MockMessageUsecaseInterface)(nil).ParseJsonToMessage), body)
+}
+
+// ProtoMessage2Message mocks base method.
+func (m *MockMessageUsecaseInterface) ProtoMessage2Message(message *user_proto.Message) models.Message {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ProtoMessage2Message", message)
+	ret0, _ := ret[0].(models.Message)
+	return ret0
+}
+
+// ProtoMessage2Message indicates an expected call of ProtoMessage2Message.
+func (mr *MockMessageUsecaseInterfaceMockRecorder) ProtoMessage2Message(message interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProtoMessage2Message", reflect.TypeOf((*MockMessageUsecaseInterface)(nil).ProtoMessage2Message), message)
 }
 
 // WebsocketMessage mocks base method.

@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	sessionMocks "server/internal/auth_server/delivery/session/mocks"
 	"server/internal/pkg/models"
-	sessionMocks "server/internal/pkg/session/mocks"
 	mock_usecase "server/internal/pkg/user/usecase/mocks"
 	"testing"
 
@@ -21,7 +21,7 @@ func TestLogIn(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
 	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
-	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
 
 	handlerTest := UserHandler{
 		UserCase: userUseCaseMock,
@@ -55,7 +55,6 @@ func TestLogIn(t *testing.T) {
 	userUseCaseMock.EXPECT().ParseJsonToUser(req.Body).Return(user, nil)
 	userUseCaseMock.EXPECT().SignIn(user).Return(user, 200, nil)
 	userUseCaseMock.EXPECT().LogInfo("Success LogIn").Return()
-	sessionManagerMock.EXPECT().SetSession(rw, user.Id).Return(nil)
 
 	handlerTest.SignIn(rw, req)
 
@@ -68,7 +67,7 @@ func TestLogInParseToJsdnError(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
 	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
-	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
 
 	handlerTest := UserHandler{
 		UserCase: userUseCaseMock,
@@ -114,7 +113,7 @@ func TestLogInSignInError(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
 	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
-	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
 
 	handlerTest := UserHandler{
 		UserCase: userUseCaseMock,
@@ -160,7 +159,7 @@ func TestLogInSetSessionError(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
 	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
-	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
 
 	handlerTest := UserHandler{
 		UserCase: userUseCaseMock,
@@ -193,7 +192,6 @@ func TestLogInSetSessionError(t *testing.T) {
 
 	userUseCaseMock.EXPECT().ParseJsonToUser(req.Body).Return(user, nil)
 	userUseCaseMock.EXPECT().SignIn(user).Return(user, 200, nil)
-	sessionManagerMock.EXPECT().SetSession(rw, user.Id).Return(errors.New("some error"))
 	userUseCaseMock.EXPECT().LogError(gomock.Any()).Return()
 
 	handlerTest.SignIn(rw, req)

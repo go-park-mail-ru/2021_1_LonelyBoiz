@@ -7,7 +7,6 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"server/internal/pkg/models"
-	sessionMocks "server/internal/pkg/session/mocks"
 	mock_usecase "server/internal/pkg/user/usecase/mocks"
 	"testing"
 	"time"
@@ -15,13 +14,15 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
+
+	sessionMocks "server/internal/auth_server/delivery/session/mocks"
 )
 
 func TestDeleteUser(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
 	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
-	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
 
 	handlerTest := UserHandler{
 		UserCase: userUseCaseMock,
@@ -69,9 +70,7 @@ func TestDeleteUser(t *testing.T) {
 
 	rw := httptest.NewRecorder()
 
-	sessionManagerMock.EXPECT().GetIdFromContext(ctx).Return(user.Id, true)
 	userUseCaseMock.EXPECT().DeleteUser(user.Id).Return(nil)
-	sessionManagerMock.EXPECT().DeleteSession(gomock.Any()).Return(nil)
 	userUseCaseMock.EXPECT().LogInfo(gomock.Any()).Return()
 
 	handlerTest.DeleteUser(rw, req.WithContext(ctx))
@@ -85,7 +84,7 @@ func TestDeleteUserGetIdFromContextError(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
 	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
-	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
 
 	handlerTest := UserHandler{
 		UserCase: userUseCaseMock,
@@ -133,7 +132,6 @@ func TestDeleteUserGetIdFromContextError(t *testing.T) {
 
 	rw := httptest.NewRecorder()
 
-	sessionManagerMock.EXPECT().GetIdFromContext(ctx).Return(user.Id, false)
 	userUseCaseMock.EXPECT().LogInfo(gomock.Any()).Return()
 
 	handlerTest.DeleteUser(rw, req.WithContext(ctx))
@@ -147,7 +145,7 @@ func TestDeleteUserAtoiError(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
 	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
-	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
 
 	handlerTest := UserHandler{
 		UserCase: userUseCaseMock,
@@ -195,7 +193,6 @@ func TestDeleteUserAtoiError(t *testing.T) {
 
 	rw := httptest.NewRecorder()
 
-	sessionManagerMock.EXPECT().GetIdFromContext(ctx).Return(user.Id, true)
 	userUseCaseMock.EXPECT().LogInfo(gomock.Any()).Return()
 
 	handlerTest.DeleteUser(rw, req.WithContext(ctx))
@@ -209,7 +206,7 @@ func TestDeleteUserIdNotEqual(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
 	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
-	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
 
 	handlerTest := UserHandler{
 		UserCase: userUseCaseMock,
@@ -257,7 +254,6 @@ func TestDeleteUserIdNotEqual(t *testing.T) {
 
 	rw := httptest.NewRecorder()
 
-	sessionManagerMock.EXPECT().GetIdFromContext(ctx).Return(user.Id, true)
 	userUseCaseMock.EXPECT().LogInfo(gomock.Any()).Return()
 
 	handlerTest.DeleteUser(rw, req.WithContext(ctx))
@@ -271,7 +267,7 @@ func TestDeleteUserDeleteUserError(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
 	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
-	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
 
 	handlerTest := UserHandler{
 		UserCase: userUseCaseMock,
@@ -319,7 +315,6 @@ func TestDeleteUserDeleteUserError(t *testing.T) {
 
 	rw := httptest.NewRecorder()
 
-	sessionManagerMock.EXPECT().GetIdFromContext(ctx).Return(user.Id, true)
 	userUseCaseMock.EXPECT().DeleteUser(user.Id).Return(errors.New("Some error"))
 	userUseCaseMock.EXPECT().LogError(gomock.Any()).Return()
 

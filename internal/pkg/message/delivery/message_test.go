@@ -23,8 +23,7 @@ func TestGetMessages(t *testing.T) {
 	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
 
 	handlerTest := MessageHandler{
-		Usecase:  messageUseCaseMock,
-		Sessions: sessionManagerMock,
+		Usecase: messageUseCaseMock,
 	}
 
 	murl, er := url.Parse("chat")
@@ -77,8 +76,7 @@ func TestGetMessagesGetIdFromCOntextError(t *testing.T) {
 	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
 
 	handlerTest := MessageHandler{
-		Usecase:  messageUseCaseMock,
-		Sessions: sessionManagerMock,
+		Usecase: messageUseCaseMock,
 	}
 
 	murl, er := url.Parse("chat")
@@ -127,8 +125,7 @@ func TestGetMessagesVarsError(t *testing.T) {
 	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
 
 	handlerTest := MessageHandler{
-		Usecase:  messageUseCaseMock,
-		Sessions: sessionManagerMock,
+		Usecase: messageUseCaseMock,
 	}
 
 	murl, er := url.Parse("chat")
@@ -173,8 +170,7 @@ func TestGetMessagesQueryCountError(t *testing.T) {
 	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
 
 	handlerTest := MessageHandler{
-		Usecase:  messageUseCaseMock,
-		Sessions: sessionManagerMock,
+		Usecase: messageUseCaseMock,
 	}
 
 	murl, er := url.Parse("chat")
@@ -223,8 +219,7 @@ func TestGetMessagesCountAtoiError(t *testing.T) {
 	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
 
 	handlerTest := MessageHandler{
-		Usecase:  messageUseCaseMock,
-		Sessions: sessionManagerMock,
+		Usecase: messageUseCaseMock,
 	}
 
 	murl, er := url.Parse("chat")
@@ -273,8 +268,7 @@ func TestGetMessagesOffsetError(t *testing.T) {
 	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
 
 	handlerTest := MessageHandler{
-		Usecase:  messageUseCaseMock,
-		Sessions: sessionManagerMock,
+		Usecase: messageUseCaseMock,
 	}
 
 	murl, er := url.Parse("chat")
@@ -323,8 +317,7 @@ func TestGetMessagesOffsetAtoiError(t *testing.T) {
 	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
 
 	handlerTest := MessageHandler{
-		Usecase:  messageUseCaseMock,
-		Sessions: sessionManagerMock,
+		Usecase: messageUseCaseMock,
 	}
 
 	murl, er := url.Parse("chat")
@@ -373,8 +366,7 @@ func TestGetMessagesManageMessageError(t *testing.T) {
 	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
 
 	handlerTest := MessageHandler{
-		Usecase:  messageUseCaseMock,
-		Sessions: sessionManagerMock,
+		Usecase: messageUseCaseMock,
 	}
 
 	murl, er := url.Parse("chat")
@@ -427,8 +419,7 @@ func TestGetMessagesManageMessageNonValidInput(t *testing.T) {
 	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
 
 	handlerTest := MessageHandler{
-		Usecase:  messageUseCaseMock,
-		Sessions: sessionManagerMock,
+		Usecase: messageUseCaseMock,
 	}
 
 	murl, er := url.Parse("chat")
@@ -481,8 +472,7 @@ func TestSendMessage(t *testing.T) {
 	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
 
 	handlerTest := MessageHandler{
-		Usecase:  messageUseCaseMock,
-		Sessions: sessionManagerMock,
+		Usecase: messageUseCaseMock,
 	}
 
 	murl, er := url.Parse("chat")
@@ -534,11 +524,9 @@ func TestSendMessageAtoiError(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
 	messageUseCaseMock := mockUsecase.NewMockMessageUsecaseInterface(mockCtrl)
-	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
 
 	handlerTest := MessageHandler{
-		Usecase:  messageUseCaseMock,
-		Sessions: sessionManagerMock,
+		Usecase: messageUseCaseMock,
 	}
 
 	murl, er := url.Parse("chat")
@@ -581,8 +569,7 @@ func TestSendMessageGetIdFromContextError(t *testing.T) {
 	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
 
 	handlerTest := MessageHandler{
-		Usecase:  messageUseCaseMock,
-		Sessions: sessionManagerMock,
+		Usecase: messageUseCaseMock,
 	}
 
 	murl, er := url.Parse("chat")
@@ -626,8 +613,7 @@ func TestSendMessageParseJsonToMessageError(t *testing.T) {
 	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
 
 	handlerTest := MessageHandler{
-		Usecase:  messageUseCaseMock,
-		Sessions: sessionManagerMock,
+		Usecase: messageUseCaseMock,
 	}
 
 	murl, er := url.Parse("chat")
@@ -680,8 +666,7 @@ func TestSendMessageCreateMessageError(t *testing.T) {
 	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
 
 	handlerTest := MessageHandler{
-		Usecase:  messageUseCaseMock,
-		Sessions: sessionManagerMock,
+		Usecase: messageUseCaseMock,
 	}
 
 	murl, er := url.Parse("chat")
@@ -735,8 +720,7 @@ func TestSendMessageNonValidInput(t *testing.T) {
 	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
 
 	handlerTest := MessageHandler{
-		Usecase:  messageUseCaseMock,
-		Sessions: sessionManagerMock,
+		Usecase: messageUseCaseMock,
 	}
 
 	murl, er := url.Parse("chat")
@@ -790,8 +774,7 @@ func TestChangeMessage(t *testing.T) {
 	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
 
 	handlerTest := MessageHandler{
-		Usecase:  messageUseCaseMock,
-		Sessions: sessionManagerMock,
+		Usecase: messageUseCaseMock,
 	}
 
 	murl, er := url.Parse("chat")
@@ -846,8 +829,7 @@ func TestChangeMessageGetIdFromContextError(t *testing.T) {
 	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
 
 	handlerTest := MessageHandler{
-		Usecase:  messageUseCaseMock,
-		Sessions: sessionManagerMock,
+		Usecase: messageUseCaseMock,
 	}
 
 	murl, er := url.Parse("chat")
@@ -891,8 +873,7 @@ func TestChangeMessageAtoiError(t *testing.T) {
 	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
 
 	handlerTest := MessageHandler{
-		Usecase:  messageUseCaseMock,
-		Sessions: sessionManagerMock,
+		Usecase: messageUseCaseMock,
 	}
 
 	murl, er := url.Parse("chat")
@@ -936,8 +917,7 @@ func TestChangeMessageParseToJsonError(t *testing.T) {
 	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
 
 	handlerTest := MessageHandler{
-		Usecase:  messageUseCaseMock,
-		Sessions: sessionManagerMock,
+		Usecase: messageUseCaseMock,
 	}
 
 	murl, er := url.Parse("chat")

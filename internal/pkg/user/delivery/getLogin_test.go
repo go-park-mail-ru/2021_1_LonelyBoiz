@@ -7,9 +7,11 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"server/internal/pkg/models"
-	sessionMocks "server/internal/pkg/session/mocks"
+
 	mock_usecase "server/internal/pkg/user/usecase/mocks"
 	"testing"
+
+	sessionMocks "server/internal/auth_server/delivery/session/mocks"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -19,7 +21,7 @@ func TestGetLogin(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
 	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
-	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
 
 	handlerTest := UserHandler{
 		UserCase: userUseCaseMock,
@@ -52,7 +54,6 @@ func TestGetLogin(t *testing.T) {
 	rw := httptest.NewRecorder()
 
 	userUseCaseMock.EXPECT().GetUserInfoById(user.Id).Return(user, nil)
-	sessionManagerMock.EXPECT().GetIdFromContext(ctx).Return(user.Id, true)
 	userUseCaseMock.EXPECT().LogInfo(gomock.Any()).Return()
 	handlerTest.GetLogin(rw, req.WithContext(ctx))
 
@@ -65,7 +66,7 @@ func TestGetLoginGetIdFromContextError(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
 	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
-	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
 
 	handlerTest := UserHandler{
 		UserCase: userUseCaseMock,
@@ -97,7 +98,6 @@ func TestGetLoginGetIdFromContextError(t *testing.T) {
 
 	rw := httptest.NewRecorder()
 
-	sessionManagerMock.EXPECT().GetIdFromContext(ctx).Return(user.Id, false)
 	userUseCaseMock.EXPECT().LogInfo(gomock.Any()).Return()
 	handlerTest.GetLogin(rw, req.WithContext(ctx))
 
@@ -110,7 +110,7 @@ func TestGetLoginGetUserInfoByIdError(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
 	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
-	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
 
 	handlerTest := UserHandler{
 		UserCase: userUseCaseMock,
@@ -143,7 +143,6 @@ func TestGetLoginGetUserInfoByIdError(t *testing.T) {
 	rw := httptest.NewRecorder()
 
 	userUseCaseMock.EXPECT().GetUserInfoById(user.Id).Return(user, errors.New("some error"))
-	sessionManagerMock.EXPECT().GetIdFromContext(ctx).Return(user.Id, true)
 	userUseCaseMock.EXPECT().LogError(gomock.Any()).Return()
 	handlerTest.GetLogin(rw, req.WithContext(ctx))
 

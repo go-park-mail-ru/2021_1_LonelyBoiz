@@ -213,6 +213,8 @@ func TestCreateChatNonValidReaction(t *testing.T) {
 		Reaction: "asdf",
 	}
 
+	dbMock.EXPECT().ReduceScrolls(1).Return(1, nil)
+
 	_, code, err := UserUsecaseTest.CreateChat(1, like)
 	assert.NotEqual(t, nil, err)
 	assert.Equal(t, 400, code)
@@ -235,6 +237,7 @@ func TestCreateChatPermissionDenied(t *testing.T) {
 		Reaction: "like",
 	}
 
+	dbMock.EXPECT().ReduceScrolls(1).Return(1, nil)
 	dbMock.EXPECT().Rating(1, 1, "like").Return(int64(-1), nil)
 
 	_, code, err := UserUsecaseTest.CreateChat(1, like)
@@ -259,6 +262,7 @@ func TestCreateChatRatingDatabaseError(t *testing.T) {
 		Reaction: "like",
 	}
 
+	dbMock.EXPECT().ReduceScrolls(1).Return(1, nil)
 	dbMock.EXPECT().Rating(1, 1, "like").Return(int64(-1), errors.New("Some error"))
 
 	_, code, err := UserUsecaseTest.CreateChat(1, like)
@@ -283,6 +287,7 @@ func TestCreateChatCheckReciprocityError(t *testing.T) {
 		Reaction: "like",
 	}
 
+	dbMock.EXPECT().ReduceScrolls(1).Return(1, nil)
 	dbMock.EXPECT().Rating(1, 1, "like").Return(int64(1), nil)
 	dbMock.EXPECT().CheckReciprocity(1, 1).Return(false, errors.New("Some error"))
 
@@ -308,6 +313,7 @@ func TestCreateChatCheckReciprocityFalse(t *testing.T) {
 		Reaction: "like",
 	}
 
+	dbMock.EXPECT().ReduceScrolls(1).Return(1, nil)
 	dbMock.EXPECT().Rating(1, 1, "like").Return(int64(1), nil)
 	dbMock.EXPECT().CheckReciprocity(1, 1).Return(false, nil)
 
@@ -333,6 +339,7 @@ func TestCreateChatCreateChatError(t *testing.T) {
 		Reaction: "like",
 	}
 
+	dbMock.EXPECT().ReduceScrolls(1).Return(1, nil)
 	dbMock.EXPECT().Rating(1, 1, "like").Return(int64(1), nil)
 	dbMock.EXPECT().CheckReciprocity(1, 1).Return(true, nil)
 	dbMock.EXPECT().CreateChat(1, 1).Return(-1, errors.New("Some error"))
@@ -364,6 +371,7 @@ func TestCreateChatGetNewChatByIdError(t *testing.T) {
 		PartnerId: 2,
 	}
 
+	dbMock.EXPECT().ReduceScrolls(1).Return(1, nil)
 	dbMock.EXPECT().Rating(1, 1, "like").Return(int64(1), nil)
 	dbMock.EXPECT().CheckReciprocity(1, 1).Return(true, nil)
 	dbMock.EXPECT().CreateChat(1, 1).Return(1, nil)
@@ -396,6 +404,7 @@ func TestCreateChatSuccess(t *testing.T) {
 		PartnerId: 2,
 	}
 
+	dbMock.EXPECT().ReduceScrolls(1).Return(1, nil)
 	dbMock.EXPECT().Rating(1, 1, "like").Return(int64(1), nil)
 	dbMock.EXPECT().CheckReciprocity(1, 1).Return(true, nil)
 	dbMock.EXPECT().CreateChat(1, 1).Return(1, nil)
@@ -602,7 +611,7 @@ func TestChangeUserInfo(t *testing.T) {
 
 	dbMock.EXPECT().GetPassWithId(newUser.Id).Return(pass, nil)
 	dbMock.EXPECT().CheckMail(newUser.Email).Return(false, nil)
-	dbMock.EXPECT().GetPhotos(newUser.Id).Return([]string{string()}, nil)
+	dbMock.EXPECT().GetPhotos(newUser.Id).Return([]string{"1"}, nil)
 	dbMock.EXPECT().ChangePassword(newUser.Id, gomock.Any()).Return(nil)
 	dbMock.EXPECT().GetUser(newUser.Id).Return(oldUser, nil)
 	dbMock.EXPECT().ChangeUser(gomock.Any()).Return(nil)
@@ -1333,6 +1342,7 @@ func TestAddNewUserSuccess(t *testing.T) {
 		Photos:         make([]string, 0),
 	}
 
+	dbMock.EXPECT().CreateSecretAlbum(newUser.Id).Return(nil)
 	dbMock.EXPECT().AddUser(gomock.Any()).Return(newUser.Id, nil)
 
 	err := UserUsecaseTest.AddNewUser(&newUser)

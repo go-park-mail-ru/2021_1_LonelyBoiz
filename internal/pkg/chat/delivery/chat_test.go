@@ -20,11 +20,10 @@ func TestGetChats(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
 	chatUseCaseMock := mockUsecase.NewMockChatUsecaseInterface(mockCtrl)
-	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
+	//sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
 
 	handlerTest := ChatHandler{
-		Usecase:  chatUseCaseMock,
-		Sessions: sessionManagerMock,
+		Usecase: chatUseCaseMock,
 	}
 
 	murl, er := url.Parse("chat")
@@ -47,8 +46,8 @@ func TestGetChats(t *testing.T) {
 	req.URL.RawQuery = q.Encode()
 
 	userId := 1
-	limit := 20
-	offset := 20
+	//limit := 20
+	//offset := 20
 
 	ctx := req.Context()
 	ctx = context.WithValue(ctx,
@@ -58,8 +57,9 @@ func TestGetChats(t *testing.T) {
 
 	rw := httptest.NewRecorder()
 
-	sessionManagerMock.EXPECT().GetIdFromContext(ctx).Return(userId, true)
-	chatUseCaseMock.EXPECT().GetChat(userId, limit, offset).Return([]models.Chat{}, nil)
+	//sessionManagerMock.EXPECT().GetIdFromContext(ctx).Return(userId, true)
+
+	//chatUseCaseMock.EXPECT().GetChat(userId, limit, offset).Return([]models.Chat{}, nil)
 	chatUseCaseMock.EXPECT().LogInfo(gomock.Any()).Return()
 
 	handlerTest.GetChats(rw, req.WithContext(ctx))
@@ -76,8 +76,7 @@ func TestGetChatsGetIdFromContextError(t *testing.T) {
 	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
 
 	handlerTest := ChatHandler{
-		Usecase:  chatUseCaseMock,
-		Sessions: sessionManagerMock,
+		Usecase: chatUseCaseMock,
 	}
 
 	murl, er := url.Parse("chat")
@@ -126,8 +125,7 @@ func TestGetChatsCountError(t *testing.T) {
 	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
 
 	handlerTest := ChatHandler{
-		Usecase:  chatUseCaseMock,
-		Sessions: sessionManagerMock,
+		Usecase: chatUseCaseMock,
 	}
 
 	murl, er := url.Parse("chat")
@@ -176,8 +174,7 @@ func TestGetChatsLimitAtoiError(t *testing.T) {
 	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
 
 	handlerTest := ChatHandler{
-		Usecase:  chatUseCaseMock,
-		Sessions: sessionManagerMock,
+		Usecase: chatUseCaseMock,
 	}
 
 	murl, er := url.Parse("chat")
@@ -226,8 +223,7 @@ func TestGetChatsOffset(t *testing.T) {
 	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
 
 	handlerTest := ChatHandler{
-		Usecase:  chatUseCaseMock,
-		Sessions: sessionManagerMock,
+		Usecase: chatUseCaseMock,
 	}
 
 	murl, er := url.Parse("chat")
@@ -276,8 +272,7 @@ func TestGetChatsOffsetAtoiError(t *testing.T) {
 	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
 
 	handlerTest := ChatHandler{
-		Usecase:  chatUseCaseMock,
-		Sessions: sessionManagerMock,
+		Usecase: chatUseCaseMock,
 	}
 
 	murl, er := url.Parse("chat")
@@ -326,8 +321,7 @@ func TestGetChatsGetChatError(t *testing.T) {
 	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
 
 	handlerTest := ChatHandler{
-		Usecase:  chatUseCaseMock,
-		Sessions: sessionManagerMock,
+		Usecase: chatUseCaseMock,
 	}
 
 	murl, er := url.Parse("chat")

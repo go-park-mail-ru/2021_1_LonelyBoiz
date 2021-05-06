@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	sessionMocks "server/internal/auth_server/delivery/session/mocks"
 	"server/internal/pkg/models"
-	sessionMocks "server/internal/pkg/session/mocks"
 	mock_usecase "server/internal/pkg/user/usecase/mocks"
 	"testing"
 
@@ -18,7 +18,7 @@ func TestSignUp(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
 	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
-	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
 
 	handlerTest := UserHandler{
 		UserCase: userUseCaseMock,
@@ -46,7 +46,6 @@ func TestSignUp(t *testing.T) {
 
 	userUseCaseMock.EXPECT().ParseJsonToUser(req.Body).Return(user, nil)
 	userUseCaseMock.EXPECT().CreateNewUser(user).Return(user, 200, nil)
-	sessionManagerMock.EXPECT().SetSession(rw, user.Id).Return(nil)
 	userUseCaseMock.EXPECT().LogInfo(gomock.Any()).Return()
 
 	handlerTest.SignUp(rw, req)
@@ -60,7 +59,7 @@ func TestSignUpParseJsonToUserError(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
 	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
-	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
 
 	handlerTest := UserHandler{
 		UserCase: userUseCaseMock,
@@ -100,7 +99,7 @@ func TestSignUpCreateNewUserError(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
 	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
-	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
 
 	handlerTest := UserHandler{
 		UserCase: userUseCaseMock,
@@ -141,7 +140,7 @@ func TestCreateNewUserErrorValidationError(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
 	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
-	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
 
 	handlerTest := UserHandler{
 		UserCase: userUseCaseMock,
@@ -181,7 +180,7 @@ func TestSetSessionError(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
 	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
-	sessionManagerMock := sessionMocks.NewMockSessionManagerInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
 
 	handlerTest := UserHandler{
 		UserCase: userUseCaseMock,
@@ -209,7 +208,6 @@ func TestSetSessionError(t *testing.T) {
 
 	userUseCaseMock.EXPECT().ParseJsonToUser(req.Body).Return(user, nil)
 	userUseCaseMock.EXPECT().CreateNewUser(user).Return(user, 200, nil)
-	sessionManagerMock.EXPECT().SetSession(rw, user.Id).Return(errors.New("Some error"))
 	userUseCaseMock.EXPECT().LogError(gomock.Any()).Return()
 
 	handlerTest.SignUp(rw, req)

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"net/http/httptest"
 	"server/internal/pkg/models"
 	"server/internal/pkg/session/mocks"
 	"testing"
@@ -24,13 +23,11 @@ func TestSetSession(t *testing.T) {
 		Logger: &models.Logger{Logger: logrus.New().WithField("test", "test")},
 	}
 
-	rw := httptest.NewRecorder()
-
 	userid := 1
 
 	dbMock.EXPECT().AddCookie(userid, gomock.Any()).Return(nil)
 
-	err := SessionsManagerTest.SetSession(rw, userid)
+	_, err := SessionsManagerTest.SetSession(userid)
 
 	assert.Equal(t, nil, err)
 }
@@ -45,57 +42,11 @@ func TestAddCookieError(t *testing.T) {
 		Logger: &models.Logger{Logger: logrus.New().WithField("test", "test")},
 	}
 
-	rw := httptest.NewRecorder()
-
 	userid := 1
 
 	dbMock.EXPECT().AddCookie(userid, gomock.Any()).Return(errors.New("Some error"))
 
-	err := SessionsManagerTest.SetSession(rw, userid)
-
-	assert.NotEqual(t, nil, err)
-}
-
-func TestDeleteSession(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-
-	dbMock := mocks.NewMockSessionRepositoryInterface(mockCtrl)
-
-	SessionsManagerTest := SessionsManager{
-		DB:     dbMock,
-		Logger: &models.Logger{Logger: logrus.New().WithField("test", "test")},
-	}
-
-	cookie := http.Cookie{
-		Name:  "token",
-		Value: "123",
-	}
-
-	dbMock.EXPECT().DeleteCookie("123").Return(nil)
-
-	err := SessionsManagerTest.DeleteSession(&cookie)
-
-	assert.Equal(t, nil, err)
-}
-
-func TestDeleteSessionDeleteCookieError(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-
-	dbMock := mocks.NewMockSessionRepositoryInterface(mockCtrl)
-
-	SessionsManagerTest := SessionsManager{
-		DB:     dbMock,
-		Logger: &models.Logger{Logger: logrus.New().WithField("test", "test")},
-	}
-
-	cookie := http.Cookie{
-		Name:  "token",
-		Value: "123",
-	}
-
-	dbMock.EXPECT().DeleteCookie("123").Return(errors.New("Some error"))
-
-	err := SessionsManagerTest.DeleteSession(&cookie)
+	_, err := SessionsManagerTest.SetSession(userid)
 
 	assert.NotEqual(t, nil, err)
 }
