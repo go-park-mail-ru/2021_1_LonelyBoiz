@@ -18,86 +18,122 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// UserServiceClient is the client API for UserService service.
+// ImageServiceClient is the client API for ImageService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type UserServiceClient interface {
+type ImageServiceClient interface {
 	UploadImage(ctx context.Context, in *ImageRequest, opts ...grpc.CallOption) (*ImageResponse, error)
+	DeleteImage(ctx context.Context, in *ImageNothing, opts ...grpc.CallOption) (*ImageNothing, error)
 }
 
-type userServiceClient struct {
+type imageServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewUserServiceClient(cc grpc.ClientConnInterface) UserServiceClient {
-	return &userServiceClient{cc}
+func NewImageServiceClient(cc grpc.ClientConnInterface) ImageServiceClient {
+	return &imageServiceClient{cc}
 }
 
-func (c *userServiceClient) UploadImage(ctx context.Context, in *ImageRequest, opts ...grpc.CallOption) (*ImageResponse, error) {
+func (c *imageServiceClient) UploadImage(ctx context.Context, in *ImageRequest, opts ...grpc.CallOption) (*ImageResponse, error) {
 	out := new(ImageResponse)
-	err := c.cc.Invoke(ctx, "/image.UserService/UploadImage", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/image.ImageService/UploadImage", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// UserServiceServer is the server API for UserService service.
-// All implementations must embed UnimplementedUserServiceServer
+func (c *imageServiceClient) DeleteImage(ctx context.Context, in *ImageNothing, opts ...grpc.CallOption) (*ImageNothing, error) {
+	out := new(ImageNothing)
+	err := c.cc.Invoke(ctx, "/image.ImageService/DeleteImage", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// ImageServiceServer is the server API for ImageService service.
+// All implementations must embed UnimplementedImageServiceServer
 // for forward compatibility
-type UserServiceServer interface {
+type ImageServiceServer interface {
 	UploadImage(context.Context, *ImageRequest) (*ImageResponse, error)
-	mustEmbedUnimplementedUserServiceServer()
+	DeleteImage(context.Context, *ImageNothing) (*ImageNothing, error)
+	mustEmbedUnimplementedImageServiceServer()
 }
 
-// UnimplementedUserServiceServer must be embedded to have forward compatible implementations.
-type UnimplementedUserServiceServer struct {
+// UnimplementedImageServiceServer must be embedded to have forward compatible implementations.
+type UnimplementedImageServiceServer struct {
 }
 
-func (UnimplementedUserServiceServer) UploadImage(context.Context, *ImageRequest) (*ImageResponse, error) {
+func (UnimplementedImageServiceServer) UploadImage(context.Context, *ImageRequest) (*ImageResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UploadImage not implemented")
 }
-func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
+func (UnimplementedImageServiceServer) DeleteImage(context.Context, *ImageNothing) (*ImageNothing, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteImage not implemented")
+}
+func (UnimplementedImageServiceServer) mustEmbedUnimplementedImageServiceServer() {}
 
-// UnsafeUserServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to UserServiceServer will
+// UnsafeImageServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to ImageServiceServer will
 // result in compilation errors.
-type UnsafeUserServiceServer interface {
-	mustEmbedUnimplementedUserServiceServer()
+type UnsafeImageServiceServer interface {
+	mustEmbedUnimplementedImageServiceServer()
 }
 
-func RegisterUserServiceServer(s grpc.ServiceRegistrar, srv UserServiceServer) {
-	s.RegisterService(&UserService_ServiceDesc, srv)
+func RegisterImageServiceServer(s grpc.ServiceRegistrar, srv ImageServiceServer) {
+	s.RegisterService(&ImageService_ServiceDesc, srv)
 }
 
-func _UserService_UploadImage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _ImageService_UploadImage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ImageRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UserServiceServer).UploadImage(ctx, in)
+		return srv.(ImageServiceServer).UploadImage(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/image.UserService/UploadImage",
+		FullMethod: "/image.ImageService/UploadImage",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).UploadImage(ctx, req.(*ImageRequest))
+		return srv.(ImageServiceServer).UploadImage(ctx, req.(*ImageRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
+func _ImageService_DeleteImage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ImageNothing)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ImageServiceServer).DeleteImage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/image.ImageService/DeleteImage",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ImageServiceServer).DeleteImage(ctx, req.(*ImageNothing))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// ImageService_ServiceDesc is the grpc.ServiceDesc for ImageService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var UserService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "image.UserService",
-	HandlerType: (*UserServiceServer)(nil),
+var ImageService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "image.ImageService",
+	HandlerType: (*ImageServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "UploadImage",
-			Handler:    _UserService_UploadImage_Handler,
+			Handler:    _ImageService_UploadImage_Handler,
+		},
+		{
+			MethodName: "DeleteImage",
+			Handler:    _ImageService_DeleteImage_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -1,9 +1,12 @@
 package usecase
 
 import (
+	"context"
 	"errors"
+	"google.golang.org/grpc/metadata"
 	"server/internal/pkg/image/repository"
 	"server/internal/pkg/models"
+	"strconv"
 
 	"github.com/google/uuid"
 )
@@ -26,6 +29,9 @@ var (
 type ImageUsecaseInterface interface {
 	AddImage(userId int, image []byte) (models.Image, error)
 	DeleteImage(userId int, imageUuid uuid.UUID) error
+	GetParamFromContext(ctx context.Context, param string) (int, bool)
+	SetUUID(ctx context.Context, vars map[string]string) context.Context
+	GetUUID(ctx context.Context) (uuid.UUID, bool)
 	models.LoggerInterface
 }
 
@@ -33,6 +39,49 @@ type ImageUsecase struct {
 	Db           repository.DbRepositoryInterface
 	ImageStorage repository.StorageRepositoryInterface
 	models.LoggerInterface
+}
+
+func (u *ImageUsecase) GetUUID(ctx context.Context) (uuid.UUID, bool) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return uuid.New(), false
+	}
+
+	sUUID := md.Get("urlUUID")
+	if len(sUUID) == 0 {
+		return uuid.New(), false
+	}
+
+	uid, err := uuid.Parse(sUUID[0])
+	if err != nil {
+		return uuid.New(), false
+	}
+
+	return uid, true
+}
+
+func (u *ImageUsecase) SetUUID(ctx context.Context, vars map[string]string) context.Context {
+	sUuid := vars["uuid"]
+	return metadata.AppendToOutgoingContext(ctx, "urlUUID", sUuid)
+}
+
+func (u *ImageUsecase) GetParamFromContext(ctx context.Context, param string) (int, bool) {
+	data, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return -1, false
+	}
+
+	dataByParam := data.Get(param)
+	if len(dataByParam) == 0 {
+		return -1, false
+	}
+
+	value, err := strconv.Atoi(dataByParam[0])
+	if err != nil {
+		return -1, false
+	}
+
+	return value, true
 }
 
 func (u *ImageUsecase) AddImage(userId int, image []byte) (models.Image, error) {

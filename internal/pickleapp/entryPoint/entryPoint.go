@@ -6,13 +6,13 @@ import (
 	"net/http"
 	"os"
 	session_proto2 "server/internal/auth_server/delivery/session"
+	image_proto "server/internal/image_server/delivery/proto"
 	"server/internal/pickleapp/middleware"
 	"server/internal/pickleapp/repository"
 	"server/internal/pkg/chat/delivery"
 	chatRepository "server/internal/pkg/chat/repository"
 	chatUsecase "server/internal/pkg/chat/usecase"
 	imageDelivery "server/internal/pkg/image/delivery"
-	imageRepository "server/internal/pkg/image/repository"
 	imageUsecase "server/internal/pkg/image/usecase"
 	messageDelivery "server/internal/pkg/message/delivery"
 	messageRepository "server/internal/pkg/message/repository"
@@ -28,9 +28,6 @@ import (
 
 	authHandler "server/internal/pkg/session/delivery"
 
-	awsSession "github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/jmoiron/sqlx"
@@ -114,14 +111,6 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 	messageRep := messageRepository.MessageRepository{DB: a.Db}
 	chatRep := chatRepository.ChatRepository{DB: a.Db}
 
-	imageRep := imageRepository.PostgresRepository{Db: a.Db}
-	sess := awsSession.Must(awsSession.NewSession())
-	awsRep := imageRepository.AwsImageRepository{
-		Bucket:   "lepick-images",
-		Svc:      s3.New(sess),
-		Uploader: s3manager.NewUploader(sess),
-	}
-
 	clients := make(map[int]*websocket.Conn)
 
 	//GRPC auth
@@ -152,16 +141,26 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 
 	userClient := user_proto.NewUserServiceClient(userConn)
 
+	//GRPC images
+	opts = []grpc.DialOption{
+		grpc.WithInsecure(),
+	}
+
+	imagesConn, err := grpc.Dial("localhost:5600", opts...)
+	if err != nil {
+		grpclog.Fatalf("fail to dial: %v", err)
+		panic(err)
+	}
+
+	imageClient := image_proto.NewImageServiceClient(userConn)
+
 	// init uCases & handlers
 	sanitizer := bluemonday.UGCPolicy()
 	userUcase := usecase.UserUsecase{Db: &userRep, Clients: &clients, Sanitizer: sanitizer}
 	chatUcase := chatUsecase.ChatUsecase{Db: &chatRep}
 	messUcase := messageUsecase.MessageUsecase{Db: &messageRep, Clients: &clients, Sanitizer: sanitizer}
 	sessionManager := session.SessionsManager{DB: &sessionRep}
-	imageUcase := imageUsecase.ImageUsecase{
-		Db:           &imageRep,
-		ImageStorage: &awsRep,
-	}
+	imageUcase := imageUsecase.ImageUsecase{}
 
 	chatHandler := delivery.ChatHandler{
 		Usecase: &chatUcase,
@@ -180,8 +179,8 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 	}
 
 	imageHandler := imageDelivery.ImageHandler{
-		Usecase:  &imageUcase,
-		Sessions: &sessionManager,
+		Server:  imageClient,
+		Usecase: &imageUcase,
 	}
 
 	authHandler := authHandler.AuthHandler{
@@ -223,5 +222,5 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 	imageHandler.SetHandlers(subRouter)
 	authHandler.SetAuthHandler(csrfRouter)
 
-	return []*grpc.ClientConn{userConn, authConn}
+	return []*grpc.ClientConn{userConn, authConn, imagesConn}
 }

@@ -26,6 +26,11 @@ func SetContextMiddleware(next http.Handler) http.Handler {
 			ctx = metadata.AppendToOutgoingContext(ctx, "urlMessageId", vars["messageId"])
 		}
 
+		_, ok = vars["uuid"]
+		if ok {
+			ctx = metadata.AppendToOutgoingContext(ctx, "urlUUID", vars["uuid"])
+		}
+
 		_, ok = vars["chatId"]
 		if ok {
 			ctx = metadata.AppendToOutgoingContext(ctx, "urlChatId", vars["chatId"])

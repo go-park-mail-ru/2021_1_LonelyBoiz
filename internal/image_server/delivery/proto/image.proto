@@ -9,6 +9,7 @@ option go_package= "/Users/nick_nak/programs/2_parkMail/2021_1_LonelyBoiz/intern
 message ImageResponse {
   string image = 1;
 }
+
 message ImageRequest {
   bytes image = 1;
 }
@@ -22,6 +23,7 @@ message Photos{
 }
 
 // grpc-сервис работы с юзером
-service UserService {
+service ImageService {
   rpc UploadImage (ImageRequest) returns (ImageResponse) {}
+  rpc DeleteImage (ImageNothing) returns (ImageNothing) {}
 }
