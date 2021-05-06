@@ -1,6 +1,7 @@
 package delivery
 
 import (
+	"fmt"
 	session_proto2 "server/internal/auth_server/delivery/session"
 	chatUsecase "server/internal/pkg/chat/usecase"
 	messageUsecase "server/internal/pkg/message/usecase"
@@ -24,7 +25,7 @@ type UserServer struct {
 func (u UserServer) CreateUser(ctx context.Context, user *userProto.User) (*userProto.UserResponse, error) {
 	newUser, code, responseError := u.UserUsecase.CreateNewUser(u.UserUsecase.ProtoUser2User(user))
 	if code != 200 {
-		return &userProto.UserResponse{}, status.Error(codes.Code(code), responseError.Error())
+		return &userProto.UserResponse{}, status.New(codes.Code(code), responseError.Error()).Err()
 	}
 
 	token, err := u.Sessions.Create(ctx, &session_proto2.SessionId{Id: int32(newUser.Id)})
@@ -190,6 +191,7 @@ func (u UserServer) GetChats(ctx context.Context, nothing *userProto.UserNothing
 
 	limit, ok := u.UserUsecase.GetParamFromContext(ctx, "urlCount")
 	if !ok {
+		fmt.Println(limit)
 		response := model.ErrorResponse{Err: "Неверный формат count"}
 		return &userProto.ChatsResponse{}, status.Error(400, response.Err)
 	}
@@ -273,7 +275,6 @@ func (u UserServer) CreateMessage(ctx context.Context, message *userProto.Messag
 		return &userProto.Message{}, status.Error(codes.Code(code), err.Error())
 	}
 
-	u.MessageUsecase.WebsocketMessage(newMessage)
 	return u.MessageUsecase.Message2ProtoMessage(newMessage), nil
 }
 
@@ -296,7 +297,6 @@ func (u UserServer) ChangeMessage(ctx context.Context, message *userProto.Messag
 		return &userProto.Message{}, status.Error(codes.Code(code), err.Error())
 	}
 
-	u.MessageUsecase.WebsocketReactMessage(newMessage)
 	return u.MessageUsecase.Message2ProtoMessage(newMessage), nil
 }
 
@@ -315,8 +315,8 @@ func (u UserServer) AddToSecreteAlbum(ctx context.Context, message *userProto.Us
 	return &userProto.UserNothing{}, nil
 }
 
-func (u UserServer) UnlockSecretAlbum(ctx context.Context, message **userProto.UserNothing) (*userProto.UserNothing, error) {
-	ownerId, ok := u.UserUsecase.GetParamFromContext(ctx, "ownerId")
+func (u UserServer) UnlockSecretAlbum(ctx context.Context, message *userProto.UserNothing) (*userProto.UserNothing, error) {
+	ownerId, ok := u.UserUsecase.GetParamFromContext(ctx, "cookieId")
 	if !ok {
 		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
 		return &userProto.UserNothing{}, status.Error(403, response.Err)
@@ -336,14 +336,14 @@ func (u UserServer) UnlockSecretAlbum(ctx context.Context, message **userProto.U
 	return &userProto.UserNothing{}, nil
 }
 
-func (u UserServer) GetSecreteAlbum(ctx context.Context, message **userProto.UserNothing) (*userProto.Photos, error) {
+func (u UserServer) GetSecreteAlbum(ctx context.Context, message *userProto.UserNothing) (*userProto.Photos, error) {
 	ownerId, ok := u.UserUsecase.GetParamFromContext(ctx, "ownerId")
 	if !ok {
 		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
 		return &userProto.Photos{}, status.Error(403, response.Err)
 	}
 
-	getterId, ok := u.UserUsecase.GetParamFromContext(ctx, "getterId")
+	getterId, ok := u.UserUsecase.GetParamFromContext(ctx, "cookieId")
 	if !ok {
 		response := model.ErrorResponse{Err: "Пользователь не найден"}
 		return &userProto.Photos{}, status.Error(400, response.Error())

@@ -15,6 +15,12 @@ func (a *UserHandler) GetUserInfo(w http.ResponseWriter, r *http.Request) {
 		model.Process(model.LoggerFunc(err, a.UserCase.LogError), model.ResponseFunc(w, 401, response))
 		return
 	}
+
+	ret := a.UserCase.ProtoUser2User(user)
+
+	if len(ret.Photos) == 0 {
+		ret.Photos = make([]string, 0)
+	}
 	a.UserCase.LogInfo("Получен результат из сервера USER")
-	model.Process(model.LoggerFunc("Get User Info", a.UserCase.LogInfo), model.ResponseFunc(w, 200, a.UserCase.ProtoUser2User(user)))
+	model.Process(model.LoggerFunc("Get User Info", a.UserCase.LogInfo), model.ResponseFunc(w, 200, ret))
 }

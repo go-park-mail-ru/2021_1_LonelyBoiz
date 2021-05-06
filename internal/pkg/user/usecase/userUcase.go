@@ -82,10 +82,13 @@ func (u *UserUsecase) UpdatePayment(userid int, amount int) error {
 
 func (u *UserUsecase) SetChat(ws *websocket.Conn, id int) {
 	(*u.Clients)[id] = ws
+	fmt.Println(u.Clients)
 }
 
 func (u *UserUsecase) AddToSecreteAlbum(ownerId int, photos []string) (int, error) {
 	err := u.Db.AddToSecreteAlbum(ownerId, photos)
+	fmt.Println(photos)
+	fmt.Println(ownerId)
 	if err != nil {
 		return 500, err
 	}
@@ -671,14 +674,14 @@ func (u *UserUsecase) AddNewUser(newUser *model.User) error {
 
 func (u *UserUsecase) SetCookie(token string) http.Cookie {
 	return http.Cookie{
-		Name:    "token",
-		Value:   token,
-		Expires: time.Now().AddDate(0, 0, 1),
-		//SameSite: http.SameSiteLaxMode,
+		Name:     "token",
+		Value:    token,
+		Expires:  time.Now().AddDate(0, 0, 1),
+		SameSite: http.SameSiteLaxMode,
 		//Domain:   "p1ckle.herokuapp.com",
-		Domain: "localhost:3000",
+		Domain: "localhost:8000",
 		//Secure:   true,
-		//HttpOnly: true,
+		HttpOnly: true,
 		//Path:     "/",
 	}
 }
@@ -771,7 +774,6 @@ func (u *UserUsecase) GetParamFromContext(ctx context.Context, param string) (in
 	}
 
 	dataByParam := data.Get(param)
-
 	if len(dataByParam) == 0 {
 		return -1, false
 	}

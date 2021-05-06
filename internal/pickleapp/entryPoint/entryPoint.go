@@ -26,6 +26,8 @@ import (
 	user_proto "server/internal/user_server/delivery/proto"
 	"time"
 
+	authHandler "server/internal/pkg/session/delivery"
+
 	awsSession "github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
@@ -153,7 +155,7 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 	// init uCases & handlers
 	sanitizer := bluemonday.UGCPolicy()
 	userUcase := usecase.UserUsecase{Db: &userRep, Clients: &clients, Sanitizer: sanitizer}
-	chatUcase := chatUsecase.ChatUsecase{Db: &chatRep, Clients: &clients}
+	chatUcase := chatUsecase.ChatUsecase{Db: &chatRep}
 	messUcase := messageUsecase.MessageUsecase{Db: &messageRep, Clients: &clients, Sanitizer: sanitizer}
 	sessionManager := session.SessionsManager{DB: &sessionRep}
 	imageUcase := imageUsecase.ImageUsecase{
@@ -163,10 +165,12 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 
 	chatHandler := delivery.ChatHandler{
 		Usecase: &chatUcase,
+		Server:  userClient,
 	}
 
 	messHandler := messageDelivery.MessageHandler{
 		Usecase: &messUcase,
+		Server:  userClient,
 	}
 
 	userHandler := userDelivery.UserHandler{
@@ -178,6 +182,10 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 	imageHandler := imageDelivery.ImageHandler{
 		Usecase:  &imageUcase,
 		Sessions: &sessionManager,
+	}
+
+	authHandler := authHandler.AuthHandler{
+		Usecase: &sessionManager,
 	}
 
 	// init middlewares
@@ -213,6 +221,7 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 	messHandler.SetMessageHandlers(subRouter)
 	chatHandler.SetChatHandlers(subRouter)
 	imageHandler.SetHandlers(subRouter)
+	authHandler.SetAuthHandler(csrfRouter)
 
 	return []*grpc.ClientConn{userConn, authConn}
 }

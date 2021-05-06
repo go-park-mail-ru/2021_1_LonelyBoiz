@@ -1,12 +1,13 @@
 package delivery
 
 import (
-	"github.com/gorilla/mux"
-	"google.golang.org/grpc/status"
 	"net/http"
 	"server/internal/pkg/chat/usecase"
 	model "server/internal/pkg/models"
 	userProto "server/internal/user_server/delivery/proto"
+
+	"github.com/gorilla/mux"
+	"google.golang.org/grpc/status"
 )
 
 type ChatHandlerInterface interface {

@@ -205,7 +205,7 @@ func (repo *UserRepository) GetUser(id int) (model.User, error) {
     		datepreference,
     		isactive,
     		isdeleted,
-			photos
+			COALESCE(photos, '{}') AS photos
 		FROM users WHERE id = $1`,
 		id)
 	if err != nil {

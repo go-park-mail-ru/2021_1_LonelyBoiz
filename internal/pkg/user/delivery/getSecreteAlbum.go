@@ -11,7 +11,7 @@ import (
 
 func (a *UserHandler) GetSecreteAlbum(w http.ResponseWriter, r *http.Request) {
 	a.UserCase.LogInfo("Передано на сервер USER")
-	photos, err := a.Server.GetSecreteAlbum(r.Context(), &userProto.UserNothing{})
+	protoPhotos, err := a.Server.GetSecreteAlbum(r.Context(), &userProto.UserNothing{})
 	if err != nil {
 		st, _ := status.FromError(err)
 		model.Process(model.LoggerFunc(st.Message(), a.UserCase.LogError), model.ResponseFunc(w, int(st.Code()), st.Message()))
@@ -21,7 +21,14 @@ func (a *UserHandler) GetSecreteAlbum(w http.ResponseWriter, r *http.Request) {
 
 	res := make(map[string][]string, 1)
 
-	res["photos"] = a.UserCase.ProtoPhotos2Photos(photos.Photos)
+	photos := a.UserCase.ProtoPhotos2Photos(protoPhotos.Photos)
+
+	if len(photos) == 0 {
+		photos = make([]string, 0)
+	}
+
+	res["photos"] = photos
+
 	w.WriteHeader(200)
 	json.NewEncoder(w).Encode(res)
 

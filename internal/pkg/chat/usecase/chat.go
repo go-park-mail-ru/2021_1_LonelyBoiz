@@ -1,18 +1,16 @@
 package usecase
 
 import (
-	"github.com/lib/pq"
-	"golang.org/x/net/context"
 	"server/internal/pkg/chat/repository"
 	model "server/internal/pkg/models"
 	userProto "server/internal/user_server/delivery/proto"
 
-	"github.com/gorilla/websocket"
+	"github.com/lib/pq"
+	"golang.org/x/net/context"
 )
 
 type ChatUsecaseInterface interface {
 	model.LoggerInterface
-	ChatsWriter(newChat *model.Chat)
 	GetChat(userId, limitInt, offsetInt int) ([]model.Chat, error)
 	GetIdFromContext(ctx context.Context) (int, bool)
 	Photos2ProtoPhotos(userPhotos pq.StringArray) (photos []string)
@@ -22,18 +20,12 @@ type ChatUsecaseInterface interface {
 }
 
 type ChatUsecase struct {
-	Clients *map[int]*websocket.Conn
 	model.LoggerInterface
-	Db        repository.ChatRepositoryInterface
-	chatsChan chan *model.Chat
+	Db repository.ChatRepositoryInterface
 }
 
 func (u *ChatUsecase) GetChat(userId, limitInt, offsetInt int) ([]model.Chat, error) {
 	return u.Db.GetChats(userId, limitInt, offsetInt)
-}
-
-func (u *ChatUsecase) ChatsWriter(newChat *model.Chat) {
-	u.chatsChan <- newChat
 }
 
 func (u *ChatUsecase) GetIdFromContext(ctx context.Context) (int, bool) {

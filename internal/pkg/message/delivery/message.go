@@ -1,11 +1,12 @@
 package delivery
 
 import (
-	"google.golang.org/grpc/status"
 	"net/http"
 	"server/internal/pkg/message/usecase"
 	model "server/internal/pkg/models"
 	userProto "server/internal/user_server/delivery/proto"
+
+	"google.golang.org/grpc/status"
 
 	"github.com/gorilla/mux"
 )
@@ -56,6 +57,7 @@ func (m *MessageHandler) SendMessage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	nMessage := m.Usecase.ProtoMessage2Message(message)
+	m.Usecase.WebsocketMessage(nMessage)
 	model.Process(model.LoggerFunc("Success Create Message", m.Usecase.LogInfo), model.ResponseFunc(w, 200, nMessage))
 }
 
@@ -75,5 +77,6 @@ func (m *MessageHandler) ChangeMessage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	nMessage := m.Usecase.ProtoMessage2Message(protoMessage)
+	m.Usecase.WebsocketReactMessage(nMessage)
 	model.Process(model.LoggerFunc("New message", m.Usecase.LogInfo), model.ResponseFunc(w, 204, nMessage))
 }

@@ -1,10 +1,11 @@
 package delivery
 
 import (
-	"google.golang.org/grpc/status"
 	"net/http"
 	"server/internal/pkg/models"
 	userProto "server/internal/user_server/delivery/proto"
+
+	"google.golang.org/grpc/status"
 )
 
 func (a *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {

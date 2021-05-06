@@ -30,10 +30,10 @@ func CSRFMiddleware(next http.Handler) http.Handler {
 				Name:     "csrf-token",
 				Value:    key,
 				Expires:  expiration,
-				SameSite: http.SameSiteNoneMode,
-				Domain:   "p1ckle.herokuapp.com",
-				//Domain: "localhost:8000",
-				Secure:   true,
+				SameSite: http.SameSiteLaxMode,
+				//Domain:   "p1ckle.herokuapp.com",
+				Domain: "localhost:8000",
+				//Secure:   true,
 				HttpOnly: true,
 			}
 			http.SetCookie(w, &cookie)

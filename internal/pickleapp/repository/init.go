@@ -2,13 +2,14 @@ package repository
 
 import (
 	"database/sql"
+
 	"github.com/jmoiron/sqlx"
 )
 
 func getPostgres() *sql.DB {
-	//dsn := "user=sniki dbname=postgres password=p@ssword1 host=127.0.0.1 port=5432 sslmode=disable"
+	dsn := "user=sniki dbname=postgres password=p@ssword1 host=127.0.0.1 port=5432 sslmode=disable"
 	//db, err := sql.Open("pgx", os.Getenv("DATABASE_URL"))
-	dsn := "dbname=postgres host=127.0.0.1 port=5432 sslmode=disable"
+	//dsn := "dbname=postgres host=127.0.0.1 port=5432 sslmode=disable"
 	db, err := sql.Open("pgx", dsn)
 	if err != nil {
 		panic("cant parse config" + err.Error())

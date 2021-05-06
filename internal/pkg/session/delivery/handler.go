@@ -4,10 +4,17 @@ import (
 	"net/http"
 	model "server/internal/pkg/models"
 	auth_server "server/internal/pkg/session"
+
+	"github.com/gorilla/mux"
 )
 
 type AuthHandler struct {
 	Usecase auth_server.SessionManagerInterface
+}
+
+func (a *AuthHandler) SetAuthHandler(subRouter *mux.Router) {
+	// оплата
+	subRouter.HandleFunc("/login", a.LogOut).Methods("DELETE")
 }
 
 func (a *AuthHandler) LogOut(w http.ResponseWriter, r *http.Request) {

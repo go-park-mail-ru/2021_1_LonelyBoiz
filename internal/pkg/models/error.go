@@ -31,6 +31,12 @@ func ResponseWithJson(w http.ResponseWriter, code int, body interface{}) {
 	json.NewEncoder(w).Encode(body)
 }
 
+func ParseGrpcError(str string) ErrorResponse {
+	var res ErrorResponse
+	json.Unmarshal([]byte(str), &res)
+	return res
+}
+
 type (
 	logfunc      func()
 	responsefunc func()
