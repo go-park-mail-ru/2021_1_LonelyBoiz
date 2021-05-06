@@ -17,8 +17,8 @@ services:
   pickleapp:
     environment: 
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
-      AWS_SECRET_ACCESS_KEY: ${AWS_ACCESS_KEY_ID}
-      AWS_REGION: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_REGION: ${AWS_REGION}
     image: pickleapp_server
     ports:
       - "8000:8000"
@@ -30,8 +30,8 @@ services:
   image:
     environment: 
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
-      AWS_SECRET_ACCESS_KEY: ${AWS_ACCESS_KEY_ID}
-      AWS_REGION: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_REGION: ${AWS_REGION}
     image: image_server
     ports:
       - "5200:5200"
