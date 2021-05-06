@@ -9,7 +9,6 @@ import (
 	models "server/internal/pkg/models"
 
 	gomock "github.com/golang/mock/gomock"
-	uuid "github.com/google/uuid"
 )
 
 // MockUserRepositoryInterface is a mock of UserRepositoryInterface interface.
@@ -33,6 +32,20 @@ func NewMockUserRepositoryInterface(ctrl *gomock.Controller) *MockUserRepository
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockUserRepositoryInterface) EXPECT() *MockUserRepositoryInterfaceMockRecorder {
 	return m.recorder
+}
+
+// AddToSecreteAlbum mocks base method.
+func (m *MockUserRepositoryInterface) AddToSecreteAlbum(ownerId int, photos []string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddToSecreteAlbum", ownerId, photos)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddToSecreteAlbum indicates an expected call of AddToSecreteAlbum.
+func (mr *MockUserRepositoryInterfaceMockRecorder) AddToSecreteAlbum(ownerId, photos interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddToSecreteAlbum", reflect.TypeOf((*MockUserRepositoryInterface)(nil).AddToSecreteAlbum), ownerId, photos)
 }
 
 // AddUser mocks base method.
@@ -93,19 +106,19 @@ func (mr *MockUserRepositoryInterfaceMockRecorder) CheckMail(email interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckMail", reflect.TypeOf((*MockUserRepositoryInterface)(nil).CheckMail), email)
 }
 
-// CheckPhoto mocks base method.
-func (m *MockUserRepositoryInterface) CheckPhoto(photoUuid uuid.UUID, userId int) (bool, error) {
+// CheckPermission mocks base method.
+func (m *MockUserRepositoryInterface) CheckPermission(ownerId, getterId int) (bool, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CheckPhoto", photoUuid, userId)
+	ret := m.ctrl.Call(m, "CheckPermission", ownerId, getterId)
 	ret0, _ := ret[0].(bool)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// CheckPhoto indicates an expected call of CheckPhoto.
-func (mr *MockUserRepositoryInterfaceMockRecorder) CheckPhoto(photoUuid, userId interface{}) *gomock.Call {
+// CheckPermission indicates an expected call of CheckPermission.
+func (mr *MockUserRepositoryInterfaceMockRecorder) CheckPermission(ownerId, getterId interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckPhoto", reflect.TypeOf((*MockUserRepositoryInterface)(nil).CheckPhoto), photoUuid, userId)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckPermission", reflect.TypeOf((*MockUserRepositoryInterface)(nil).CheckPermission), ownerId, getterId)
 }
 
 // CheckReciprocity mocks base method.
@@ -164,6 +177,20 @@ func (m *MockUserRepositoryInterface) CreateFeed(userId int) error {
 func (mr *MockUserRepositoryInterfaceMockRecorder) CreateFeed(userId interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateFeed", reflect.TypeOf((*MockUserRepositoryInterface)(nil).CreateFeed), userId)
+}
+
+// CreateSecretAlbum mocks base method.
+func (m *MockUserRepositoryInterface) CreateSecretAlbum(id int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateSecretAlbum", id)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateSecretAlbum indicates an expected call of CreateSecretAlbum.
+func (mr *MockUserRepositoryInterfaceMockRecorder) CreateSecretAlbum(id interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSecretAlbum", reflect.TypeOf((*MockUserRepositoryInterface)(nil).CreateSecretAlbum), id)
 }
 
 // DeleteUser mocks base method.
@@ -255,26 +282,11 @@ func (mr *MockUserRepositoryInterfaceMockRecorder) GetPassWithId(id interface{})
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPassWithId", reflect.TypeOf((*MockUserRepositoryInterface)(nil).GetPassWithId), id)
 }
 
-// GetPhoto mocks base method.
-func (m *MockUserRepositoryInterface) GetPhoto(photoId int) (string, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPhoto", photoId)
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetPhoto indicates an expected call of GetPhoto.
-func (mr *MockUserRepositoryInterfaceMockRecorder) GetPhoto(photoId interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPhoto", reflect.TypeOf((*MockUserRepositoryInterface)(nil).GetPhoto), photoId)
-}
-
 // GetPhotos mocks base method.
-func (m *MockUserRepositoryInterface) GetPhotos(userId int) ([]uuid.UUID, error) {
+func (m *MockUserRepositoryInterface) GetPhotos(userId int) ([]string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPhotos", userId)
-	ret0, _ := ret[0].([]uuid.UUID)
+	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -283,6 +295,21 @@ func (m *MockUserRepositoryInterface) GetPhotos(userId int) ([]uuid.UUID, error)
 func (mr *MockUserRepositoryInterfaceMockRecorder) GetPhotos(userId interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPhotos", reflect.TypeOf((*MockUserRepositoryInterface)(nil).GetPhotos), userId)
+}
+
+// GetSecretePhotos mocks base method.
+func (m *MockUserRepositoryInterface) GetSecretePhotos(ownerId int) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSecretePhotos", ownerId)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSecretePhotos indicates an expected call of GetSecretePhotos.
+func (mr *MockUserRepositoryInterfaceMockRecorder) GetSecretePhotos(ownerId interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSecretePhotos", reflect.TypeOf((*MockUserRepositoryInterface)(nil).GetSecretePhotos), ownerId)
 }
 
 // GetUser mocks base method.
@@ -315,6 +342,21 @@ func (mr *MockUserRepositoryInterfaceMockRecorder) Rating(userIdFrom, userIdTo, 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Rating", reflect.TypeOf((*MockUserRepositoryInterface)(nil).Rating), userIdFrom, userIdTo, reaction)
 }
 
+// ReduceScrolls mocks base method.
+func (m *MockUserRepositoryInterface) ReduceScrolls(userId int) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ReduceScrolls", userId)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ReduceScrolls indicates an expected call of ReduceScrolls.
+func (mr *MockUserRepositoryInterfaceMockRecorder) ReduceScrolls(userId interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReduceScrolls", reflect.TypeOf((*MockUserRepositoryInterface)(nil).ReduceScrolls), userId)
+}
+
 // SignIn mocks base method.
 func (m *MockUserRepositoryInterface) SignIn(email string) (models.User, error) {
 	m.ctrl.T.Helper()
@@ -328,4 +370,32 @@ func (m *MockUserRepositoryInterface) SignIn(email string) (models.User, error) 
 func (mr *MockUserRepositoryInterfaceMockRecorder) SignIn(email interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SignIn", reflect.TypeOf((*MockUserRepositoryInterface)(nil).SignIn), email)
+}
+
+// UnblockSecreteAlbum mocks base method.
+func (m *MockUserRepositoryInterface) UnblockSecreteAlbum(ownerId, getterId int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UnblockSecreteAlbum", ownerId, getterId)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UnblockSecreteAlbum indicates an expected call of UnblockSecreteAlbum.
+func (mr *MockUserRepositoryInterfaceMockRecorder) UnblockSecreteAlbum(ownerId, getterId interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UnblockSecreteAlbum", reflect.TypeOf((*MockUserRepositoryInterface)(nil).UnblockSecreteAlbum), ownerId, getterId)
+}
+
+// UpdatePayment mocks base method.
+func (m *MockUserRepositoryInterface) UpdatePayment(userId, amount int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdatePayment", userId, amount)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdatePayment indicates an expected call of UpdatePayment.
+func (mr *MockUserRepositoryInterfaceMockRecorder) UpdatePayment(userId, amount interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePayment", reflect.TypeOf((*MockUserRepositoryInterface)(nil).UpdatePayment), userId, amount)
 }

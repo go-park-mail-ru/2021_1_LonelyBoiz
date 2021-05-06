@@ -1,13 +1,6 @@
 package main
 
 import (
-	"github.com/gorilla/websocket"
-	"github.com/microcosm-cc/bluemonday"
-	"github.com/sirupsen/logrus"
-	"golang.org/x/net/context"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/grpclog"
-	"google.golang.org/grpc/metadata"
 	"log"
 	"math/rand"
 	"net"
@@ -23,6 +16,13 @@ import (
 	delivery2 "server/internal/user_server/delivery"
 	userProto "server/internal/user_server/delivery/proto"
 	"time"
+
+	"github.com/microcosm-cc/bluemonday"
+	"github.com/sirupsen/logrus"
+	"golang.org/x/net/context"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/grpclog"
+	"google.golang.org/grpc/metadata"
 )
 
 type UserServerInterceptor struct {
@@ -85,22 +85,17 @@ func main() {
 
 	db := repository.Init()
 
-	clients := make(map[int]*websocket.Conn)
-
 	userServer := delivery2.UserServer{
 		UserUsecase: &usecase.UserUsecase{
 			Db:              &repository2.UserRepository{DB: db},
 			LoggerInterface: ServerInterceptor.Logger,
 			Sanitizer:       bluemonday.NewPolicy(),
-			Clients:         &clients,
 		},
 		ChatUsecase: &chatUsecase.ChatUsecase{
-			Clients:         &clients,
 			LoggerInterface: ServerInterceptor.Logger,
 			Db:              &chatRepository.ChatRepository{DB: db},
 		},
 		MessageUsecase: &messageUsecase.MessageUsecase{
-			Clients:         &clients,
 			Db:              &repository3.MessageRepository{DB: db},
 			LoggerInterface: ServerInterceptor.Logger,
 			Sanitizer:       bluemonday.NewPolicy(),
