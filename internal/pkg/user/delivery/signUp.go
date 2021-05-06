@@ -29,5 +29,5 @@ func (a *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 	cookie := a.UserCase.SetCookie(userResponse.GetToken())
 	http.SetCookie(w, &cookie)
 
-	models.Process(models.LoggerFunc("Success SignUp", a.UserCase.LogInfo), models.ResponseFunc(w, 200, userResponse.GetUser()))
+	models.Process(models.LoggerFunc("Success SignUp", a.UserCase.LogInfo), models.ResponseFunc(w, 200, a.UserCase.ProtoUser2User(userResponse.GetUser())))
 }

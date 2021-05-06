@@ -724,7 +724,7 @@ func (u *UserUsecase) ProtoPhotos2Photos(userPhotos []string) (photos pq.StringA
 }
 
 func (u *UserUsecase) ProtoUser2User(user *userProto.User) model.User {
-	return model.User{
+	ret := model.User{
 		Id:             int(user.GetId()),
 		Email:          user.GetEmail(),
 		Password:       user.GetPassword(),
@@ -743,6 +743,11 @@ func (u *UserUsecase) ProtoUser2User(user *userProto.User) model.User {
 		Photos:         u.ProtoPhotos2Photos(user.Photos),
 		CaptchaToken:   user.CaptchaToken,
 	}
+	if len(ret.Photos) == 0 {
+		ret.Photos = make([]string, 0)
+	}
+
+	return ret
 }
 
 func (u *UserUsecase) User2ProtoUser(user model.User) *userProto.User {
