@@ -61,7 +61,7 @@ func (a *App) Start() error {
 		AllowedOrigins:   []string{"http://localhost:3000", "https://lepick.online.com"},
 		AllowCredentials: true,
 		AllowedMethods:   []string{"GET", "POST", "DELETE", "PATCH", "OPTIONS"},
-		AllowedHeaders:   []string{"Content-Type", "Access-Control-Allow-Headers", "Access-Control-Allow-Origin", "Authorization", "X-Requested-With", "X-CSRF-Token"},
+		AllowedHeaders:   []string{"Content-Type", "Access-Control-Allow-Headers", "Access-Control-Expose-Headers", "Access-Control-Allow-Origin", "Authorization", "X-Requested-With", "X-CSRF-Token"},
 		Debug:            false,
 	})
 
