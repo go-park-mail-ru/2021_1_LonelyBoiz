@@ -10,6 +10,7 @@ require (
 	github.com/cockroachdb/apd v1.1.0 // indirect
 	github.com/gofrs/uuid v4.0.0+incompatible // indirect
 	github.com/golang/mock v1.5.0
+	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/uuid v1.2.0
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/websocket v1.4.2
@@ -23,7 +24,10 @@ require (
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83
-	golang.org/x/net v0.0.0-20210331212208-0fccb6fa2b5c
+	golang.org/x/net v0.0.0-20210505024714-0287a6fb4125
+	golang.org/x/sys v0.0.0-20210503173754-0981d6026fa6 // indirect
+	google.golang.org/genproto v0.0.0-20210505142820-a42aa055cf76 // indirect
 	google.golang.org/grpc v1.37.0
+	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.1.0 // indirect
 	google.golang.org/protobuf v1.26.0
 )

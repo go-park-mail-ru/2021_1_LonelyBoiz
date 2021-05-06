@@ -81,3 +81,9 @@ CREATE TABLE secretPermission(
     FOREIGN KEY (getterId) REFERENCES users (id)
 );
 
+select photos, email from users;
+
+
+insert into chats(userid1, userid2) values(2,3)
+
+update users set photos='{"e7816294-3529-42cd-a612-4f323d6d972a"}' where id=2;
