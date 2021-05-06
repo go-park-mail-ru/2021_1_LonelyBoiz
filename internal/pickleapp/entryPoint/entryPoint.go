@@ -1,6 +1,9 @@
 package entryPoint
 
 import (
+	awsSession "github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"log"
 	"math/rand"
 	"net/http"
@@ -13,6 +16,7 @@ import (
 	chatRepository "server/internal/pkg/chat/repository"
 	chatUsecase "server/internal/pkg/chat/usecase"
 	imageDelivery "server/internal/pkg/image/delivery"
+	imageRepository "server/internal/pkg/image/repository"
 	imageUsecase "server/internal/pkg/image/usecase"
 	messageDelivery "server/internal/pkg/message/delivery"
 	messageRepository "server/internal/pkg/message/repository"
@@ -111,6 +115,13 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 	messageRep := messageRepository.MessageRepository{DB: a.Db}
 	chatRep := chatRepository.ChatRepository{DB: a.Db}
 
+	sess := awsSession.Must(awsSession.NewSession())
+	awsRep := imageRepository.AwsImageRepository{
+		Bucket:   "lepick-images",
+		Svc:      s3.New(sess),
+		Uploader: s3manager.NewUploader(sess),
+	}
+
 	clients := make(map[int]*websocket.Conn)
 
 	//GRPC auth
@@ -146,13 +157,13 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 		grpc.WithInsecure(),
 	}
 
-	imagesConn, err := grpc.Dial("localhost:5600", opts...)
+	imagesConn, err := grpc.Dial("localhost:5200", opts...)
 	if err != nil {
 		grpclog.Fatalf("fail to dial: %v", err)
 		panic(err)
 	}
 
-	imageClient := image_proto.NewImageServiceClient(userConn)
+	imageClient := image_proto.NewImageServiceClient(imagesConn)
 
 	// init uCases & handlers
 	sanitizer := bluemonday.UGCPolicy()
@@ -160,7 +171,10 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 	chatUcase := chatUsecase.ChatUsecase{Db: &chatRep}
 	messUcase := messageUsecase.MessageUsecase{Db: &messageRep, Clients: &clients, Sanitizer: sanitizer}
 	sessionManager := session.SessionsManager{DB: &sessionRep}
-	imageUcase := imageUsecase.ImageUsecase{}
+	imageUcase := imageUsecase.ImageUsecase{
+		Db:           &imageRepository.PostgresRepository{Db: a.Db},
+		ImageStorage: &awsRep,
+	}
 
 	chatHandler := delivery.ChatHandler{
 		Usecase: &chatUcase,
@@ -208,7 +222,7 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 	csrfRouter := a.router.NewRoute().Subrouter()
 
 	csrfRouter.Use(loggerm.Middleware)
-	csrfRouter.Use(middleware.CSRFMiddleware)
+	//csrfRouter.Use(middleware.CSRFMiddleware)
 	csrfRouter.Use(middleware.SetContextMiddleware)
 
 	// validate cookie router

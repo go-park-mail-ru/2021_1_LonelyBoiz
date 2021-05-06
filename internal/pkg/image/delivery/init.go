@@ -1,6 +1,7 @@
 package delivery
 
 import (
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"google.golang.org/grpc/status"
 	"io"
@@ -47,7 +48,7 @@ func (h *ImageHandler) UploadImage(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	models.Process(models.LoggerFunc("Success Upload Image", h.Usecase.LogError), models.ResponseFunc(w, http.StatusOK, model.GetImage()))
+	models.Process(models.LoggerFunc("Success Upload Image", h.Usecase.LogInfo), models.ResponseFunc(w, http.StatusOK, models.Image{Uuid: uuid.MustParse(model.GetImage())}))
 }
 
 func (h *ImageHandler) DeleteImage(w http.ResponseWriter, r *http.Request) {
@@ -63,5 +64,5 @@ func (h *ImageHandler) DeleteImage(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	models.Process(models.LoggerFunc("Success Delete Image", h.Usecase.LogError), models.ResponseFunc(w, http.StatusNoContent, nil))
+	models.Process(models.LoggerFunc("Success Delete Image", h.Usecase.LogInfo), models.ResponseFunc(w, http.StatusNoContent, nil))
 }

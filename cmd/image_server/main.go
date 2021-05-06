@@ -37,12 +37,10 @@ func (s *ServerInterceptor) logger(ctx context.Context, req interface{}, info *g
 	}
 
 	s.Logger.Logger = s.Logger.Logger.WithFields(logrus.Fields{
-		"server":    "[AUTH]",
+		"server":    "[IMAGE]",
 		"requestId": reqId,
 		"method":    info.FullMethod,
 		"context":   md,
-		"request":   req,
-		"response":  resp,
 		"error":     err,
 		"work_time": time.Since(start),
 	})

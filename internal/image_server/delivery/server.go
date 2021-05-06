@@ -49,7 +49,7 @@ func (i ImageServer) UploadImage(ctx context.Context, request *imageProto.ImageR
 	statusCode := setStatusCode(err, http.StatusBadRequest)
 	if err != nil {
 		responseBody := models.ErrorResponse{Err: err.Error()}
-		i.Usecase.LogInfo(responseBody)
+		i.Usecase.LogError(err.Error())
 		return &imageProto.ImageResponse{}, status.Error(codes.Code(statusCode), responseBody.Error())
 	}
 
