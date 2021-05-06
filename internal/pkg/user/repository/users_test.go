@@ -254,6 +254,7 @@ func TestGetChatById(t *testing.T) {
 		"lastmessage",
 		"lastmessagetime",
 		"lastmessageauthorid",
+		"photos",
 	}).AddRow(
 		chat.ChatId,
 		chat.PartnerId,
@@ -261,6 +262,7 @@ func TestGetChatById(t *testing.T) {
 		chat.LastMessage,
 		chat.LastMessageTime,
 		chat.LastMessageAuthorId,
+		chat.Photos,
 	)
 
 	mock.
