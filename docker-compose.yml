@@ -55,7 +55,7 @@ services:
     image: postgres:latest
     volumes:
       - ./postgres_data:/var/lib/postgresql/data
-      - ./proj.session.sql:/-entrypoint-initdb.d/init.sql
+      - ./proj.session.sql:/docker-entrypoint-initdb.d/init.sql
     environment:
       POSTGRES_HOST_AUTH_METHOD: "trust"
     ports:
