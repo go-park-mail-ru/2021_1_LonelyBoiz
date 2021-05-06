@@ -365,7 +365,8 @@ func (repo *UserRepository) GetNewChatById(chatId int, userId int) (model.Chat, 
 	err := repo.DB.Select(&chats,
 		`SELECT chats.id AS chatId,
     		users.id AS partnerId,
-    		users.name AS partnerName
+    		users.name AS partnerName,
+			users.photos AS photos
 		FROM chats
     		JOIN users ON (users.id <> $1 AND (users.id = chats.userid2 OR users.id = chats.userid1))
 		WHERE (chats.userid1 = $1 OR chats.userid2 = $1) AND chats.id = $2`,
@@ -376,11 +377,6 @@ func (repo *UserRepository) GetNewChatById(chatId int, userId int) (model.Chat, 
 	}
 	if len(chats) == 0 {
 		return model.Chat{}, nil
-	}
-
-	err = repo.DB.Select(&chats[0].Photos, `SELECT photos FROM users WHERE id = $1`, chats[0].PartnerId)
-	if err != nil {
-		return model.Chat{}, err
 	}
 
 	return chats[0], nil
