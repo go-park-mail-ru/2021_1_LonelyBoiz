@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package image;
+
+
+//protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative user.proto
+option go_package= "/Users/nick_nak/programs/2_parkMail/2021_1_LonelyBoiz/internal/image_server/delivery/proto/image.proto";
+
+message ImageResponse {
+  string image = 1;
+}
+message ImageRequest {
+  bytes image = 1;
+}
+
+message ImageNothing {
+  bool dummy = 1;
+}
+
+message Photos{
+  repeated string Photos = 1;
+}
+
+// grpc-сервис работы с юзером
+service UserService {
+  rpc UploadImage (ImageRequest) returns (ImageResponse) {}
+}
