@@ -6,6 +6,7 @@ import (
 )
 
 func main() {
+
 	a := entryPoint.App{}
 	config := entryPoint.NewConfig()
 
