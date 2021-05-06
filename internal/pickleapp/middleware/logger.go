@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"google.golang.org/grpc/metadata"
 	"math/rand"
 	"net/http"
 	chatUsecase "server/internal/pkg/chat/usecase"
@@ -10,10 +9,24 @@ import (
 	"server/internal/pkg/models"
 	"server/internal/pkg/user/usecase"
 	"strconv"
+	"strings"
 	"time"
 
+	"google.golang.org/grpc/metadata"
+
 	"github.com/sirupsen/logrus"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
+
+var FooCount = prometheus.NewCounter(prometheus.CounterOpts{
+	Name: "foo_total",
+	Help: "Number of foo successfully processed.",
+})
+
+var Hits = prometheus.NewCounterVec(prometheus.CounterOpts{
+	Name: "hits",
+}, []string{"status", "path"})
 
 type LoggerMiddleware struct {
 	Logger *models.Logger
@@ -55,5 +68,11 @@ func (logger *LoggerMiddleware) Middleware(next http.Handler) http.Handler {
 		ctx := r.Context()
 		ctx = metadata.AppendToOutgoingContext(ctx, "requestId", strconv.FormatInt(reqId, 10))
 		next.ServeHTTP(w, r.WithContext(ctx))
+
+		if r.RequestURI != "/metrics" {
+			Hits.WithLabelValues(strconv.Itoa(r.Response.StatusCode), strings.Split(r.URL.Path, "/")[0]).Inc()
+			FooCount.Add(1)
+		}
+
 	})
 }

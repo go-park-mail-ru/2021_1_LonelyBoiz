@@ -48,25 +48,6 @@ func (session *SessionsManager) keyGen() string {
 	return string(b)
 }
 
-//func (session *SessionsManager) SetSession(w http.ResponseWriter, id int) error {
-//	key := session.keyGen()
-//	expiration := time.Now().Add(24 * time.Hour)
-//
-//	cookie := http.Cookie{
-//		Name:     "token",
-//		Value:    key,
-//		Expires:  expiration,
-//		SameSite: http.SameSiteNoneMode,
-//		Domain:   "p1ckle.herokuapp.com",
-//		//Domain: "localhost:8000",
-//		Secure:   true,
-//		HttpOnly: true,
-//		Path:     "/",
-//	}
-//
-//	return cookie
-//}
-
 func (session *SessionsManager) SetSession(id int) (string, error) {
 	key := session.keyGen()
 
@@ -103,10 +84,10 @@ func (session *SessionsManager) DeleteSessionByToken(token string) error {
 
 func (session *SessionsManager) DeleteCookie(cookie *http.Cookie) {
 	cookie.Expires = time.Now().AddDate(0, 0, -1)
-	cookie.SameSite = http.SameSiteLaxMode
+	cookie.SameSite = http.SameSiteStrictMode
 	cookie.Secure = true
 	cookie.HttpOnly = true
-	cookie.Domain = "localhost:3000"
+	cookie.Domain = "lepick.online:8000"
 }
 
 func (session *SessionsManager) GetIdFromContext(ctx context.Context) (int, bool) {
