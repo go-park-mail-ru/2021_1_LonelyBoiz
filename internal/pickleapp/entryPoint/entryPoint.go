@@ -1,9 +1,6 @@
 package entryPoint
 
 import (
-	awsSession "github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"log"
 	"math/rand"
 	"net/http"
@@ -29,6 +26,10 @@ import (
 	"server/internal/pkg/user/usecase"
 	user_proto "server/internal/user_server/delivery/proto"
 	"time"
+
+	awsSession "github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 
 	authHandler "server/internal/pkg/session/delivery"
 
@@ -129,7 +130,7 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 		grpc.WithInsecure(),
 	}
 
-	authConn, err := grpc.Dial("localhost:5400", opts...)
+	authConn, err := grpc.Dial("auth:5400", opts...)
 
 	if err != nil {
 		log.Print(1)
@@ -144,7 +145,7 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 		grpc.WithInsecure(),
 	}
 
-	userConn, err := grpc.Dial("localhost:5500", opts...)
+	userConn, err := grpc.Dial("user:5500", opts...)
 	if err != nil {
 		grpclog.Fatalf("fail to dial: %v", err)
 		panic(err)
@@ -157,7 +158,7 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 		grpc.WithInsecure(),
 	}
 
-	imagesConn, err := grpc.Dial("localhost:5200", opts...)
+	imagesConn, err := grpc.Dial("image:5200", opts...)
 	if err != nil {
 		grpclog.Fatalf("fail to dial: %v", err)
 		panic(err)

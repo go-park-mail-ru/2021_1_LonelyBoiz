@@ -1,0 +1,57 @@
+version: "3"
+
+volumes:
+  dbbackups:
+  postgis-data:
+
+services:
+  auth:
+    image: auth_server
+    ports:
+      - "5400:5400"
+    volumes:
+      - ./static:/app/static
+    depends_on:
+      - postgres
+
+  pickleapp:
+    image: pickleapp_server
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./static:/app/static
+    depends_on:
+      - postgres
+
+  image:
+    image: image_server
+    ports:
+      - "5200:5200"
+    volumes:
+      - ./static:/app/static
+    depends_on:
+      - postgres
+
+  user:
+    image: user_server
+    ports:
+      - "5500:5500"
+    volumes:
+      - ./static:/app/static
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:latest
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+      - ./proj.session.sql:/docker-entrypoint-initdb.d/init.sql
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: "trust"
+    ports:
+      - "5432:5432"
+    restart: always
+
+volumes:
+  database_data:
+    driver: local
