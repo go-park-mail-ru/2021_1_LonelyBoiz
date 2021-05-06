@@ -75,8 +75,8 @@ func (a *App) Start() error {
 		IdleTimeout:  120 * time.Second,
 	}
 
-	err := s.ListenAndServe()
-	//err := s.ListenAndServeTLS(os.Getenv("SSL_PUBLIC"), os.Getenv("SSL_PRIVATE"))
+	//err := s.ListenAndServe()
+	err := s.ListenAndServeTLS(os.Getenv("SSL_PUBLIC"), os.Getenv("SSL_PRIVATE"))
 	if err != nil {
 		return err
 	}
