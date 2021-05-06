@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -137,7 +136,7 @@ func TestSignIn(t *testing.T) {
 		DatePreference: "male",
 		IsActive:       true,
 		IsDeleted:      true,
-		Photos:         []uuid.UUID{uuid.New()},
+		Photos:         []string{"1", "2"},
 	}
 
 	rows := sqlmock.NewRows([]string{
@@ -152,7 +151,8 @@ func TestSignIn(t *testing.T) {
 		"passwordhash",
 		"datepreference",
 		"isactive",
-		"isdeleted"}).AddRow(
+		"isdeleted",
+		"photos"}).AddRow(
 		user.Id,
 		user.Email,
 		user.Name,
@@ -165,19 +165,13 @@ func TestSignIn(t *testing.T) {
 		user.DatePreference,
 		user.IsActive,
 		user.IsDeleted,
+		user.Photos,
 	)
-
-	rows2 := sqlmock.NewRows([]string{"photoid"}).AddRow(user.Photos[0])
 
 	mock.
 		ExpectQuery("SELECT id, email, name, birthday, description, city").
 		WithArgs(user.Email).
 		WillReturnRows(rows)
-
-	mock.
-		ExpectQuery("SELECT photoUuid FROM photos WHERE userid").
-		WithArgs(user.Id).
-		WillReturnRows(rows2)
 
 	repo := UserRepository{
 		DB: sqlx.NewDb(db, "psx"),
@@ -198,7 +192,7 @@ func TestSignIn(t *testing.T) {
 	}
 }
 
-func TestGetPhoto(t *testing.T) {
+/*func TestGetPhoto(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("cant create mock: %s", err)
@@ -232,7 +226,7 @@ func TestGetPhoto(t *testing.T) {
 		t.Errorf("results not match, want %v, have %v", value, res)
 		return
 	}
-}
+}*/
 
 func TestGetChatById(t *testing.T) {
 	db, mock, err := sqlmock.New()
@@ -250,7 +244,7 @@ func TestGetChatById(t *testing.T) {
 		LastMessage:         "last message",
 		LastMessageTime:     123,
 		LastMessageAuthorId: 1,
-		Photos:              []uuid.UUID{uuid.New(), uuid.New()},
+		Photos:              []string{"1", "2"},
 	}
 
 	rows := sqlmock.NewRows([]string{
@@ -260,6 +254,7 @@ func TestGetChatById(t *testing.T) {
 		"lastmessage",
 		"lastmessagetime",
 		"lastmessageauthorid",
+		"photos",
 	}).AddRow(
 		chat.ChatId,
 		chat.PartnerId,
@@ -267,19 +262,13 @@ func TestGetChatById(t *testing.T) {
 		chat.LastMessage,
 		chat.LastMessageTime,
 		chat.LastMessageAuthorId,
+		chat.Photos,
 	)
-
-	rows2 := sqlmock.NewRows([]string{"photoUuid"}).AddRow(chat.Photos[0]).AddRow(chat.Photos[1])
 
 	mock.
 		ExpectQuery("SELECT chats.id AS chatid,").
 		WithArgs(chat.ChatId, userid).
 		WillReturnRows(rows)
-
-	mock.
-		ExpectQuery("SELECT photoUuid FROM photos").
-		WithArgs(chat.PartnerId).
-		WillReturnRows(rows2)
 
 	repo := UserRepository{
 		DB: sqlx.NewDb(db, "psx"),
@@ -320,7 +309,7 @@ func TestAddUser(t *testing.T) {
 		DatePreference: "male",
 		IsActive:       true,
 		IsDeleted:      true,
-		Photos:         []uuid.UUID{},
+		Photos:         []string{},
 	}
 
 	rows := sqlmock.NewRows([]string{"id"}).AddRow(user.Id)
@@ -339,6 +328,7 @@ func TestAddUser(t *testing.T) {
 			user.IsActive,
 			user.IsDeleted,
 			user.Instagram,
+			user.Photos,
 		).
 		WillReturnRows(rows)
 
