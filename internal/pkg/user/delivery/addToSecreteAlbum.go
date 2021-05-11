@@ -9,6 +9,7 @@ import (
 )
 
 func (a *UserHandler) AddToSecreteAlbum(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
 	user, err := a.UserCase.ParseJsonToUser(r.Body)
 	if err != nil {
 		a.UserCase.LogError(err)
