@@ -9,7 +9,6 @@ import (
 	"server/internal/pkg/models"
 	"server/internal/pkg/user/usecase"
 	"strconv"
-	"strings"
 	"time"
 
 	"google.golang.org/grpc/metadata"
@@ -18,11 +17,6 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 )
-
-var FooCount = prometheus.NewCounter(prometheus.CounterOpts{
-	Name: "foo_total",
-	Help: "Number of foo successfully processed.",
-})
 
 var Hits = prometheus.NewCounterVec(prometheus.CounterOpts{
 	Name: "hits",
@@ -69,10 +63,10 @@ func (logger *LoggerMiddleware) Middleware(next http.Handler) http.Handler {
 		ctx = metadata.AppendToOutgoingContext(ctx, "requestId", strconv.FormatInt(reqId, 10))
 		next.ServeHTTP(w, r.WithContext(ctx))
 
-		if r.RequestURI != "/metrics" {
+		/*if r.RequestURI != "/metrics" {
+			fmt.Println("padenie")
 			Hits.WithLabelValues(strconv.Itoa(r.Response.StatusCode), strings.Split(r.URL.Path, "/")[0]).Inc()
-			FooCount.Add(1)
 		}
-
+		*/
 	})
 }

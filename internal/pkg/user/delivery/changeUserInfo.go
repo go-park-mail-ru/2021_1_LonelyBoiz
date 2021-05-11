@@ -1,12 +1,14 @@
 package delivery
 
 import (
-	"google.golang.org/grpc/status"
 	"net/http"
 	model "server/internal/pkg/models"
+
+	"google.golang.org/grpc/status"
 )
 
 func (a *UserHandler) ChangeUserInfo(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
 	newUser, err := a.UserCase.ParseJsonToUser(r.Body)
 	if err != nil {
 		response := model.ErrorResponse{Err: "Не удалось прочитать тело запроса"}

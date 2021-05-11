@@ -55,7 +55,7 @@ type App struct {
 func (a *App) Start() error {
 	a.Logger.Info("Server Start")
 
-	prometheus.MustRegister(middleware.FooCount, middleware.Hits)
+	prometheus.MustRegister(middleware.Hits)
 
 	cors := cors2.New(cors2.Options{
 		AllowedOrigins:   []string{"http://localhost:3000", "https://lepick.online"},
@@ -75,8 +75,8 @@ func (a *App) Start() error {
 		IdleTimeout:  120 * time.Second,
 	}
 
-	//err := s.ListenAndServe()
-	err := s.ListenAndServeTLS(os.Getenv("SSL_PUBLIC"), os.Getenv("SSL_PRIVATE"))
+	err := s.ListenAndServe()
+	//err := s.ListenAndServeTLS(os.Getenv("SSL_PUBLIC"), os.Getenv("SSL_PRIVATE"))
 	if err != nil {
 		return err
 	}
@@ -221,7 +221,7 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 		Session: authClient,
 	}
 
-	a.router.Handle("/metrics", promhttp.Handler()).Methods("GET")
+	a.router.Handle("/metrics", promhttp.Handler())
 
 	rawRouter := a.router.NewRoute().Subrouter()
 

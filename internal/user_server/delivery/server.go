@@ -301,6 +301,7 @@ func (u UserServer) ChangeMessage(ctx context.Context, message *userProto.Messag
 }
 
 func (u UserServer) AddToSecreteAlbum(ctx context.Context, message *userProto.User) (*userProto.UserNothing, error) {
+	u.UserUsecase.LogInfo("Enter user server")
 	ownerId, ok := u.UserUsecase.GetParamFromContext(ctx, "cookieId")
 	if !ok {
 		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
