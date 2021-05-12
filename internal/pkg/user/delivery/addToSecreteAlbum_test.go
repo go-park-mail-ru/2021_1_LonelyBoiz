@@ -21,7 +21,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func TestChangeUserInfo(t *testing.T) {
+func TestAddToSecreteAlbum(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
 	useCase := usecase.UserUsecase{}
@@ -60,6 +60,8 @@ func TestChangeUserInfo(t *testing.T) {
 		user.Id,
 	)
 
+	res := user_proto.UserNothing{}
+
 	protoUser := user_proto.User{
 		Photos: []string{"1", "2"},
 	}
@@ -69,19 +71,18 @@ func TestChangeUserInfo(t *testing.T) {
 	userUseCaseMock.EXPECT().ParseJsonToUser(gomock.Any()).Return(user, nil)
 	userUseCaseMock.EXPECT().LogInfo(gomock.Any()).Return()
 	userUseCaseMock.EXPECT().User2ProtoUser(user).Return(&protoUser)
-	userUseCaseMock.EXPECT().ProtoUser2User(gomock.Any()).Return(user)
-	serverMock.EXPECT().ChangeUser(ctx, useCase.User2ProtoUser(user)).Return(&protoUser, nil)
+	serverMock.EXPECT().AddToSecreteAlbum(ctx, useCase.User2ProtoUser(user)).Return(&res, nil)
 	userUseCaseMock.EXPECT().LogInfo(gomock.Any()).Return()
 	userUseCaseMock.EXPECT().LogInfo(gomock.Any()).Return()
 
-	handlerTest.ChangeUserInfo(rw, req.WithContext(ctx))
+	handlerTest.AddToSecreteAlbum(rw, req.WithContext(ctx))
 
 	response := rw.Result()
 
-	assert.Equal(t, 200, response.StatusCode)
+	assert.Equal(t, 204, response.StatusCode)
 }
 
-func TestChangeUserInfo_ParseToJson_Error(t *testing.T) {
+func TestAddToSecreteAlbum_ParseJsonToUser_Error(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
 	userUseCaseMock := usecaseMocks.NewMockUserUseCaseInterface(mockCtrl)
@@ -123,14 +124,14 @@ func TestChangeUserInfo_ParseToJson_Error(t *testing.T) {
 	userUseCaseMock.EXPECT().ParseJsonToUser(gomock.Any()).Return(user, errors.New("Some error"))
 	userUseCaseMock.EXPECT().LogError(gomock.Any()).Return()
 
-	handlerTest.ChangeUserInfo(rw, req.WithContext(ctx))
+	handlerTest.AddToSecreteAlbum(rw, req.WithContext(ctx))
 
 	response := rw.Result()
 
 	assert.Equal(t, 400, response.StatusCode)
 }
 
-func TestChangeUserInfo_ChangeUser_Error(t *testing.T) {
+func TestAddToSecreteAlbum_Error(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
 	useCase := usecase.UserUsecase{}
@@ -169,6 +170,8 @@ func TestChangeUserInfo_ChangeUser_Error(t *testing.T) {
 		user.Id,
 	)
 
+	res := user_proto.UserNothing{}
+
 	protoUser := user_proto.User{
 		Photos: []string{"1", "2"},
 	}
@@ -178,10 +181,10 @@ func TestChangeUserInfo_ChangeUser_Error(t *testing.T) {
 	userUseCaseMock.EXPECT().ParseJsonToUser(gomock.Any()).Return(user, nil)
 	userUseCaseMock.EXPECT().LogInfo(gomock.Any()).Return()
 	userUseCaseMock.EXPECT().User2ProtoUser(user).Return(&protoUser)
-	serverMock.EXPECT().ChangeUser(ctx, useCase.User2ProtoUser(user)).Return(nil, status.Error(codes.Code(500), "Some error"))
+	serverMock.EXPECT().AddToSecreteAlbum(ctx, useCase.User2ProtoUser(user)).Return(&res, status.Error(codes.Code(500), "Some error"))
 	userUseCaseMock.EXPECT().LogError(gomock.Any()).Return()
 
-	handlerTest.ChangeUserInfo(rw, req.WithContext(ctx))
+	handlerTest.AddToSecreteAlbum(rw, req.WithContext(ctx))
 
 	response := rw.Result()
 

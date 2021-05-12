@@ -1,10 +1,11 @@
 package delivery
 
 import (
-	"google.golang.org/grpc/status"
 	"net/http"
 	model "server/internal/pkg/models"
 	userProto "server/internal/user_server/delivery/proto"
+
+	"google.golang.org/grpc/status"
 )
 
 func (a *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
@@ -19,7 +20,10 @@ func (a *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	}
 	a.UserCase.LogInfo("Получен результат из сервера USER")
 
-	cookie, _ := r.Cookie("token")
+	cookie, ok := r.Cookie("token")
+	if ok != nil {
+		model.ResponseFunc(w, 401, nil)
+	}
 
 	a.UserCase.DeleteSession(cookie)
 	http.SetCookie(w, cookie)

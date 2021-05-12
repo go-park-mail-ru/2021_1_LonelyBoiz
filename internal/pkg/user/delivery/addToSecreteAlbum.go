@@ -3,18 +3,15 @@ package delivery
 import (
 	"net/http"
 	"server/internal/pkg/models"
-	model "server/internal/pkg/models"
 
 	"google.golang.org/grpc/status"
 )
 
 func (a *UserHandler) AddToSecreteAlbum(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
 	user, err := a.UserCase.ParseJsonToUser(r.Body)
 	if err != nil {
-		a.UserCase.LogError(err)
-		response := model.ErrorResponse{Err: "Не удалось прочитать тело запроса"}
-		model.Process(model.LoggerFunc(response.Err, a.UserCase.LogError), model.ResponseFunc(w, 400, response))
+		response := models.ErrorResponse{Err: "Не удалось прочитать тело запроса"}
+		models.Process(models.LoggerFunc(response.Err, a.UserCase.LogError), models.ResponseFunc(w, 400, response))
 		return
 	}
 
@@ -22,11 +19,10 @@ func (a *UserHandler) AddToSecreteAlbum(w http.ResponseWriter, r *http.Request) 
 	_, err = a.Server.AddToSecreteAlbum(r.Context(), a.UserCase.User2ProtoUser(user))
 	if err != nil {
 		st, _ := status.FromError(err)
-		model.Process(model.LoggerFunc(st.Message(), a.UserCase.LogError), model.ResponseFunc(w, int(st.Code()), st.Message()))
+		models.Process(models.LoggerFunc(st.Message(), a.UserCase.LogError), models.ResponseFunc(w, int(st.Code()), st.Message()))
 		return
 	}
 	a.UserCase.LogInfo("Получен результат из сервера USER")
 
 	models.Process(models.LoggerFunc("Success add photo to secrete album", a.UserCase.LogInfo), models.ResponseFunc(w, 204, nil))
-	return
 }

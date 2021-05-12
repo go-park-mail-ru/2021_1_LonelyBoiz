@@ -8,7 +8,6 @@ import (
 )
 
 func (a *UserHandler) ChangeUserInfo(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
 	newUser, err := a.UserCase.ParseJsonToUser(r.Body)
 	if err != nil {
 		response := model.ErrorResponse{Err: "Не удалось прочитать тело запроса"}
