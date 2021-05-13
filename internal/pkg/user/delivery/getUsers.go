@@ -24,5 +24,4 @@ func (a *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	models.Process(models.LoggerFunc("Create Feed", a.UserCase.LogInfo), models.ResponseFunc(w, 200, users))
-	return
 }

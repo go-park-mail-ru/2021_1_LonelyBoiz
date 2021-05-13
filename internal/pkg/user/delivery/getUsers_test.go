@@ -19,7 +19,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func TestGetUserInfo(t *testing.T) {
+func TestGetUsers(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
 	userUseCaseMock := usecaseMocks.NewMockUserUseCaseInterface(mockCtrl)
@@ -46,9 +46,8 @@ func TestGetUserInfo(t *testing.T) {
 	}
 	req = mux.SetURLVars(req, vars)
 
-	protoUser := user_proto.User{
-		Id:    1,
-		Email: "email",
+	protoFeed := user_proto.Feed{
+		Users: []*user_proto.UserId{&user_proto.UserId{Id: 1}, &user_proto.UserId{Id: 2}},
 	}
 	user := models.User{
 		Id:    1,
@@ -64,19 +63,18 @@ func TestGetUserInfo(t *testing.T) {
 	rw := httptest.NewRecorder()
 
 	userUseCaseMock.EXPECT().LogInfo(gomock.Any()).Return()
-	serverMock.EXPECT().GetUserById(ctx, &user_proto.UserNothing{Dummy: true}).Return(&protoUser, nil)
+	serverMock.EXPECT().CreateFeed(ctx, &user_proto.UserNothing{}).Return(&protoFeed, nil)
 	userUseCaseMock.EXPECT().LogInfo(gomock.Any()).Return()
-	userUseCaseMock.EXPECT().ProtoUser2User(&protoUser).Return(user)
 	userUseCaseMock.EXPECT().LogInfo(gomock.Any()).Return()
 
-	handlerTest.GetUserInfo(rw, req.WithContext(ctx))
+	handlerTest.GetUsers(rw, req.WithContext(ctx))
 
 	response := rw.Result()
 
 	assert.Equal(t, 200, response.StatusCode)
 }
 
-func TestGetUserInfo_GetUserById_Error(t *testing.T) {
+func TestGetUsers_CreateFeed_Error(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
 	userUseCaseMock := usecaseMocks.NewMockUserUseCaseInterface(mockCtrl)
@@ -103,9 +101,8 @@ func TestGetUserInfo_GetUserById_Error(t *testing.T) {
 	}
 	req = mux.SetURLVars(req, vars)
 
-	protoUser := user_proto.User{
-		Id:    1,
-		Email: "email",
+	protoFeed := user_proto.Feed{
+		Users: []*user_proto.UserId{},
 	}
 	user := models.User{
 		Id:    1,
@@ -121,10 +118,10 @@ func TestGetUserInfo_GetUserById_Error(t *testing.T) {
 	rw := httptest.NewRecorder()
 
 	userUseCaseMock.EXPECT().LogInfo(gomock.Any()).Return()
-	serverMock.EXPECT().GetUserById(ctx, &user_proto.UserNothing{Dummy: true}).Return(&protoUser, status.Error(codes.Code(500), "Some error"))
-	userUseCaseMock.EXPECT().LogError(gomock.Any())
+	serverMock.EXPECT().CreateFeed(ctx, &user_proto.UserNothing{}).Return(&protoFeed, status.Error(codes.Code(500), "Some error"))
+	userUseCaseMock.EXPECT().LogError(gomock.Any()).Return()
 
-	handlerTest.GetUserInfo(rw, req.WithContext(ctx))
+	handlerTest.GetUsers(rw, req.WithContext(ctx))
 
 	response := rw.Result()
 
