@@ -21,9 +21,5 @@ jobs:
 
     - name: Test
       run: go test ./... -v -coverpkg=./... -coverprofile=cover.out.tmp 
-
-    -name: Delete mock and proto files from coverprofile
       run: cat cover.out.tmp | grep -v "mock.go" | grep -v "pb.go" > cover.out
-
-    -name: Calculate coverage
       run: go tool cover -func=cover.out
