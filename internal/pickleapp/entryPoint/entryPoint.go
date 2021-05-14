@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	session_proto2 "server/internal/auth_server/delivery/session"
+	"server/internal/email"
 	image_proto "server/internal/image_server/delivery/proto"
 	"server/internal/pickleapp/middleware"
 	"server/internal/pickleapp/repository"
@@ -171,11 +172,22 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 
 	imageClient := image_proto.NewImageServiceClient(imagesConn)
 
+	// init notification email
+	emailNot := email.NotificationByEmail{
+		Emails: make(chan string),
+		Body:   "Вам пришло новое письмо!",
+	}
+
 	// init uCases & handlers
 	sanitizer := bluemonday.UGCPolicy()
 	userUcase := usecase.UserUsecase{Db: &userRep, Clients: &clients, Sanitizer: sanitizer}
 	chatUcase := chatUsecase.ChatUsecase{Db: &chatRep}
-	messUcase := messageUsecase.MessageUsecase{Db: &messageRep, Clients: &clients, Sanitizer: sanitizer}
+	messUcase := messageUsecase.MessageUsecase{
+		Clients:               &clients,
+		Db:                    &messageRep,
+		NotificationInterface: &emailNot,
+		Sanitizer:             sanitizer,
+	}
 	sessionManager := session.SessionsManager{DB: &sessionRep}
 	imageUcase := imageUsecase.ImageUsecase{
 		Db:           &imageRepository.PostgresRepository{Db: a.Db},
@@ -243,6 +255,8 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 	chatHandler.SetChatHandlers(subRouter)
 	imageHandler.SetHandlers(subRouter)
 	authHandler.SetAuthHandler(csrfRouter)
+
+	go emailNot.SendMessage()
 
 	return []*grpc.ClientConn{userConn, authConn, imagesConn}
 }

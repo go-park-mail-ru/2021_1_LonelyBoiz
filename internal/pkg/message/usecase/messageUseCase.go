@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"server/internal/email"
 	messageRepository "server/internal/pkg/message/repository"
 	model "server/internal/pkg/models"
 	userProto "server/internal/user_server/delivery/proto"
@@ -25,15 +26,30 @@ type MessageUsecaseInterface interface {
 	GetIdFromContext(ctx context.Context) (int, bool)
 	ProtoMessage2Message(message *userProto.Message) model.Message
 	Message2ProtoMessage(message model.Message) *userProto.Message
+	SendEmailNotification(chatId, id int)
 }
 
 type MessageUsecase struct {
 	Clients *map[int]*websocket.Conn
 	Db      messageRepository.MessageRepositoryInterface
-
+	email.NotificationInterface
 	model.LoggerInterface
 
 	Sanitizer *bluemonday.Policy
+}
+
+func (m *MessageUsecase) SendEmailNotification(chatId, id int) {
+	userId, err := m.Db.GetPartnerId(chatId, id)
+	if err != nil {
+		m.LogError("SendEmailNotification  - " + err.Error())
+	}
+
+	userEmail, err := m.Db.GetEmailById(userId)
+	if err != nil {
+		m.LogError("SendEmailNotification  - " + err.Error())
+	}
+
+	m.AddEmailToQueue(userEmail)
 }
 
 func (m *MessageUsecase) WebsocketMessage(newMessage model.Message) {

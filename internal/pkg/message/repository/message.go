@@ -17,10 +17,20 @@ type MessageRepositoryInterface interface {
 	DeleteMessage(messageId int) error
 	GetMessages(chatId int, limit int, offset int) ([]model.Message, error)
 	GetMessage(messageId int) (model.Message, error)
+	GetEmailById(id int) (email string, err error)
 }
 
 type MessageRepository struct {
 	DB *sqlx.DB
+}
+
+func (repo *MessageRepository) GetEmailById(id int) (email string, err error) {
+	err = repo.DB.Select(&email, `SELECT email FROM users WHERE users.id = $1;`, id)
+	if err != nil {
+		return "", err
+	}
+
+	return email, nil
 }
 
 func (repo *MessageRepository) CheckMessageForReacting(userId int, messageId int) (int, error) {
