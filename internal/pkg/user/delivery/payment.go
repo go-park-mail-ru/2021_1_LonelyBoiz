@@ -25,11 +25,8 @@ func (a *UserHandler) Payment(w http.ResponseWriter, r *http.Request) {
 
 	amountString := r.PostFormValue("withdraw_amount")
 	a.UserCase.LogInfo(amountString)
-	tarif := make(map[string]int, 3)
-	tarif["1.00"] = 10
-	tarif["2.00"] = 20
-	tarif["3.00"] = 40
-	amountInt, ok := tarif[amountString]
+
+	amountInt, ok := models.Tarif[amountString]
 	if !ok {
 		a.UserCase.LogError("Неправильный amount")
 		w.WriteHeader(400)

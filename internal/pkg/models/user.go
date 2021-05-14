@@ -43,6 +43,12 @@ type Like struct {
 	Reaction string `json:"reaction"`
 }
 
+var Tarif = map[string]int{
+	"1.00": 10,
+	"2.00": 20,
+	"3.00": 40,
+}
+
 func init() {
 	govalidator.CustomTypeTagMap.Set(
 		"ageValid",
