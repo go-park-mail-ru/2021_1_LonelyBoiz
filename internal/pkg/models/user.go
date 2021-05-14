@@ -67,6 +67,8 @@ type key int
 
 const CtxUserId key = -1
 
+const CtxImageId key = -2
+
 const CharSet = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM0123456789"
 
 var (

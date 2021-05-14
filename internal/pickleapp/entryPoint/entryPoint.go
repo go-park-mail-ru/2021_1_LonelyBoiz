@@ -6,15 +6,11 @@ import (
 	"net/http"
 	"os"
 	session_proto2 "server/internal/auth_server/delivery/session"
-	image_proto "server/internal/image_server/delivery/proto"
 	"server/internal/pickleapp/middleware"
 	"server/internal/pickleapp/repository"
 	"server/internal/pkg/chat/delivery"
 	chatRepository "server/internal/pkg/chat/repository"
 	chatUsecase "server/internal/pkg/chat/usecase"
-	imageDelivery "server/internal/pkg/image/delivery"
-	imageRepository "server/internal/pkg/image/repository"
-	imageUsecase "server/internal/pkg/image/usecase"
 	messageDelivery "server/internal/pkg/message/delivery"
 	messageRepository "server/internal/pkg/message/repository"
 	messageUsecase "server/internal/pkg/message/usecase"
@@ -26,10 +22,6 @@ import (
 	"server/internal/pkg/user/usecase"
 	user_proto "server/internal/user_server/delivery/proto"
 	"time"
-
-	awsSession "github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 
 	authHandler "server/internal/pkg/session/delivery"
 
@@ -46,8 +38,8 @@ import (
 )
 
 type App struct {
-	addr   string
-	router *mux.Router
+	Addr   string
+	Router *mux.Router
 	Db     *sqlx.DB
 	Logger *logrus.Logger
 }
@@ -61,22 +53,22 @@ func (a *App) Start() error {
 		AllowedOrigins:   []string{"http://localhost:3000", "https://lepick.online"},
 		AllowCredentials: true,
 		AllowedMethods:   []string{"GET", "POST", "DELETE", "PATCH", "OPTIONS"},
-		AllowedHeaders:   []string{"Content-Type", "Access-Control-Allow-Headers", "Access-Control-Expose-Headers", "Access-Control-Allow-Origin", "Authorization", "X-Requested-With", "X-CSRF-Token"},
+		AllowedHeaders:   []string{"Content-Type", "Access-Control-Allow-Headers", "Access-Control-Expose-Headers", "Access-Control-Allow-Origin", "Authorization", "X-Requested-With", "X-CSRF-Token", "Server"},
 		Debug:            false,
 	})
 
-	corsHandler := cors.Handler(a.router)
+	corsHandler := cors.Handler(a.Router)
 
 	s := http.Server{
-		Addr:         a.addr,
+		Addr:         a.Addr,
 		Handler:      corsHandler,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  120 * time.Second,
 	}
 
-	//err := s.ListenAndServe()
-	err := s.ListenAndServeTLS(os.Getenv("SSL_PUBLIC"), os.Getenv("SSL_PRIVATE"))
+	err := s.ListenAndServe()
+	//err := s.ListenAndServeTLS(os.Getenv("SSL_PUBLIC"), os.Getenv("SSL_PRIVATE"))
 	if err != nil {
 		return err
 	}
@@ -104,10 +96,9 @@ func NewConfig() Config {
 }
 
 func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
-
 	//init config
-	a.addr = currConfig.addr
-	a.router = currConfig.router
+	a.Addr = currConfig.addr
+	a.Router = currConfig.router
 
 	// init logger
 	contextLogger := logrus.New()
@@ -121,13 +112,6 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 	messageRep := messageRepository.MessageRepository{DB: a.Db}
 	chatRep := chatRepository.ChatRepository{DB: a.Db}
 
-	sess := awsSession.Must(awsSession.NewSession())
-	awsRep := imageRepository.AwsImageRepository{
-		Bucket:   "lepick-images",
-		Svc:      s3.New(sess),
-		Uploader: s3manager.NewUploader(sess),
-	}
-
 	clients := make(map[int]*websocket.Conn)
 
 	//GRPC auth
@@ -135,7 +119,7 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 		grpc.WithInsecure(),
 	}
 
-	authConn, err := grpc.Dial("auth:5400", opts...)
+	authConn, err := grpc.Dial("localhost:5400", opts...)
 
 	if err != nil {
 		log.Print(1)
@@ -150,7 +134,7 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 		grpc.WithInsecure(),
 	}
 
-	userConn, err := grpc.Dial("user:5500", opts...)
+	userConn, err := grpc.Dial("localhost:5500", opts...)
 	if err != nil {
 		grpclog.Fatalf("fail to dial: %v", err)
 		panic(err)
@@ -158,29 +142,12 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 
 	userClient := user_proto.NewUserServiceClient(userConn)
 
-	//GRPC images
-	opts = []grpc.DialOption{
-		grpc.WithInsecure(),
-	}
-
-	imagesConn, err := grpc.Dial("image:5200", opts...)
-	if err != nil {
-		grpclog.Fatalf("fail to dial: %v", err)
-		panic(err)
-	}
-
-	imageClient := image_proto.NewImageServiceClient(imagesConn)
-
 	// init uCases & handlers
 	sanitizer := bluemonday.UGCPolicy()
 	userUcase := usecase.UserUsecase{Db: &userRep, Clients: &clients, Sanitizer: sanitizer}
 	chatUcase := chatUsecase.ChatUsecase{Db: &chatRep}
 	messUcase := messageUsecase.MessageUsecase{Db: &messageRep, Clients: &clients, Sanitizer: sanitizer}
 	sessionManager := session.SessionsManager{DB: &sessionRep}
-	imageUcase := imageUsecase.ImageUsecase{
-		Db:           &imageRepository.PostgresRepository{Db: a.Db},
-		ImageStorage: &awsRep,
-	}
 
 	chatHandler := delivery.ChatHandler{
 		Usecase: &chatUcase,
@@ -198,11 +165,6 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 		Sessions: authClient,
 	}
 
-	imageHandler := imageDelivery.ImageHandler{
-		Server:  imageClient,
-		Usecase: &imageUcase,
-	}
-
 	authHandler := authHandler.AuthHandler{
 		Usecase: &sessionManager,
 	}
@@ -211,7 +173,6 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 	loggerm := middleware.LoggerMiddleware{
 		Logger: &models.Logger{Logger: logrus.NewEntry(a.Logger)},
 		User:   &userUcase,
-		Image:  &imageUcase,
 		//Session: &sessionManager,
 		Chat:    &chatUcase,
 		Message: &messUcase,
@@ -221,13 +182,13 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 		Session: authClient,
 	}
 
-	a.router.Handle("/metrics", promhttp.Handler()).Methods("GET")
+	a.Router.Handle("/metrics", promhttp.Handler()).Methods("GET")
 
-	rawRouter := a.router.NewRoute().Subrouter()
+	rawRouter := a.Router.NewRoute().Subrouter()
 
 	userHandler.SetRawRouter(rawRouter)
 
-	csrfRouter := a.router.NewRoute().Subrouter()
+	csrfRouter := a.Router.NewRoute().Subrouter()
 
 	csrfRouter.Use(loggerm.Middleware)
 	//csrfRouter.Use(middleware.CSRFMiddleware)
@@ -241,8 +202,7 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 	userHandler.SetHandlersWithoutCheckCookie(csrfRouter)
 	messHandler.SetMessageHandlers(subRouter)
 	chatHandler.SetChatHandlers(subRouter)
-	imageHandler.SetHandlers(subRouter)
 	authHandler.SetAuthHandler(csrfRouter)
 
-	return []*grpc.ClientConn{userConn, authConn, imagesConn}
+	return []*grpc.ClientConn{userConn, authConn}
 }

@@ -678,10 +678,10 @@ func (u *UserUsecase) SetCookie(token string) http.Cookie {
 		Value:    token,
 		Expires:  time.Now().AddDate(0, 0, 1),
 		SameSite: http.SameSiteStrictMode,
-		Domain:   "lepick.online:8000",
-		//Domain: "localhost:8000",
-		Secure:   true,
-		HttpOnly: true,
+		//Domain:   "lepick.online:8000",
+		Domain: "localhost:8000",
+		//Secure:   true,
+		//HttpOnly: true,
 		//Path:     "/",
 	}
 }

@@ -9,7 +9,6 @@ import (
 	"server/internal/pkg/models"
 	"server/internal/pkg/user/usecase"
 	"strconv"
-	"strings"
 	"time"
 
 	"google.golang.org/grpc/metadata"
@@ -59,20 +58,30 @@ func (logger *LoggerMiddleware) Middleware(next http.Handler) http.Handler {
 		})
 
 		logger.Logger.LogInfo("Entry Point - Logger Middleware")
-		logger.User.LoggerInterface = logger.Logger
-		logger.Image.LoggerInterface = logger.Logger
-		//logger.Session.Logger = logger.Logger
-		logger.Chat.LoggerInterface = logger.Logger
-		logger.Message.LoggerInterface = logger.Logger
+		if logger.User != nil {
+			logger.User.LoggerInterface = logger.Logger
+		}
+
+		if logger.Image != nil {
+			logger.Image.LoggerInterface = logger.Logger
+		}
+
+		if logger.Chat != nil {
+			logger.Chat.LoggerInterface = logger.Logger
+		}
+
+		if logger.Message != nil {
+			logger.Message.LoggerInterface = logger.Logger
+		}
 
 		ctx := r.Context()
 		ctx = metadata.AppendToOutgoingContext(ctx, "requestId", strconv.FormatInt(reqId, 10))
 		next.ServeHTTP(w, r.WithContext(ctx))
 
-		if r.RequestURI != "/metrics" {
-			Hits.WithLabelValues(strconv.Itoa(r.Response.StatusCode), strings.Split(r.URL.Path, "/")[0]).Inc()
-			FooCount.Add(1)
-		}
+		//if r.RequestURI != "/metrics" {
+		//	Hits.WithLabelValues(strconv.Itoa(r.Response.StatusCode), strings.Split(r.URL.Path, "/")[0]).Inc()
+		//	FooCount.Add(1)
+		//}
 
 	})
 }

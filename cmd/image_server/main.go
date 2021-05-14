@@ -1,90 +1,115 @@
 package main
 
 import (
-	"context"
 	awsSession "github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/grpclog"
-	"google.golang.org/grpc/metadata"
 	"log"
 	"math/rand"
-	"net"
-	delivery2 "server/internal/image_server/delivery"
-	imageProto "server/internal/image_server/delivery/proto"
+	"os"
+	session_proto2 "server/internal/auth_server/delivery/session"
+	"server/internal/pickleapp/entryPoint"
+	"server/internal/pickleapp/middleware"
 	"server/internal/pickleapp/repository"
+	imageDelivery "server/internal/pkg/image/delivery"
 	imageRepository "server/internal/pkg/image/repository"
-	"server/internal/pkg/image/usecase"
+	imageUsecase "server/internal/pkg/image/usecase"
 	"server/internal/pkg/models"
 	"time"
 )
 
-type ServerInterceptor struct {
-	Logger *models.Logger
+type Config struct {
+	addr    string
+	userIds int
+	router  *mux.Router
 }
 
-func (s *ServerInterceptor) logger(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
-	start := time.Now()
-
-	md, _ := metadata.FromIncomingContext(ctx)
-
-	reqIds := md.Get("requestId")
-	var reqId string
-	if len(reqIds) != 0 {
-		reqId = reqIds[0]
-	}
-
-	s.Logger.Logger = s.Logger.Logger.WithFields(logrus.Fields{
-		"server":    "[IMAGE]",
-		"requestId": reqId,
-		"method":    info.FullMethod,
-		"context":   md,
-		"error":     err,
-		"work_time": time.Since(start),
-	})
-
-	reply, err := handler(ctx, req)
-
-	s.Logger.LogInfo("Auth Interceptor")
-	return reply, err
+func NewConfig() Config {
+	rand.Seed(time.Now().UnixNano())
+	newConfig := Config{}
+	port := "7000"
+	newConfig.addr = ":" + port
+	newConfig.userIds = 0
+	newConfig.router = mux.NewRouter()
+	return newConfig
 }
 
 func main() {
-	rand.Seed(time.Now().UnixNano())
-	listener, err := net.Listen("tcp", ":5200")
+	a := entryPoint.App{}
+	config := NewConfig()
 
-	if err != nil {
-		grpclog.Fatalf("failed to listen: %v", err)
-	}
+	//init config
+	a.Addr = config.addr
+	a.Router = config.router
 
-	ServerInterceptor := ServerInterceptor{&models.Logger{Logger: logrus.NewEntry(logrus.StandardLogger())}}
+	// init logger
+	contextLogger := logrus.New()
+	logrus.SetFormatter(&logrus.TextFormatter{})
+	a.Logger = contextLogger
 
-	grpcServer := grpc.NewServer(grpc.UnaryInterceptor(ServerInterceptor.logger))
-
+	// init db
+	a.Db = repository.Init()
 	sess := awsSession.Must(awsSession.NewSession())
-
 	awsRep := imageRepository.AwsImageRepository{
 		Bucket:   "lepick-images",
 		Svc:      s3.New(sess),
 		Uploader: s3manager.NewUploader(sess),
 	}
 
-	imageServer := delivery2.ImageServer{
-		Usecase: &usecase.ImageUsecase{
-			Db:              &imageRepository.PostgresRepository{Db: repository.Init()},
-			ImageStorage:    &awsRep,
-			LoggerInterface: ServerInterceptor.Logger,
-		},
+	//GRPC auth
+	opts := []grpc.DialOption{
+		grpc.WithInsecure(),
 	}
+	//TODO:: поменять на auth
+	authConn, err := grpc.Dial("localhost:5400", opts...)
 
-	imageProto.RegisterImageServiceServer(grpcServer, &imageServer)
-	log.Print("Image Server START at 5200")
-	err = grpcServer.Serve(listener)
+	defer authConn.Close()
 
 	if err != nil {
-		grpclog.Fatalf("failed to serve: %v", err)
-		return
+		log.Print(1)
+		grpclog.Fatalf("fail to dial: %v", err)
+		panic(err)
+	}
+	authClient := session_proto2.NewAuthCheckerClient(authConn)
+
+	// init uCases & handlers
+	imageUcase := imageUsecase.ImageUsecase{
+		Db:           &imageRepository.PostgresRepository{Db: a.Db},
+		ImageStorage: &awsRep,
+	}
+
+	imageHandler := imageDelivery.ImageHandler{
+		Usecase: &imageUcase,
+	}
+	// init middlewares
+	loggerm := middleware.LoggerMiddleware{
+		Logger: &models.Logger{Logger: logrus.NewEntry(a.Logger)},
+		Image:  &imageUcase,
+	}
+
+	checkcookiem := middleware.ValidateCookieMiddleware{
+		Session: authClient,
+	}
+
+	csrfRouter := a.Router.NewRoute().Subrouter()
+
+	csrfRouter.Use(loggerm.Middleware)
+	//csrfRouter.Use(middleware.CSRFMiddleware)
+	csrfRouter.Use(middleware.SetContextMiddleware)
+
+	// validate cookie router
+	subRouter := csrfRouter.NewRoute().Subrouter()
+	subRouter.Use(checkcookiem.Middleware)
+
+	imageHandler.SetHandlers(subRouter)
+
+	err = a.Start()
+	if err != nil {
+		a.Logger.Error(err)
+		os.Exit(1)
 	}
 }
