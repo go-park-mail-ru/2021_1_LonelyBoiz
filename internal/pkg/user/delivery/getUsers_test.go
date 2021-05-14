@@ -47,7 +47,7 @@ func TestGetUsers(t *testing.T) {
 	req = mux.SetURLVars(req, vars)
 
 	protoFeed := user_proto.Feed{
-		Users: []*user_proto.UserId{&user_proto.UserId{Id: 1}, &user_proto.UserId{Id: 2}},
+		Users: []*user_proto.UserId{{Id: 1}, {Id: 2}},
 	}
 	user := models.User{
 		Id:    1,

@@ -2,10 +2,11 @@ package delivery
 
 import (
 	"encoding/json"
-	"google.golang.org/grpc/status"
 	"net/http"
 	"server/internal/pkg/models"
 	userproto "server/internal/user_server/delivery/proto"
+
+	"google.golang.org/grpc/status"
 )
 
 func (a *UserHandler) LikesHandler(w http.ResponseWriter, r *http.Request) {
@@ -24,6 +25,7 @@ func (a *UserHandler) LikesHandler(w http.ResponseWriter, r *http.Request) {
 		UserId:   int32(like.UserId),
 		Reaction: like.Reaction,
 	})
+	a.UserCase.LogInfo("Получен результат из сервера USER")
 
 	if err != nil {
 		st, _ := status.FromError(err)
@@ -34,7 +36,6 @@ func (a *UserHandler) LikesHandler(w http.ResponseWriter, r *http.Request) {
 		models.Process(models.LoggerFunc(st.Message(), a.UserCase.LogError), models.ResponseFunc(w, int(st.Code()), st.Message()))
 		return
 	}
-	a.UserCase.LogInfo("Получен результат из сервера USER")
 
 	nChat := models.Chat{
 		ChatId:              int(chat.GetChatId()),

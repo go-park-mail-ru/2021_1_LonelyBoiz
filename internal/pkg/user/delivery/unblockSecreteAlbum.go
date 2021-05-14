@@ -19,5 +19,4 @@ func (a *UserHandler) UnblockSecreteAlbum(w http.ResponseWriter, r *http.Request
 	a.UserCase.LogInfo("Получен результат из сервера USER")
 
 	model.Process(model.LoggerFunc("Successful unlock", a.UserCase.LogInfo), model.ResponseFunc(w, 204, nil))
-	return
 }
