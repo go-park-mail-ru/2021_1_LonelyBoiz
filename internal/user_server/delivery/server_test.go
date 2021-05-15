@@ -1775,3 +1775,124 @@ func TestChangeMessage_Error(t *testing.T) {
 
 	assert.NotEqual(t, err, nil)
 }
+
+func TestAddToSecretAlbum(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+	chatUseCaseMock := chat_usecase.NewMockChatUsecaseInterface(mockCtrl)
+	messageUsecaseMock := message_usecase.NewMockMessageUsecaseInterface(mockCtrl)
+
+	server := UserServer{
+		UserUsecase:    userUseCaseMock,
+		Sessions:       sessionManagerMock,
+		ChatUsecase:    chatUseCaseMock,
+		MessageUsecase: messageUsecaseMock,
+	}
+
+	user := models.User{
+		Id:             1,
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+	}
+	protoUser := user_proto.User{
+		Id:             1,
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+	}
+
+	req := &http.Request{}
+
+	ctx := req.Context()
+
+	userUseCaseMock.EXPECT().ProtoPhotos2Photos(gomock.Any()).Return([]string{})
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "cookieId").Return(user.Id, true)
+	userUseCaseMock.EXPECT().AddToSecreteAlbum(user.Id, gomock.Any()).Return(200, nil)
+
+	_, err := server.AddToSecreteAlbum(ctx, &protoUser)
+
+	assert.Equal(t, err, nil)
+}
+
+func TestAddToSecretAlbum_GetCookie_Error(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+	chatUseCaseMock := chat_usecase.NewMockChatUsecaseInterface(mockCtrl)
+	messageUsecaseMock := message_usecase.NewMockMessageUsecaseInterface(mockCtrl)
+
+	server := UserServer{
+		UserUsecase:    userUseCaseMock,
+		Sessions:       sessionManagerMock,
+		ChatUsecase:    chatUseCaseMock,
+		MessageUsecase: messageUsecaseMock,
+	}
+
+	user := models.User{
+		Id:             1,
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+	}
+	protoUser := user_proto.User{
+		Id:             1,
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+	}
+
+	req := &http.Request{}
+
+	ctx := req.Context()
+
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "cookieId").Return(user.Id, false)
+
+	_, err := server.AddToSecreteAlbum(ctx, &protoUser)
+
+	assert.NotEqual(t, err, nil)
+}
+
+func TestAddToSecretAlbum_Error(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+	chatUseCaseMock := chat_usecase.NewMockChatUsecaseInterface(mockCtrl)
+	messageUsecaseMock := message_usecase.NewMockMessageUsecaseInterface(mockCtrl)
+
+	server := UserServer{
+		UserUsecase:    userUseCaseMock,
+		Sessions:       sessionManagerMock,
+		ChatUsecase:    chatUseCaseMock,
+		MessageUsecase: messageUsecaseMock,
+	}
+
+	user := models.User{
+		Id:             1,
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+	}
+	protoUser := user_proto.User{
+		Id:             1,
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+	}
+
+	req := &http.Request{}
+
+	ctx := req.Context()
+
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "cookieId").Return(user.Id, true)
+	userUseCaseMock.EXPECT().ProtoPhotos2Photos(gomock.Any()).Return([]string{})
+	userUseCaseMock.EXPECT().AddToSecreteAlbum(user.Id, gomock.Any()).Return(500, errors.New("Some error"))
+
+	_, err := server.AddToSecreteAlbum(ctx, &protoUser)
+
+	assert.NotEqual(t, err, nil)
+}
