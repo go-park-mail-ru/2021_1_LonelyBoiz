@@ -6,6 +6,7 @@ import (
 	session_proto "server/internal/auth_server/delivery/session"
 	sessionMocks "server/internal/auth_server/delivery/session/mocks"
 	chat_usecase "server/internal/pkg/chat/usecase/mocks"
+	message_usecase "server/internal/pkg/message/usecase/mocks"
 	"server/internal/pkg/models"
 	mock_usecase "server/internal/pkg/user/usecase/mocks"
 	user_proto "server/internal/user_server/delivery/proto"
@@ -1150,6 +1151,257 @@ func TestGetChats_GetChat_Error(t *testing.T) {
 	chatUseCaseMock.EXPECT().GetChat(user.Id, offset, limit).Return(chats, errors.New("Some error"))
 
 	_, err := server.GetChats(ctx, &user_proto.UserNothing{})
+
+	assert.NotEqual(t, err, nil)
+}
+
+func TestGetMessages(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+	chatUseCaseMock := chat_usecase.NewMockChatUsecaseInterface(mockCtrl)
+	messageUsecaseMock := message_usecase.NewMockMessageUsecaseInterface(mockCtrl)
+
+	server := UserServer{
+		UserUsecase:    userUseCaseMock,
+		Sessions:       sessionManagerMock,
+		ChatUsecase:    chatUseCaseMock,
+		MessageUsecase: messageUsecaseMock,
+	}
+
+	user := models.User{
+		Id:             1,
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+	}
+
+	message := models.Message{
+		MessageId: 1,
+		AuthorId:  1,
+		ChatId:    1,
+	}
+
+	messages := []models.Message{message}
+
+	limit := 20
+	offset := 20
+
+	req := &http.Request{}
+
+	ctx := req.Context()
+
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "cookieId").Return(user.Id, true)
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "urlCount").Return(limit, true)
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "urlOffset").Return(offset, true)
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "urlChatId").Return(message.ChatId, true)
+
+	messageUsecaseMock.EXPECT().ManageMessage(user.Id, message.ChatId, limit, offset).Return(messages, 200, nil)
+	messageUsecaseMock.EXPECT().Message2ProtoMessage(message).Return(&user_proto.Message{})
+
+	_, err := server.GetMessages(ctx, &user_proto.UserNothing{})
+
+	assert.Equal(t, err, nil)
+}
+
+func TestGetMessages_getCookie_Error(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+	chatUseCaseMock := chat_usecase.NewMockChatUsecaseInterface(mockCtrl)
+	messageUsecaseMock := message_usecase.NewMockMessageUsecaseInterface(mockCtrl)
+
+	server := UserServer{
+		UserUsecase:    userUseCaseMock,
+		Sessions:       sessionManagerMock,
+		ChatUsecase:    chatUseCaseMock,
+		MessageUsecase: messageUsecaseMock,
+	}
+
+	user := models.User{
+		Id:             1,
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+	}
+
+	req := &http.Request{}
+
+	ctx := req.Context()
+
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "cookieId").Return(user.Id, false)
+
+	_, err := server.GetMessages(ctx, &user_proto.UserNothing{})
+
+	assert.NotEqual(t, err, nil)
+}
+
+func TestGetMessages_GetCount_Error(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+	chatUseCaseMock := chat_usecase.NewMockChatUsecaseInterface(mockCtrl)
+	messageUsecaseMock := message_usecase.NewMockMessageUsecaseInterface(mockCtrl)
+
+	server := UserServer{
+		UserUsecase:    userUseCaseMock,
+		Sessions:       sessionManagerMock,
+		ChatUsecase:    chatUseCaseMock,
+		MessageUsecase: messageUsecaseMock,
+	}
+
+	user := models.User{
+		Id:             1,
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+	}
+
+	limit := 20
+
+	req := &http.Request{}
+
+	ctx := req.Context()
+
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "cookieId").Return(user.Id, true)
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "urlCount").Return(limit, false)
+
+	_, err := server.GetMessages(ctx, &user_proto.UserNothing{})
+
+	assert.NotEqual(t, err, nil)
+}
+
+func TestGetMessages_GetOffset_Error(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+	chatUseCaseMock := chat_usecase.NewMockChatUsecaseInterface(mockCtrl)
+	messageUsecaseMock := message_usecase.NewMockMessageUsecaseInterface(mockCtrl)
+
+	server := UserServer{
+		UserUsecase:    userUseCaseMock,
+		Sessions:       sessionManagerMock,
+		ChatUsecase:    chatUseCaseMock,
+		MessageUsecase: messageUsecaseMock,
+	}
+
+	user := models.User{
+		Id:             1,
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+	}
+
+	limit := 20
+	offset := 20
+
+	req := &http.Request{}
+
+	ctx := req.Context()
+
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "cookieId").Return(user.Id, true)
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "urlCount").Return(limit, true)
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "urlOffset").Return(offset, false)
+
+	_, err := server.GetMessages(ctx, &user_proto.UserNothing{})
+
+	assert.NotEqual(t, err, nil)
+}
+
+func TestGetMessages_GetChatId_Error(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+	chatUseCaseMock := chat_usecase.NewMockChatUsecaseInterface(mockCtrl)
+	messageUsecaseMock := message_usecase.NewMockMessageUsecaseInterface(mockCtrl)
+
+	server := UserServer{
+		UserUsecase:    userUseCaseMock,
+		Sessions:       sessionManagerMock,
+		ChatUsecase:    chatUseCaseMock,
+		MessageUsecase: messageUsecaseMock,
+	}
+
+	user := models.User{
+		Id:             1,
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+	}
+
+	message := models.Message{
+		MessageId: 1,
+		AuthorId:  1,
+		ChatId:    1,
+	}
+
+	limit := 20
+	offset := 20
+
+	req := &http.Request{}
+
+	ctx := req.Context()
+
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "cookieId").Return(user.Id, true)
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "urlCount").Return(limit, true)
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "urlOffset").Return(offset, true)
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "urlChatId").Return(message.ChatId, false)
+
+	_, err := server.GetMessages(ctx, &user_proto.UserNothing{})
+
+	assert.NotEqual(t, err, nil)
+}
+
+func TestGetMessages_ManageMessage_Error(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+	chatUseCaseMock := chat_usecase.NewMockChatUsecaseInterface(mockCtrl)
+	messageUsecaseMock := message_usecase.NewMockMessageUsecaseInterface(mockCtrl)
+
+	server := UserServer{
+		UserUsecase:    userUseCaseMock,
+		Sessions:       sessionManagerMock,
+		ChatUsecase:    chatUseCaseMock,
+		MessageUsecase: messageUsecaseMock,
+	}
+
+	user := models.User{
+		Id:             1,
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+	}
+
+	message := models.Message{
+		MessageId: 1,
+		AuthorId:  1,
+		ChatId:    1,
+	}
+
+	messages := []models.Message{message}
+
+	limit := 20
+	offset := 20
+
+	req := &http.Request{}
+
+	ctx := req.Context()
+
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "cookieId").Return(user.Id, true)
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "urlCount").Return(limit, true)
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "urlOffset").Return(offset, true)
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "urlChatId").Return(message.ChatId, true)
+
+	messageUsecaseMock.EXPECT().ManageMessage(user.Id, message.ChatId, limit, offset).Return(messages, 500, errors.New("Some error"))
+
+	_, err := server.GetMessages(ctx, &user_proto.UserNothing{})
 
 	assert.NotEqual(t, err, nil)
 }
