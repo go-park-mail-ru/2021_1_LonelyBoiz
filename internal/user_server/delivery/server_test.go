@@ -1896,3 +1896,282 @@ func TestAddToSecretAlbum_Error(t *testing.T) {
 
 	assert.NotEqual(t, err, nil)
 }
+
+func TestUnlockSecretAlbum(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+	chatUseCaseMock := chat_usecase.NewMockChatUsecaseInterface(mockCtrl)
+	messageUsecaseMock := message_usecase.NewMockMessageUsecaseInterface(mockCtrl)
+
+	server := UserServer{
+		UserUsecase:    userUseCaseMock,
+		Sessions:       sessionManagerMock,
+		ChatUsecase:    chatUseCaseMock,
+		MessageUsecase: messageUsecaseMock,
+	}
+
+	user := models.User{
+		Id:             1,
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+	}
+
+	req := &http.Request{}
+
+	ctx := req.Context()
+
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "cookieId").Return(user.Id, true)
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "getterId").Return(user.Id, true)
+	userUseCaseMock.EXPECT().UnblockSecreteAlbum(user.Id, user.Id).Return(200, nil)
+
+	_, err := server.UnlockSecretAlbum(ctx, &user_proto.UserNothing{})
+
+	assert.Equal(t, err, nil)
+}
+
+func TestUnlockSecretAlbum_GetCookie_Error(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+	chatUseCaseMock := chat_usecase.NewMockChatUsecaseInterface(mockCtrl)
+	messageUsecaseMock := message_usecase.NewMockMessageUsecaseInterface(mockCtrl)
+
+	server := UserServer{
+		UserUsecase:    userUseCaseMock,
+		Sessions:       sessionManagerMock,
+		ChatUsecase:    chatUseCaseMock,
+		MessageUsecase: messageUsecaseMock,
+	}
+
+	user := models.User{
+		Id:             1,
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+	}
+
+	req := &http.Request{}
+
+	ctx := req.Context()
+
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "cookieId").Return(user.Id, false)
+
+	_, err := server.UnlockSecretAlbum(ctx, &user_proto.UserNothing{})
+
+	assert.NotEqual(t, err, nil)
+}
+
+func TestUnlockSecretAlbum_GetId_Error(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+	chatUseCaseMock := chat_usecase.NewMockChatUsecaseInterface(mockCtrl)
+	messageUsecaseMock := message_usecase.NewMockMessageUsecaseInterface(mockCtrl)
+
+	server := UserServer{
+		UserUsecase:    userUseCaseMock,
+		Sessions:       sessionManagerMock,
+		ChatUsecase:    chatUseCaseMock,
+		MessageUsecase: messageUsecaseMock,
+	}
+
+	user := models.User{
+		Id:             1,
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+	}
+
+	req := &http.Request{}
+
+	ctx := req.Context()
+
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "cookieId").Return(user.Id, true)
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "getterId").Return(user.Id, false)
+
+	_, err := server.UnlockSecretAlbum(ctx, &user_proto.UserNothing{})
+
+	assert.NotEqual(t, err, nil)
+}
+
+func TestUnlockSecretAlbum_Error(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+	chatUseCaseMock := chat_usecase.NewMockChatUsecaseInterface(mockCtrl)
+	messageUsecaseMock := message_usecase.NewMockMessageUsecaseInterface(mockCtrl)
+
+	server := UserServer{
+		UserUsecase:    userUseCaseMock,
+		Sessions:       sessionManagerMock,
+		ChatUsecase:    chatUseCaseMock,
+		MessageUsecase: messageUsecaseMock,
+	}
+
+	user := models.User{
+		Id:             1,
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+	}
+
+	req := &http.Request{}
+
+	ctx := req.Context()
+
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "cookieId").Return(user.Id, true)
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "getterId").Return(user.Id, true)
+	userUseCaseMock.EXPECT().UnblockSecreteAlbum(user.Id, user.Id).Return(200, errors.New("Some error"))
+
+	_, err := server.UnlockSecretAlbum(ctx, &user_proto.UserNothing{})
+
+	assert.NotEqual(t, err, nil)
+}
+
+func TestGetSecreteAlbum(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+	chatUseCaseMock := chat_usecase.NewMockChatUsecaseInterface(mockCtrl)
+	messageUsecaseMock := message_usecase.NewMockMessageUsecaseInterface(mockCtrl)
+
+	server := UserServer{
+		UserUsecase:    userUseCaseMock,
+		Sessions:       sessionManagerMock,
+		ChatUsecase:    chatUseCaseMock,
+		MessageUsecase: messageUsecaseMock,
+	}
+
+	user := models.User{
+		Id:             1,
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+		Photos:         []string{},
+	}
+
+	req := &http.Request{}
+
+	ctx := req.Context()
+
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "ownerId").Return(user.Id, true)
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "cookieId").Return(user.Id, true)
+	userUseCaseMock.EXPECT().GetSecreteAlbum(user.Id, user.Id).Return([]string{}, 200, nil)
+	userUseCaseMock.EXPECT().Photos2ProtoPhotos(gomock.Any()).Return(user.Photos)
+
+	_, err := server.GetSecreteAlbum(ctx, &user_proto.UserNothing{})
+
+	assert.Equal(t, err, nil)
+}
+
+func TestGetSecreteAlbum_GetOwnerId_Error(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+	chatUseCaseMock := chat_usecase.NewMockChatUsecaseInterface(mockCtrl)
+	messageUsecaseMock := message_usecase.NewMockMessageUsecaseInterface(mockCtrl)
+
+	server := UserServer{
+		UserUsecase:    userUseCaseMock,
+		Sessions:       sessionManagerMock,
+		ChatUsecase:    chatUseCaseMock,
+		MessageUsecase: messageUsecaseMock,
+	}
+
+	user := models.User{
+		Id:             1,
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+		Photos:         []string{},
+	}
+
+	req := &http.Request{}
+
+	ctx := req.Context()
+
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "ownerId").Return(user.Id, false)
+
+	_, err := server.GetSecreteAlbum(ctx, &user_proto.UserNothing{})
+
+	assert.NotEqual(t, err, nil)
+}
+
+func TestGetSecreteAlbum_GetCookie_Error(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+	chatUseCaseMock := chat_usecase.NewMockChatUsecaseInterface(mockCtrl)
+	messageUsecaseMock := message_usecase.NewMockMessageUsecaseInterface(mockCtrl)
+
+	server := UserServer{
+		UserUsecase:    userUseCaseMock,
+		Sessions:       sessionManagerMock,
+		ChatUsecase:    chatUseCaseMock,
+		MessageUsecase: messageUsecaseMock,
+	}
+
+	user := models.User{
+		Id:             1,
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+		Photos:         []string{},
+	}
+
+	req := &http.Request{}
+
+	ctx := req.Context()
+
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "ownerId").Return(user.Id, true)
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "cookieId").Return(user.Id, false)
+
+	_, err := server.GetSecreteAlbum(ctx, &user_proto.UserNothing{})
+
+	assert.NotEqual(t, err, nil)
+}
+
+func TestGetSecreteAlbum_Error(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+	chatUseCaseMock := chat_usecase.NewMockChatUsecaseInterface(mockCtrl)
+	messageUsecaseMock := message_usecase.NewMockMessageUsecaseInterface(mockCtrl)
+
+	server := UserServer{
+		UserUsecase:    userUseCaseMock,
+		Sessions:       sessionManagerMock,
+		ChatUsecase:    chatUseCaseMock,
+		MessageUsecase: messageUsecaseMock,
+	}
+
+	user := models.User{
+		Id:             1,
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+		Photos:         []string{},
+	}
+
+	req := &http.Request{}
+
+	ctx := req.Context()
+
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "ownerId").Return(user.Id, true)
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "cookieId").Return(user.Id, true)
+	userUseCaseMock.EXPECT().GetSecreteAlbum(user.Id, user.Id).Return([]string{}, 500, errors.New("Some error"))
+
+	_, err := server.GetSecreteAlbum(ctx, &user_proto.UserNothing{})
+
+	assert.NotEqual(t, err, nil)
+}
