@@ -1405,3 +1405,189 @@ func TestGetMessages_ManageMessage_Error(t *testing.T) {
 
 	assert.NotEqual(t, err, nil)
 }
+
+func TestCreateMessage(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+	chatUseCaseMock := chat_usecase.NewMockChatUsecaseInterface(mockCtrl)
+	messageUsecaseMock := message_usecase.NewMockMessageUsecaseInterface(mockCtrl)
+
+	server := UserServer{
+		UserUsecase:    userUseCaseMock,
+		Sessions:       sessionManagerMock,
+		ChatUsecase:    chatUseCaseMock,
+		MessageUsecase: messageUsecaseMock,
+	}
+
+	user := models.User{
+		Id:             1,
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+	}
+
+	message := models.Message{
+		MessageId: 1,
+		AuthorId:  1,
+		ChatId:    1,
+	}
+
+	protoMessage := user_proto.Message{
+		MessageId: 1,
+		AuthorId:  1,
+		ChatId:    1,
+	}
+
+	req := &http.Request{}
+
+	ctx := req.Context()
+
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "cookieId").Return(user.Id, true)
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "urlChatId").Return(message.ChatId, true)
+
+	messageUsecaseMock.EXPECT().ProtoMessage2Message(gomock.Any()).Return(message)
+	messageUsecaseMock.EXPECT().Message2ProtoMessage(gomock.Any()).Return(&protoMessage)
+
+	messageUsecaseMock.EXPECT().CreateMessage(message, message.ChatId, user.Id).Return(message, 200, nil)
+
+	_, err := server.CreateMessage(ctx, &protoMessage)
+
+	assert.Equal(t, err, nil)
+}
+
+func TestCreateMessage_GetCookie_Error(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+	chatUseCaseMock := chat_usecase.NewMockChatUsecaseInterface(mockCtrl)
+	messageUsecaseMock := message_usecase.NewMockMessageUsecaseInterface(mockCtrl)
+
+	server := UserServer{
+		UserUsecase:    userUseCaseMock,
+		Sessions:       sessionManagerMock,
+		ChatUsecase:    chatUseCaseMock,
+		MessageUsecase: messageUsecaseMock,
+	}
+
+	user := models.User{
+		Id:             1,
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+	}
+
+	protoMessage := user_proto.Message{
+		MessageId: 1,
+		AuthorId:  1,
+		ChatId:    1,
+	}
+
+	req := &http.Request{}
+
+	ctx := req.Context()
+
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "cookieId").Return(user.Id, false)
+
+	_, err := server.CreateMessage(ctx, &protoMessage)
+
+	assert.NotEqual(t, err, nil)
+}
+
+func TestCreateMessage_GetChat_Error(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+	chatUseCaseMock := chat_usecase.NewMockChatUsecaseInterface(mockCtrl)
+	messageUsecaseMock := message_usecase.NewMockMessageUsecaseInterface(mockCtrl)
+
+	server := UserServer{
+		UserUsecase:    userUseCaseMock,
+		Sessions:       sessionManagerMock,
+		ChatUsecase:    chatUseCaseMock,
+		MessageUsecase: messageUsecaseMock,
+	}
+
+	user := models.User{
+		Id:             1,
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+	}
+
+	message := models.Message{
+		MessageId: 1,
+		AuthorId:  1,
+		ChatId:    1,
+	}
+
+	protoMessage := user_proto.Message{
+		MessageId: 1,
+		AuthorId:  1,
+		ChatId:    1,
+	}
+
+	req := &http.Request{}
+
+	ctx := req.Context()
+
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "cookieId").Return(user.Id, true)
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "urlChatId").Return(message.ChatId, false)
+
+	_, err := server.CreateMessage(ctx, &protoMessage)
+
+	assert.NotEqual(t, err, nil)
+}
+
+func TestCreateMessage_CreateMessage_Error(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+	chatUseCaseMock := chat_usecase.NewMockChatUsecaseInterface(mockCtrl)
+	messageUsecaseMock := message_usecase.NewMockMessageUsecaseInterface(mockCtrl)
+
+	server := UserServer{
+		UserUsecase:    userUseCaseMock,
+		Sessions:       sessionManagerMock,
+		ChatUsecase:    chatUseCaseMock,
+		MessageUsecase: messageUsecaseMock,
+	}
+
+	user := models.User{
+		Id:             1,
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+	}
+
+	message := models.Message{
+		MessageId: 1,
+		AuthorId:  1,
+		ChatId:    1,
+	}
+
+	protoMessage := user_proto.Message{
+		MessageId: 1,
+		AuthorId:  1,
+		ChatId:    1,
+	}
+
+	req := &http.Request{}
+
+	ctx := req.Context()
+
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "cookieId").Return(user.Id, true)
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "urlChatId").Return(message.ChatId, true)
+
+	messageUsecaseMock.EXPECT().ProtoMessage2Message(gomock.Any()).Return(message)
+
+	messageUsecaseMock.EXPECT().CreateMessage(message, message.ChatId, user.Id).Return(message, 400, errors.New("Some error"))
+
+	_, err := server.CreateMessage(ctx, &protoMessage)
+
+	assert.NotEqual(t, err, nil)
+}
