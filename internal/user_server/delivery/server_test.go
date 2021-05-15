@@ -778,3 +778,181 @@ func TestCreateFeed_ValidationError(t *testing.T) {
 
 	assert.NotEqual(t, err, nil)
 }
+
+func TestCreateChat(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+
+	server := UserServer{
+		UserUsecase: userUseCaseMock,
+		Sessions:    sessionManagerMock,
+	}
+
+	user := models.User{
+		Id:             1,
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+	}
+
+	chat := models.Chat{
+		ChatId:      1,
+		PartnerId:   2,
+		PartnerName: "Name",
+		Photos:      []string{},
+	}
+
+	req := &http.Request{}
+
+	ctx := req.Context()
+
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "cookieId").Return(user.Id, true)
+	userUseCaseMock.EXPECT().CreateChat(user.Id, models.Like{}).Return(chat, 200, nil)
+	userUseCaseMock.EXPECT().Photos2ProtoPhotos(gomock.Any()).Return(chat.Photos)
+
+	_, err := server.CreateChat(ctx, &user_proto.Like{})
+
+	assert.Equal(t, err, nil)
+}
+
+func TestCreateChat_GetCookie_Error(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+
+	server := UserServer{
+		UserUsecase: userUseCaseMock,
+		Sessions:    sessionManagerMock,
+	}
+
+	user := models.User{
+		Id:             1,
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+	}
+
+	req := &http.Request{}
+
+	ctx := req.Context()
+
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "cookieId").Return(user.Id, false)
+
+	_, err := server.CreateChat(ctx, &user_proto.Like{})
+
+	assert.NotEqual(t, err, nil)
+}
+
+func TestCreateChat_204(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+
+	server := UserServer{
+		UserUsecase: userUseCaseMock,
+		Sessions:    sessionManagerMock,
+	}
+
+	user := models.User{
+		Id:             1,
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+	}
+
+	chat := models.Chat{
+		ChatId:      1,
+		PartnerId:   2,
+		PartnerName: "Name",
+		Photos:      []string{},
+	}
+
+	req := &http.Request{}
+
+	ctx := req.Context()
+
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "cookieId").Return(user.Id, true)
+	userUseCaseMock.EXPECT().CreateChat(user.Id, models.Like{}).Return(chat, 204, nil)
+
+	_, err := server.CreateChat(ctx, &user_proto.Like{})
+
+	assert.NotEqual(t, err, nil)
+}
+
+func TestCreateChat_Error(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+
+	server := UserServer{
+		UserUsecase: userUseCaseMock,
+		Sessions:    sessionManagerMock,
+	}
+
+	user := models.User{
+		Id:             1,
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+	}
+
+	chat := models.Chat{
+		ChatId:      1,
+		PartnerId:   2,
+		PartnerName: "Name",
+		Photos:      []string{},
+	}
+
+	req := &http.Request{}
+
+	ctx := req.Context()
+
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "cookieId").Return(user.Id, true)
+	userUseCaseMock.EXPECT().CreateChat(user.Id, models.Like{}).Return(chat, 500, errors.New("Some error"))
+
+	_, err := server.CreateChat(ctx, &user_proto.Like{})
+
+	assert.NotEqual(t, err, nil)
+}
+
+func TestCreateChat_Validation_Error(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+
+	server := UserServer{
+		UserUsecase: userUseCaseMock,
+		Sessions:    sessionManagerMock,
+	}
+
+	user := models.User{
+		Id:             1,
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+	}
+
+	chat := models.Chat{
+		ChatId:      1,
+		PartnerId:   2,
+		PartnerName: "Name",
+		Photos:      []string{},
+	}
+
+	req := &http.Request{}
+
+	ctx := req.Context()
+
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "cookieId").Return(user.Id, true)
+	userUseCaseMock.EXPECT().CreateChat(user.Id, models.Like{}).Return(chat, 400, errors.New("Some error"))
+
+	_, err := server.CreateChat(ctx, &user_proto.Like{})
+
+	assert.NotEqual(t, err, nil)
+}
