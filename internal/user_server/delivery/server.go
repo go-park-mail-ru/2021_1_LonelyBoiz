@@ -1,7 +1,6 @@
 package delivery
 
 import (
-	"fmt"
 	session_proto2 "server/internal/auth_server/delivery/session"
 	chatUsecase "server/internal/pkg/chat/usecase"
 	messageUsecase "server/internal/pkg/message/usecase"
@@ -191,7 +190,6 @@ func (u UserServer) GetChats(ctx context.Context, nothing *userProto.UserNothing
 
 	limit, ok := u.UserUsecase.GetParamFromContext(ctx, "urlCount")
 	if !ok {
-		fmt.Println(limit)
 		response := model.ErrorResponse{Err: "Неверный формат count"}
 		return &userProto.ChatsResponse{}, status.Error(400, response.Err)
 	}
