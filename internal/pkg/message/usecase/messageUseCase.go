@@ -27,29 +27,35 @@ type MessageUsecaseInterface interface {
 	ProtoMessage2Message(message *userProto.Message) model.Message
 	Message2ProtoMessage(message model.Message) *userProto.Message
 	SendEmailNotification(chatId, id int)
+	email.NotificationInterface
 }
 
 type MessageUsecase struct {
 	Clients *map[int]*websocket.Conn
 	Db      messageRepository.MessageRepositoryInterface
-	email.NotificationInterface
 	model.LoggerInterface
-
 	Sanitizer *bluemonday.Policy
+
+	email.NotificationInterface
 }
 
 func (m *MessageUsecase) SendEmailNotification(chatId, id int) {
 	userId, err := m.Db.GetPartnerId(chatId, id)
 	if err != nil {
 		m.LogError("SendEmailNotification  - " + err.Error())
+		return
 	}
 
 	userEmail, err := m.Db.GetEmailById(userId)
 	if err != nil {
 		m.LogError("SendEmailNotification  - " + err.Error())
+		return
 	}
 
+	m.LogError(userEmail)
+
 	m.AddEmailToQueue(userEmail)
+	//m.AddEmailToQueue(userEmail)
 }
 
 func (m *MessageUsecase) WebsocketMessage(newMessage model.Message) {

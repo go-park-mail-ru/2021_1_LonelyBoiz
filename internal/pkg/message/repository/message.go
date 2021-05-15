@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"errors"
 	model "server/internal/pkg/models"
 	"time"
 
@@ -25,12 +26,17 @@ type MessageRepository struct {
 }
 
 func (repo *MessageRepository) GetEmailById(id int) (email string, err error) {
-	err = repo.DB.Select(&email, `SELECT email FROM users WHERE users.id = $1;`, id)
+	var emails []string
+	err = repo.DB.Select(&emails, `SELECT email FROM users WHERE users.id = $1;`, id)
 	if err != nil {
 		return "", err
 	}
 
-	return email, nil
+	if len(emails) == 0 {
+		return "", errors.New("email Not Found")
+	}
+
+	return emails[0], nil
 }
 
 func (repo *MessageRepository) CheckMessageForReacting(userId int, messageId int) (int, error) {

@@ -130,6 +130,7 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 	}
 
 	clients := make(map[int]*websocket.Conn)
+	emails := make(chan string)
 
 	//GRPC auth
 	opts := []grpc.DialOption{
@@ -174,7 +175,7 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 
 	// init notification email
 	emailNot := email.NotificationByEmail{
-		Emails: make(chan string),
+		Emails: &emails,
 		Body:   "Вам пришло новое письмо!",
 	}
 
@@ -255,8 +256,6 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 	chatHandler.SetChatHandlers(subRouter)
 	imageHandler.SetHandlers(subRouter)
 	authHandler.SetAuthHandler(csrfRouter)
-
-	go emailNot.SendMessage()
 
 	return []*grpc.ClientConn{userConn, authConn, imagesConn}
 }
