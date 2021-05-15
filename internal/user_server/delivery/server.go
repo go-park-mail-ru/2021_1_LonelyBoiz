@@ -138,13 +138,13 @@ func (u UserServer) CreateFeed(ctx context.Context, nothing *userProto.UserNothi
 		return &userProto.Feed{}, status.Error(codes.Code(code), err.Error())
 	}
 
-	var feed1 []*userProto.UserId
+	var protoFeed []*userProto.UserId
 
 	for _, idFromFeed := range feed {
-		feed1 = append(feed1, &userProto.UserId{Id: int32(idFromFeed)})
+		protoFeed = append(protoFeed, &userProto.UserId{Id: int32(idFromFeed)})
 	}
 
-	return &userProto.Feed{Users: feed1}, nil
+	return &userProto.Feed{Users: protoFeed}, nil
 }
 
 func (u UserServer) CreateChat(ctx context.Context, like *userProto.Like) (*userProto.Chat, error) {

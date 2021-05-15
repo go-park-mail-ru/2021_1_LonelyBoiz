@@ -626,3 +626,155 @@ func TestGetUserById_GetParamDromContext_Error(t *testing.T) {
 
 	assert.NotEqual(t, err, nil)
 }
+
+func TestCreateFeed(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+
+	server := UserServer{
+		UserUsecase: userUseCaseMock,
+		Sessions:    sessionManagerMock,
+	}
+
+	user := models.User{
+		Id:             1,
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+	}
+
+	req := &http.Request{}
+
+	ctx := req.Context()
+
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "cookieId").Return(user.Id, true)
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "urlCount").Return(20, true)
+	userUseCaseMock.EXPECT().CreateFeed(user.Id, 20).Return([]int{1, 2}, 200, nil)
+
+	_, err := server.CreateFeed(ctx, &user_proto.UserNothing{})
+
+	assert.Equal(t, err, nil)
+}
+
+func TestCreateFeed_GetCookie_Error(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+
+	server := UserServer{
+		UserUsecase: userUseCaseMock,
+		Sessions:    sessionManagerMock,
+	}
+
+	user := models.User{
+		Id:             1,
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+	}
+
+	req := &http.Request{}
+
+	ctx := req.Context()
+
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "cookieId").Return(user.Id, false)
+
+	_, err := server.CreateFeed(ctx, &user_proto.UserNothing{})
+
+	assert.NotEqual(t, err, nil)
+}
+
+func TestCreateFeed_GetCount_Error(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+
+	server := UserServer{
+		UserUsecase: userUseCaseMock,
+		Sessions:    sessionManagerMock,
+	}
+
+	user := models.User{
+		Id:             1,
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+	}
+
+	req := &http.Request{}
+
+	ctx := req.Context()
+
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "cookieId").Return(user.Id, true)
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "urlCount").Return(20, false)
+
+	_, err := server.CreateFeed(ctx, &user_proto.UserNothing{})
+
+	assert.NotEqual(t, err, nil)
+}
+
+func TestCreateFeed_InternalError(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+
+	server := UserServer{
+		UserUsecase: userUseCaseMock,
+		Sessions:    sessionManagerMock,
+	}
+
+	user := models.User{
+		Id:             1,
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+	}
+
+	req := &http.Request{}
+
+	ctx := req.Context()
+
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "cookieId").Return(user.Id, true)
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "urlCount").Return(20, true)
+	userUseCaseMock.EXPECT().CreateFeed(user.Id, 20).Return([]int{1, 2}, 500, errors.New("Some error"))
+
+	_, err := server.CreateFeed(ctx, &user_proto.UserNothing{})
+
+	assert.NotEqual(t, err, nil)
+}
+
+func TestCreateFeed_ValidationError(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+
+	server := UserServer{
+		UserUsecase: userUseCaseMock,
+		Sessions:    sessionManagerMock,
+	}
+
+	user := models.User{
+		Id:             1,
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+	}
+
+	req := &http.Request{}
+
+	ctx := req.Context()
+
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "cookieId").Return(user.Id, true)
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "urlCount").Return(20, true)
+	userUseCaseMock.EXPECT().CreateFeed(user.Id, 20).Return([]int{1, 2}, 400, errors.New("Some error"))
+
+	_, err := server.CreateFeed(ctx, &user_proto.UserNothing{})
+
+	assert.NotEqual(t, err, nil)
+}
