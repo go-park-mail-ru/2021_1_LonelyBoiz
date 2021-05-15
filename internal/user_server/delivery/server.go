@@ -30,7 +30,7 @@ func (u UserServer) CreateUser(ctx context.Context, user *userProto.User) (*user
 
 	token, err := u.Sessions.Create(ctx, &session_proto2.SessionId{Id: int32(newUser.Id)})
 	if err != nil {
-		return &userProto.UserResponse{}, status.Error(codes.Code(code), err.Error())
+		return &userProto.UserResponse{}, status.Error(codes.Code(500), err.Error())
 	}
 
 	return &userProto.UserResponse{
