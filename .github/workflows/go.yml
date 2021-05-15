@@ -3,7 +3,7 @@ name: Go
 
 on:
   push:
-    branches: [ '*' ]
+    branches: [ 'UserDeliveryTests' ]
   pull_request:
     branches: [ main ]
 

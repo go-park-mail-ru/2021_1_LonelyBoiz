@@ -3,7 +3,6 @@ package usecase
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"server/internal/pkg/models"
 	mocks "server/internal/pkg/user/repository/mocks"
@@ -15,6 +14,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
+
+const bcryptPass = "$2a$05$xaL9iW4Opbrgn52nyBO0/OIbfx1jjuIVy.SYCBG2VIqHzHnkj05le"
 
 func TestUserUsecaseSignInNonValidEmail(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
@@ -55,10 +56,7 @@ func TestUserUsecaseSignInWrongPassword(t *testing.T) {
 		Sanitizer:       bluemonday.NewPolicy(),
 	}
 
-	pass, err := UserUsecaseTest.HashPassword("12345678")
-	if err != nil {
-		fmt.Println("bcrypt error:", err)
-	}
+	pass := []byte(bcryptPass)
 
 	user := models.User{
 		Email:          "windes@ya.ru",
@@ -118,10 +116,7 @@ func TestUserUsecaseSignInSuccess(t *testing.T) {
 		Sanitizer:       bluemonday.NewPolicy(),
 	}
 
-	pass, err := UserUsecaseTest.HashPassword("12345678")
-	if err != nil {
-		fmt.Println("bcrypt error:", err)
-	}
+	pass := []byte(bcryptPass)
 
 	user1 := models.User{
 		Id:             1,
@@ -173,10 +168,7 @@ func TestUserUsecaseSignInError(t *testing.T) {
 		Sanitizer:       bluemonday.NewPolicy(),
 	}
 
-	pass, err := UserUsecaseTest.HashPassword("12345678")
-	if err != nil {
-		fmt.Println("bcrypt error:", err)
-	}
+	pass := []byte(bcryptPass)
 
 	user := models.User{
 		Email:          "windes@ya.ru",
@@ -573,10 +565,7 @@ func TestChangeUserInfo(t *testing.T) {
 		Sanitizer:       bluemonday.NewPolicy(),
 	}
 
-	pass, err := UserUsecaseTest.HashPassword("12345678")
-	if err != nil {
-		fmt.Println("bcrypt error:", err)
-	}
+	pass := []byte(bcryptPass)
 
 	newUser := models.User{
 		Id:             1,
@@ -804,10 +793,7 @@ func TestChangeUserInfoChangePasswordError(t *testing.T) {
 		Sanitizer:       bluemonday.NewPolicy(),
 	}
 
-	pass, err := UserUsecaseTest.HashPassword("12345678")
-	if err != nil {
-		fmt.Println("bcrypt error:", err)
-	}
+	pass := []byte(bcryptPass)
 
 	newUser := models.User{
 		Id:             1,
@@ -845,10 +831,7 @@ func TestChangeUserInfoGetUserInfoError(t *testing.T) {
 		Sanitizer:       bluemonday.NewPolicy(),
 	}
 
-	pass, err := UserUsecaseTest.HashPassword("12345678")
-	if err != nil {
-		fmt.Println("bcrypt error:", err)
-	}
+	pass := []byte(bcryptPass)
 
 	newUser := models.User{
 		Id:             1,
@@ -887,10 +870,7 @@ func TestChangeUserInfoNonValidEmail(t *testing.T) {
 		Sanitizer:       bluemonday.NewPolicy(),
 	}
 
-	pass, err := UserUsecaseTest.HashPassword("12345678")
-	if err != nil {
-		fmt.Println("bcrypt error:", err)
-	}
+	pass := []byte(bcryptPass)
 
 	newUser := models.User{
 		Id:             1,
@@ -929,10 +909,7 @@ func TestChangeUserInfoEmailIsSignedUpError(t *testing.T) {
 		Sanitizer:       bluemonday.NewPolicy(),
 	}
 
-	pass, err := UserUsecaseTest.HashPassword("12345678")
-	if err != nil {
-		fmt.Println("bcrypt error:", err)
-	}
+	pass := []byte(bcryptPass)
 
 	newUser := models.User{
 		Id:             1,
@@ -972,10 +949,7 @@ func TestChangeUserInfoEmailIsSignedUp(t *testing.T) {
 		Sanitizer:       bluemonday.NewPolicy(),
 	}
 
-	pass, err := UserUsecaseTest.HashPassword("12345678")
-	if err != nil {
-		fmt.Println("bcrypt error:", err)
-	}
+	pass := []byte(bcryptPass)
 
 	newUser := models.User{
 		Id:             1,
@@ -1015,10 +989,7 @@ func TestChangeUserInfoNonValidSex(t *testing.T) {
 		Sanitizer:       bluemonday.NewPolicy(),
 	}
 
-	pass, err := UserUsecaseTest.HashPassword("12345678")
-	if err != nil {
-		fmt.Println("bcrypt error:", err)
-	}
+	pass := []byte(bcryptPass)
 
 	newUser := models.User{
 		Id:             1,
@@ -1058,10 +1029,7 @@ func TestChangeUserInfoNonValidPreference(t *testing.T) {
 		Sanitizer:       bluemonday.NewPolicy(),
 	}
 
-	pass, err := UserUsecaseTest.HashPassword("12345678")
-	if err != nil {
-		fmt.Println("bcrypt error:", err)
-	}
+	pass := []byte(bcryptPass)
 
 	newUser := models.User{
 		Id:             1,
@@ -1101,10 +1069,7 @@ func TestChangeUserInfoIsActiveError(t *testing.T) {
 		Sanitizer:       bluemonday.NewPolicy(),
 	}
 
-	pass, err := UserUsecaseTest.HashPassword("12345678")
-	if err != nil {
-		fmt.Println("bcrypt error:", err)
-	}
+	pass := []byte(bcryptPass)
 
 	newUser := models.User{
 		Id:             1,
@@ -1144,10 +1109,7 @@ func TestChangeUserInfoIsActiveFalse(t *testing.T) {
 		Sanitizer:       bluemonday.NewPolicy(),
 	}
 
-	pass, err := UserUsecaseTest.HashPassword("12345678")
-	if err != nil {
-		fmt.Println("bcrypt error:", err)
-	}
+	pass := []byte(bcryptPass)
 
 	newUser := models.User{
 		Id:             1,
@@ -1189,10 +1151,7 @@ func TestChangeUserInfoChangeUserError(t *testing.T) {
 		Sanitizer:       bluemonday.NewPolicy(),
 	}
 
-	pass, err := UserUsecaseTest.HashPassword("12345678")
-	if err != nil {
-		fmt.Println("bcrypt error:", err)
-	}
+	pass := []byte(bcryptPass)
 
 	newUser := models.User{
 		Id:             1,

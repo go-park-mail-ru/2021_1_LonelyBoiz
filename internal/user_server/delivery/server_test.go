@@ -379,3 +379,250 @@ func TestChangeUser_ChangeUserInfo_InternalError(t *testing.T) {
 
 	assert.NotEqual(t, err, nil)
 }
+
+func TestCheckUser(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+
+	server := UserServer{
+		UserUsecase: userUseCaseMock,
+		Sessions:    sessionManagerMock,
+	}
+
+	user := models.User{
+		Id:             1,
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+	}
+	protoUser := user_proto.User{
+		Id:             1,
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+	}
+
+	loginUser := user_proto.UserLogin{
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+	}
+
+	req := &http.Request{}
+
+	ctx := req.Context()
+
+	userUseCaseMock.EXPECT().SignIn(gomock.Any()).Return(user, 200, nil)
+	sessionManagerMock.EXPECT().Create(ctx, &session_proto.SessionId{Id: int32(user.Id)}).Return(&session_proto.SessionToken{}, nil)
+	userUseCaseMock.EXPECT().User2ProtoUser(user).Return(&protoUser)
+
+	_, err := server.CheckUser(ctx, &loginUser)
+
+	assert.Equal(t, err, nil)
+}
+
+func TestCheckUser_SignIn_InternalError(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+
+	server := UserServer{
+		UserUsecase: userUseCaseMock,
+		Sessions:    sessionManagerMock,
+	}
+
+	user := models.User{
+		Id:             1,
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+	}
+
+	loginUser := user_proto.UserLogin{
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+	}
+
+	req := &http.Request{}
+
+	ctx := req.Context()
+
+	userUseCaseMock.EXPECT().SignIn(gomock.Any()).Return(user, 500, errors.New("Some error"))
+
+	_, err := server.CheckUser(ctx, &loginUser)
+
+	assert.NotEqual(t, err, nil)
+}
+
+func TestCheckUser_SignIn_ValidationError(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+
+	server := UserServer{
+		UserUsecase: userUseCaseMock,
+		Sessions:    sessionManagerMock,
+	}
+
+	user := models.User{
+		Id:             1,
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+	}
+
+	loginUser := user_proto.UserLogin{
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+	}
+
+	req := &http.Request{}
+
+	ctx := req.Context()
+
+	userUseCaseMock.EXPECT().SignIn(gomock.Any()).Return(user, 400, errors.New("Some error"))
+
+	_, err := server.CheckUser(ctx, &loginUser)
+
+	assert.NotEqual(t, err, nil)
+}
+
+func TestCheckUser_Sessions_Error(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+
+	server := UserServer{
+		UserUsecase: userUseCaseMock,
+		Sessions:    sessionManagerMock,
+	}
+
+	user := models.User{
+		Id:             1,
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+	}
+
+	loginUser := user_proto.UserLogin{
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+	}
+
+	req := &http.Request{}
+
+	ctx := req.Context()
+
+	userUseCaseMock.EXPECT().SignIn(gomock.Any()).Return(user, 200, nil)
+	sessionManagerMock.EXPECT().Create(ctx, &session_proto.SessionId{Id: int32(user.Id)}).Return(nil, errors.New("Some error"))
+
+	_, err := server.CheckUser(ctx, &loginUser)
+
+	assert.NotEqual(t, err, nil)
+}
+
+func TestGetUserById(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+
+	server := UserServer{
+		UserUsecase: userUseCaseMock,
+		Sessions:    sessionManagerMock,
+	}
+
+	user := models.User{
+		Id:             1,
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+	}
+	protoUser := user_proto.User{
+		Id:             1,
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+	}
+
+	req := &http.Request{}
+
+	ctx := req.Context()
+
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "urlId").Return(user.Id, true)
+	userUseCaseMock.EXPECT().GetUserInfoById(user.Id).Return(user, nil)
+	userUseCaseMock.EXPECT().User2ProtoUser(user).Return(&protoUser)
+
+	_, err := server.GetUserById(ctx, &user_proto.UserNothing{})
+
+	assert.Equal(t, err, nil)
+}
+
+func TestGetUserById_GetUserInfoById_Error(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+
+	server := UserServer{
+		UserUsecase: userUseCaseMock,
+		Sessions:    sessionManagerMock,
+	}
+
+	user := models.User{
+		Id:             1,
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+	}
+
+	req := &http.Request{}
+
+	ctx := req.Context()
+
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "urlId").Return(user.Id, false)
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "cookieId").Return(user.Id, true)
+	userUseCaseMock.EXPECT().GetUserInfoById(user.Id).Return(user, errors.New("Some error"))
+
+	_, err := server.GetUserById(ctx, &user_proto.UserNothing{})
+
+	assert.NotEqual(t, err, nil)
+}
+
+func TestGetUserById_GetParamDromContext_Error(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+
+	server := UserServer{
+		UserUsecase: userUseCaseMock,
+		Sessions:    sessionManagerMock,
+	}
+
+	user := models.User{
+		Id:             1,
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+	}
+
+	req := &http.Request{}
+
+	ctx := req.Context()
+
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "urlId").Return(user.Id, false)
+	userUseCaseMock.EXPECT().GetParamFromContext(ctx, "cookieId").Return(user.Id, false)
+
+	_, err := server.GetUserById(ctx, &user_proto.UserNothing{})
+
+	assert.NotEqual(t, err, nil)
+}
