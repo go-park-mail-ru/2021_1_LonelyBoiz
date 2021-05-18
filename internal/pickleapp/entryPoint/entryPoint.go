@@ -226,13 +226,9 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 		Session: authClient,
 	}
 
-<<<<<<< HEAD
-	a.router.Handle("/metrics", promhttp.Handler())
-=======
 	metrics.New()
 
 	a.router.Handle("/metrics", promhttp.Handler()).Methods("GET")
->>>>>>> PIC-138 Добавлены метрики
 
 	rawRouter := a.router.NewRoute().Subrouter()
 
