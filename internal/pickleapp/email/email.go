@@ -1,15 +1,10 @@
 package email
 
 import (
+	"log"
 	"net/smtp"
+	"os"
 	"server/internal/pkg/models"
-)
-
-const (
-	emailFrom = "nikita.nackaznoy@gmail.com"
-	pass      = "Nn070202"
-	smtpHost  = "smtp.gmail.com"
-	smtpPort  = "587"
 )
 
 type NotificationInterface interface {
@@ -35,6 +30,11 @@ func (e *NotificationByEmail) AddEmailLetterToQueue(email string, body string) {
 }
 
 func (e *NotificationByEmail) SendMessage() {
+	emailFrom := os.Getenv("EMAILFROM")
+	pass := os.Getenv("PASS")
+	smtpHost := os.Getenv("SMTPHOST")
+	smtpPort := os.Getenv("SMTPPORT")
+
 	for bucket := range *e.Buckets {
 		msg := "From: " + emailFrom + "\n" +
 			"To: " + bucket.email + "\n" +
@@ -49,8 +49,7 @@ func (e *NotificationByEmail) SendMessage() {
 			[]byte(msg))
 
 		if err != nil {
-			e.LogError("Can't send message to " + bucket.email + " Error: " + err.Error())
-			//log.Println("Can't send message to " + bucket.email + " Error: " + err.Error())
+			log.Println("Can't send message to " + bucket.email + " Error: " + err.Error())
 		}
 	}
 }
