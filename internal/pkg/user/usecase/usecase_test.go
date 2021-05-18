@@ -5,7 +5,9 @@ import (
 	"errors"
 	"io/ioutil"
 	"server/internal/pkg/models"
+	model "server/internal/pkg/models"
 	mocks "server/internal/pkg/user/repository/mocks"
+	user_proto "server/internal/user_server/delivery/proto"
 	"strings"
 	"testing"
 
@@ -1646,4 +1648,96 @@ func TestAddToSecreteAlbum_Error(t *testing.T) {
 	code, err := UserUsecaseTest.AddToSecreteAlbum(ownerId, photos)
 	assert.Equal(t, bufErr, err)
 	assert.Equal(t, 500, code)
+}
+
+func TestProtoUser2User(t *testing.T) {
+	user := model.User{
+		Id:             1,
+		Email:          "email",
+		Password:       "pass",
+		SecondPassword: "pass",
+		PasswordHash:   nil,
+		OldPassword:    "pass",
+		Name:           "Serega",
+		Birthday:       123,
+		Description:    "desc",
+		City:           "Moscow",
+		Instagram:      "Inst",
+		Sex:            "male",
+		DatePreference: "female",
+		IsDeleted:      false,
+		IsActive:       true,
+		Photos:         []string{"1", "2"},
+	}
+
+	protoUser := user_proto.User{
+		Id:             1,
+		Email:          "email",
+		Password:       "pass",
+		SecondPassword: "pass",
+		PasswordHash:   nil,
+		OldPassword:    "pass",
+		Name:           "Serega",
+		Birthday:       123,
+		Description:    "desc",
+		City:           "Moscow",
+		Instagram:      "Inst",
+		Sex:            "male",
+		DatePreference: "female",
+		IsDeleted:      false,
+		IsActive:       true,
+		Photos:         []string{"1", "2"},
+	}
+
+	UserUsecaseTest := UserUsecase{}
+
+	res := UserUsecaseTest.ProtoUser2User(&protoUser)
+
+	assert.Equal(t, res, user)
+}
+
+func TestUser2ProtoUser(t *testing.T) {
+	user := model.User{
+		Id:             1,
+		Email:          "email",
+		Password:       "pass",
+		SecondPassword: "pass",
+		PasswordHash:   nil,
+		OldPassword:    "pass",
+		Name:           "Serega",
+		Birthday:       123,
+		Description:    "desc",
+		City:           "Moscow",
+		Instagram:      "Inst",
+		Sex:            "male",
+		DatePreference: "female",
+		IsDeleted:      false,
+		IsActive:       true,
+		Photos:         []string{"1", "2"},
+	}
+
+	protoUser := user_proto.User{
+		Id:             1,
+		Email:          "email",
+		Password:       "pass",
+		SecondPassword: "pass",
+		PasswordHash:   nil,
+		OldPassword:    "pass",
+		Name:           "Serega",
+		Birthday:       123,
+		Description:    "desc",
+		City:           "Moscow",
+		Instagram:      "Inst",
+		Sex:            "male",
+		DatePreference: "female",
+		IsDeleted:      false,
+		IsActive:       true,
+		Photos:         []string{"1", "2"},
+	}
+
+	UserUsecaseTest := UserUsecase{}
+
+	res := UserUsecaseTest.User2ProtoUser(user)
+
+	assert.Equal(t, res, &protoUser)
 }
