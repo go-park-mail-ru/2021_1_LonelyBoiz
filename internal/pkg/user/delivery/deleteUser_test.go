@@ -31,7 +31,7 @@ func TestDeleteUser(t *testing.T) {
 		Server:   serverMock,
 	}
 
-	murl, er := url.Parse("login")
+	murl, er := url.Parse("/login")
 	if er != nil {
 		t.Error(er)
 	}
@@ -83,7 +83,7 @@ func TestDeleteUser_DB_Error(t *testing.T) {
 		Server:   serverMock,
 	}
 
-	murl, er := url.Parse("login")
+	murl, er := url.Parse("/login")
 	if er != nil {
 		t.Error(er)
 	}
@@ -133,7 +133,7 @@ func TestDeleteUser_Cookie_Error(t *testing.T) {
 		Server:   serverMock,
 	}
 
-	murl, er := url.Parse("login")
+	murl, er := url.Parse("/login")
 	if er != nil {
 		t.Error(er)
 	}

@@ -35,7 +35,7 @@ func TestLikesHandler_ReadBody_Error(t *testing.T) {
 
 	errorJson := "some string"
 
-	murl, er := url.Parse("auth")
+	murl, er := url.Parse("/likes")
 	if er != nil {
 		t.Error(er)
 	}
@@ -85,7 +85,7 @@ func TestLikesHandler(t *testing.T) {
 		Server:   serverMock,
 	}
 
-	murl, er := url.Parse("likes")
+	murl, er := url.Parse("/likes")
 	if er != nil {
 		t.Error(er)
 	}
@@ -145,7 +145,7 @@ func TestLikesHandler_CreateCHat_Error(t *testing.T) {
 		Server:   serverMock,
 	}
 
-	murl, er := url.Parse("likes")
+	murl, er := url.Parse("/likes")
 	if er != nil {
 		t.Error(er)
 	}
@@ -203,7 +203,7 @@ func TestLikesHandler_NotMutual(t *testing.T) {
 		Server:   serverMock,
 	}
 
-	murl, er := url.Parse("likes")
+	murl, er := url.Parse("/likes")
 	if er != nil {
 		t.Error(er)
 	}

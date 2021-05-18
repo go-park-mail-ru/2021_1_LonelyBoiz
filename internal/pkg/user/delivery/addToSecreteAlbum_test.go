@@ -14,6 +14,8 @@ import (
 	serverMocks "server/internal/user_server/delivery/proto/mocks"
 	"testing"
 
+	"server/internal/pkg/utils/metrics"
+
 	"github.com/golang/mock/gomock"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
@@ -23,6 +25,7 @@ import (
 
 func TestAddToSecreteAlbum(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
+	metrics.New()
 
 	useCase := usecase.UserUsecase{}
 
@@ -40,7 +43,7 @@ func TestAddToSecreteAlbum(t *testing.T) {
 		Photos: []string{"1", "2"},
 	}
 
-	murl, er := url.Parse("/secretAlbum")
+	murl, er := url.Parse("/secretAlbum/1")
 	if er != nil {
 		t.Error(er)
 	}
@@ -49,6 +52,7 @@ func TestAddToSecreteAlbum(t *testing.T) {
 		Method: "POST",
 		URL:    murl,
 	}
+
 	vars := map[string]string{
 		"id": "1",
 	}
@@ -99,7 +103,7 @@ func TestAddToSecreteAlbum_ParseJsonToUser_Error(t *testing.T) {
 		Photos: []string{"1", "2"},
 	}
 
-	murl, er := url.Parse("/secretAlbum")
+	murl, er := url.Parse("/secretAlbum/1")
 	if er != nil {
 		t.Error(er)
 	}
@@ -150,7 +154,7 @@ func TestAddToSecreteAlbum_Error(t *testing.T) {
 		Photos: []string{"1", "2"},
 	}
 
-	murl, er := url.Parse("/secretAlbum")
+	murl, er := url.Parse("/secretAlbum/1")
 	if er != nil {
 		t.Error(er)
 	}

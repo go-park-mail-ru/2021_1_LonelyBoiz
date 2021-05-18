@@ -32,7 +32,7 @@ func TestGetLogin(t *testing.T) {
 		Server:   serverMock,
 	}
 
-	murl, er := url.Parse("login")
+	murl, er := url.Parse("/login")
 	if er != nil {
 		t.Error(er)
 	}
@@ -89,7 +89,7 @@ func TestGetLogin_Error(t *testing.T) {
 		Server:   serverMock,
 	}
 
-	murl, er := url.Parse("login")
+	murl, er := url.Parse("/login")
 	if er != nil {
 		t.Error(er)
 	}

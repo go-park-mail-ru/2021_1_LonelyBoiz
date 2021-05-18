@@ -32,7 +32,7 @@ func TestGetUserInfo(t *testing.T) {
 		Server:   serverMock,
 	}
 
-	murl, er := url.Parse("secretAlbum")
+	murl, er := url.Parse("/secretAlbum")
 	if er != nil {
 		t.Error(er)
 	}
@@ -89,7 +89,7 @@ func TestGetUserInfo_GetUserById_Error(t *testing.T) {
 		Server:   serverMock,
 	}
 
-	murl, er := url.Parse("secretAlbum")
+	murl, er := url.Parse("/secretAlbum")
 	if er != nil {
 		t.Error(er)
 	}

@@ -42,7 +42,7 @@ func TestSignUpParseJsonToUserError(t *testing.T) {
 		SecondPassword: "12345678",
 	}
 
-	murl, er := url.Parse("auth")
+	murl, er := url.Parse("/auth")
 	if er != nil {
 		t.Error(er)
 	}
@@ -77,7 +77,7 @@ func TestSignUp(t *testing.T) {
 		Server:   serverMock,
 	}
 
-	murl, er := url.Parse("likes")
+	murl, er := url.Parse("/likes")
 	if er != nil {
 		t.Error(er)
 	}
@@ -141,7 +141,7 @@ func TestSignUp_CreateUser_Error(t *testing.T) {
 		Server:   serverMock,
 	}
 
-	murl, er := url.Parse("likes")
+	murl, er := url.Parse("/likes")
 	if er != nil {
 		t.Error(er)
 	}

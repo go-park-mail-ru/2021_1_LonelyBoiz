@@ -36,7 +36,7 @@ func TestSignIn(t *testing.T) {
 		Server:   serverMock,
 	}
 
-	murl, er := url.Parse("likes")
+	murl, er := url.Parse("/likes")
 	if er != nil {
 		t.Error(er)
 	}
@@ -145,7 +145,7 @@ func TestSignIn_CheckUser_Error(t *testing.T) {
 		Server:   serverMock,
 	}
 
-	murl, er := url.Parse("likes")
+	murl, er := url.Parse("/likes")
 	if er != nil {
 		t.Error(er)
 	}

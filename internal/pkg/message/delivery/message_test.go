@@ -11,6 +11,8 @@ import (
 	serverMocks "server/internal/user_server/delivery/proto/mocks"
 	"testing"
 
+	"server/internal/pkg/utils/metrics"
+
 	"github.com/golang/mock/gomock"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
@@ -19,6 +21,8 @@ import (
 )
 
 func TestGetMessages(t *testing.T) {
+	metrics.New()
+
 	mockCtrl := gomock.NewController(t)
 
 	messageUseCaseMock := mockUsecase.NewMockMessageUsecaseInterface(mockCtrl)

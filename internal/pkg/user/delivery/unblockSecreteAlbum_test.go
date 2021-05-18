@@ -36,7 +36,7 @@ func TestUnblockSecreteAlbum(t *testing.T) {
 		Photos: []string{"1", "2"},
 	}
 
-	murl, er := url.Parse("secretAlbum")
+	murl, er := url.Parse("/secretAlbum")
 	if er != nil {
 		t.Error(er)
 	}
@@ -87,7 +87,7 @@ func TestUnblockSecreteAlbum_UnlockSecretAlbum_Error(t *testing.T) {
 		Photos: []string{"1", "2"},
 	}
 
-	murl, er := url.Parse("secretAlbum")
+	murl, er := url.Parse("/secretAlbum")
 	if er != nil {
 		t.Error(er)
 	}

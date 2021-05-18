@@ -32,7 +32,7 @@ func TestGetUsers(t *testing.T) {
 		Server:   serverMock,
 	}
 
-	murl, er := url.Parse("secretAlbum")
+	murl, er := url.Parse("/secretAlbum")
 	if er != nil {
 		t.Error(er)
 	}
@@ -87,7 +87,7 @@ func TestGetUsers_CreateFeed_Error(t *testing.T) {
 		Server:   serverMock,
 	}
 
-	murl, er := url.Parse("secretAlbum")
+	murl, er := url.Parse("/secretAlbum")
 	if er != nil {
 		t.Error(er)
 	}
