@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"server/internal/email"
+	email2 "server/internal/pickleapp/email"
 	messageRepository "server/internal/pkg/message/repository"
 	model "server/internal/pkg/models"
 	userProto "server/internal/user_server/delivery/proto"
@@ -27,7 +27,7 @@ type MessageUsecaseInterface interface {
 	ProtoMessage2Message(message *userProto.Message) model.Message
 	Message2ProtoMessage(message model.Message) *userProto.Message
 	SendEmailNotification(chatId, id int)
-	email.NotificationInterface
+	email2.NotificationInterface
 }
 
 type MessageUsecase struct {
@@ -36,7 +36,7 @@ type MessageUsecase struct {
 	model.LoggerInterface
 	Sanitizer *bluemonday.Policy
 
-	email.NotificationInterface
+	email2.NotificationInterface
 }
 
 func (m *MessageUsecase) SendEmailNotification(chatId, id int) {
@@ -54,8 +54,7 @@ func (m *MessageUsecase) SendEmailNotification(chatId, id int) {
 
 	m.LogError(userEmail)
 
-	m.AddEmailToQueue(userEmail)
-	//m.AddEmailToQueue(userEmail)
+	m.AddEmailLetterToQueue(userEmail, "Вам пришло новое сообщение!")
 }
 
 func (m *MessageUsecase) WebsocketMessage(newMessage model.Message) {
@@ -76,6 +75,7 @@ func (m *MessageUsecase) WebsocketMessage(newMessage model.Message) {
 
 	client, ok := (*m.Clients)[partnerId]
 	if !ok {
+		m.SendEmailNotification(newMessage.ChatId, newMessage.AuthorId)
 		m.LogInfo("Пользователь не подключен")
 		return
 	}

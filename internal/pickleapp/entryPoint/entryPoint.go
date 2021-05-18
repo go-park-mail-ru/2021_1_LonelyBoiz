@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"os"
 	session_proto2 "server/internal/auth_server/delivery/session"
-	"server/internal/email"
 	image_proto "server/internal/image_server/delivery/proto"
+	email2 "server/internal/pickleapp/email"
 	"server/internal/pickleapp/middleware"
 	"server/internal/pickleapp/repository"
 	"server/internal/pkg/chat/delivery"
@@ -130,7 +130,6 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 	}
 
 	clients := make(map[int]*websocket.Conn)
-	emails := make(chan string)
 
 	//GRPC auth
 	opts := []grpc.DialOption{
@@ -174,9 +173,9 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 	imageClient := image_proto.NewImageServiceClient(imagesConn)
 
 	// init notification email
-	emailNot := email.NotificationByEmail{
-		Emails: &emails,
-		Body:   "Вам пришло новое письмо!",
+	emails := make(chan email2.EmailBucket)
+	emailNot := email2.NotificationByEmail{
+		Buckets: &emails,
 	}
 
 	// init uCases & handlers
@@ -256,6 +255,8 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 	chatHandler.SetChatHandlers(subRouter)
 	imageHandler.SetHandlers(subRouter)
 	authHandler.SetAuthHandler(csrfRouter)
+
+	go emailNot.SendMessage()
 
 	return []*grpc.ClientConn{userConn, authConn, imagesConn}
 }

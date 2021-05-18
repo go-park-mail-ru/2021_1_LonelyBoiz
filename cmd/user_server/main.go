@@ -5,7 +5,6 @@ import (
 	"math/rand"
 	"net"
 	session_proto2 "server/internal/auth_server/delivery/session"
-	"server/internal/email"
 	"server/internal/pickleapp/repository"
 	chatRepository "server/internal/pkg/chat/repository"
 	chatUsecase "server/internal/pkg/chat/usecase"
@@ -86,18 +85,10 @@ func main() {
 
 	db := repository.Init()
 
-	// init notification email
-	emails := make(chan string)
-	emailNot := email.NotificationByEmail{
-		Emails: &emails,
-		Body:   "Вам пришло новое письмо!",
-	}
-
 	mesUcase := messageUsecase.MessageUsecase{
-		Db:                    &repository3.MessageRepository{DB: db},
-		LoggerInterface:       ServerInterceptor.Logger,
-		Sanitizer:             bluemonday.NewPolicy(),
-		NotificationInterface: &emailNot,
+		Db:              &repository3.MessageRepository{DB: db},
+		LoggerInterface: ServerInterceptor.Logger,
+		Sanitizer:       bluemonday.NewPolicy(),
 	}
 
 	userServer := delivery2.UserServer{
@@ -117,7 +108,7 @@ func main() {
 	userProto.RegisterUserServiceServer(grpcServer, &userServer)
 	log.Print("User Server START at 5500")
 
-	go emailNot.SendMessage()
+	//go emailNot.SendMessage()
 	err = grpcServer.Serve(listener)
 
 	if err != nil {

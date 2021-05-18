@@ -1,7 +1,6 @@
 package email
 
 import (
-	"log"
 	"net/smtp"
 	"server/internal/pkg/models"
 )
@@ -15,33 +14,43 @@ const (
 
 type NotificationInterface interface {
 	SendMessage()
-	AddEmailToQueue(email string)
+	AddEmailLetterToQueue(email string, body string)
 }
 
 type NotificationByEmail struct {
-	Emails *chan string
-	Body   string
+	Buckets *chan EmailBucket
 	models.LoggerInterface
 }
 
-func (e *NotificationByEmail) AddEmailToQueue(email string) {
-	*e.Emails <- email
+type EmailBucket struct {
+	email string
+	body  string
+}
+
+func (e *NotificationByEmail) AddEmailLetterToQueue(email string, body string) {
+	*e.Buckets <- EmailBucket{
+		email: email,
+		body:  body,
+	}
 }
 
 func (e *NotificationByEmail) SendMessage() {
-	for email := range *e.Emails {
+	for bucket := range *e.Buckets {
 		msg := "From: " + emailFrom + "\n" +
-			"To: " + email + "\n" +
+			"To: " + bucket.email + "\n" +
 			"Subject: Привет от Pickle!\n\n" +
-			e.Body
+			bucket.body
+
 		err := smtp.SendMail(
 			smtpHost+":"+smtpPort,
 			smtp.PlainAuth("", emailFrom, pass, smtpHost),
 			emailFrom,
-			[]string{email},
+			[]string{bucket.email},
 			[]byte(msg))
+
 		if err != nil {
-			log.Println("Can't send message to " + email + " Error: " + err.Error())
+			e.LogError("Can't send message to " + bucket.email + " Error: " + err.Error())
+			//log.Println("Can't send message to " + bucket.email + " Error: " + err.Error())
 		}
 	}
 }
