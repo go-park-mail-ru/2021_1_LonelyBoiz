@@ -10,12 +10,13 @@ func main() {
 	a := entryPoint.App{}
 	config := entryPoint.NewConfig()
 
-	conns := a.InitializeRoutes(config)
+	conns, emailConnection := a.InitializeRoutes(config)
 
 	defer func() {
 		for _, conn := range conns {
 			conn.Close()
 		}
+		close(emailConnection)
 	}()
 
 	err := a.Start()

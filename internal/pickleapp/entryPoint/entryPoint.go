@@ -104,7 +104,7 @@ func NewConfig() Config {
 	return newConfig
 }
 
-func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
+func (a *App) InitializeRoutes(currConfig Config) ([]*grpc.ClientConn, chan email2.EmailBucket) {
 
 	//init config
 	a.addr = currConfig.addr
@@ -258,5 +258,5 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 
 	go emailNot.SendMessage()
 
-	return []*grpc.ClientConn{userConn, authConn, imagesConn}
+	return []*grpc.ClientConn{userConn, authConn, imagesConn}, emails
 }

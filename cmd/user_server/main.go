@@ -108,7 +108,6 @@ func main() {
 	userProto.RegisterUserServiceServer(grpcServer, &userServer)
 	log.Print("User Server START at 5500")
 
-	//go emailNot.SendMessage()
 	err = grpcServer.Serve(listener)
 
 	if err != nil {
