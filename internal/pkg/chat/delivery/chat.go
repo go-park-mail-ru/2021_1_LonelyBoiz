@@ -24,7 +24,7 @@ func (c *ChatHandler) GetChats(w http.ResponseWriter, r *http.Request) {
 	chats, err := c.Server.GetChats(r.Context(), &userProto.UserNothing{})
 	if err != nil {
 		st, _ := status.FromError(err)
-		model.Process(model.LoggerFunc(st.Message(), c.Usecase.LogError), model.ResponseFunc(w, int(st.Code()), st.Message()))
+		model.Process(model.LoggerFunc(st.Message(), c.Usecase.LogError), model.ResponseFunc(w, int(st.Code()), st.Message()), model.MetricFunc(int(st.Code()), r, st.Err()))
 		return
 	}
 
@@ -33,7 +33,7 @@ func (c *ChatHandler) GetChats(w http.ResponseWriter, r *http.Request) {
 		nChats = append(nChats, c.Usecase.ProtoChat2Chat(chat))
 	}
 
-	model.Process(model.LoggerFunc("Success Get Chat", c.Usecase.LogInfo), model.ResponseFunc(w, 200, nChats))
+	model.Process(model.LoggerFunc("Success Get Chat", c.Usecase.LogInfo), model.ResponseFunc(w, 200, nChats), model.MetricFunc(200, r, nil))
 }
 
 func (c *ChatHandler) SetChatHandlers(subRouter *mux.Router) {

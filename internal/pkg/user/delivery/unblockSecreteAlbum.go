@@ -13,11 +13,11 @@ func (a *UserHandler) UnblockSecreteAlbum(w http.ResponseWriter, r *http.Request
 	_, err := a.Server.UnlockSecretAlbum(r.Context(), &userProto.UserNothing{})
 	if err != nil {
 		st, _ := status.FromError(err)
-		model.Process(model.LoggerFunc(st.Message(), a.UserCase.LogError), model.ResponseFunc(w, int(st.Code()), st.Message()))
+		model.Process(model.LoggerFunc(st.Message(), a.UserCase.LogError), model.ResponseFunc(w, int(st.Code()), st.Message()), model.MetricFunc(int(st.Code()), r, st.Err()))
 		return
 	}
 	a.UserCase.LogInfo("Получен результат из сервера USER")
 
-	model.Process(model.LoggerFunc("Successful unlock", a.UserCase.LogInfo), model.ResponseFunc(w, 204, nil))
+	model.Process(model.LoggerFunc("Successful unlock", a.UserCase.LogInfo), model.ResponseFunc(w, 204, nil), model.MetricFunc(204, r, nil))
 	return
 }
