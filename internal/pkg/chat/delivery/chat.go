@@ -2,60 +2,41 @@ package delivery
 
 import (
 	"net/http"
-	chatrep "server/internal/pkg/chat/repository"
 	"server/internal/pkg/chat/usecase"
 	model "server/internal/pkg/models"
-	"server/internal/pkg/session"
-	"strconv"
+	userProto "server/internal/user_server/delivery/proto"
+
+	"github.com/gorilla/mux"
+	"google.golang.org/grpc/status"
 )
 
+type ChatHandlerInterface interface {
+	GetChats(w http.ResponseWriter, r *http.Request)
+	SetChatHandlers(subRouter *mux.Router)
+}
+
 type ChatHandler struct {
-	Db       chatrep.ChatRepository
-	Sessions *session.SessionsManager
-	Usecase  *usecase.ChatUsecase
+	Usecase usecase.ChatUsecaseInterface
+	Server  userProto.UserServiceClient
 }
 
 func (c *ChatHandler) GetChats(w http.ResponseWriter, r *http.Request) {
-	userId, ok := c.Sessions.GetIdFromContext(r.Context())
-	if !ok {
-		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
-		model.ResponseWithJson(w, 403, response)
-		c.Usecase.Logger.Error(response.Err)
+	chats, err := c.Server.GetChats(r.Context(), &userProto.UserNothing{})
+	if err != nil {
+		st, _ := status.FromError(err)
+		model.Process(model.LoggerFunc(st.Message(), c.Usecase.LogError), model.ResponseFunc(w, int(st.Code()), st.Message()), model.MetricFunc(int(st.Code()), r, st.Err()))
 		return
 	}
 
-	query := r.URL.Query()
-	limit, ok := query["count"]
-	if !ok {
-		response := model.ErrorResponse{Err: "Не указан count"}
-		model.ResponseWithJson(w, 400, response)
-		return
-	}
-	limitInt, err := strconv.Atoi(limit[0])
-	if err != nil {
-		response := model.ErrorResponse{Err: "Неверный формат count"}
-		model.ResponseWithJson(w, 400, response)
-		return
-	}
-	offset, ok := query["offset"]
-	if !ok {
-		response := model.ErrorResponse{Err: "Не указан offset"}
-		model.ResponseWithJson(w, 400, response)
-		return
-	}
-	offsetInt, err := strconv.Atoi(offset[0])
-	if err != nil {
-		response := model.ErrorResponse{Err: "Неверный формат offset"}
-		model.ResponseWithJson(w, 400, response)
-		return
+	var nChats []model.Chat
+	for _, chat := range chats.GetChats() {
+		nChats = append(nChats, c.Usecase.ProtoChat2Chat(chat))
 	}
 
-	chats, err := c.Db.GetChats(userId, limitInt, offsetInt)
-	if err != nil {
-		c.Usecase.Logger.Error(err)
-		model.ResponseWithJson(w, 500, nil)
-		return
-	}
+	model.Process(model.LoggerFunc("Success Get Chat", c.Usecase.LogInfo), model.ResponseFunc(w, 200, nChats), model.MetricFunc(200, r, nil))
+}
 
-	model.ResponseWithJson(w, 200, chats)
+func (c *ChatHandler) SetChatHandlers(subRouter *mux.Router) {
+	// получить чаты юзера
+	subRouter.HandleFunc("/users/{userId:[0-9]+}/chats", c.GetChats).Methods("GET")
 }

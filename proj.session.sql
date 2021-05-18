@@ -1,9 +1,11 @@
-DROP TABLE sessions;
-DROP TABLE messages;
-DROP TABLE photos;
-DROP TABLE chats;
-DROP TABLE feed;
-DROP TABLE users;
+DROP TABLE IF EXISTS sessions CASCADE;
+DROP TABLE IF EXISTS secretPermission CASCADE;
+DROP TABLE IF EXISTS secretphotos CASCADE;
+DROP TABLE IF EXISTS messages CASCADE;
+DROP TABLE IF EXISTS photos CASCADE;
+DROP TABLE IF EXISTS chats CASCADE;
+DROP TABLE IF EXISTS feed CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
 
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
@@ -16,9 +18,12 @@ CREATE TABLE users (
     city varchar(50),
     sex varchar(10),
     datePreference varchar(10),
+    photos varchar(50)[] DEFAULT array[]::varchar[],
     isActive BOOLEAN NOT NULL,
-    isDeleted BOOLEAN NOT NULL
+    isDeleted BOOLEAN NOT NULL,
+    scrolls INT DEFAULT 20
 );
+
 
 CREATE TABLE photos(
     photoId SERIAL PRIMARY KEY,
@@ -61,3 +66,18 @@ CREATE TABLE sessions (
     token varchar(40) NOT NULL UNIQUE,
     expiration INT
 );
+
+CREATE TABLE secretPhotos(
+    photoId SERIAL PRIMARY KEY,
+    photos varchar(50)[] DEFAULT array[]::varchar[],
+    userId INT,
+    FOREIGN KEY (userId) REFERENCES users (id)
+);
+
+CREATE TABLE secretPermission(
+    ownerId INT,
+    FOREIGN KEY (ownerId) REFERENCES users (id),
+    getterId INT,
+    FOREIGN KEY (getterId) REFERENCES users (id)
+);
+

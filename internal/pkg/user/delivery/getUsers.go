@@ -2,70 +2,27 @@ package delivery
 
 import (
 	"net/http"
-	model "server/internal/pkg/models"
-	"strconv"
+	"server/internal/pkg/models"
+	userProto "server/internal/user_server/delivery/proto"
+
+	"google.golang.org/grpc/status"
 )
 
 func (a *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
-	id, ok := a.Sessions.GetIdFromContext(r.Context())
-	if !ok {
-		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
-		model.ResponseWithJson(w, 403, response)
-		return
-	}
-
-	query := r.URL.Query()
-	limit, ok := query["count"]
-	if !ok {
-		response := model.ErrorResponse{Err: "Не указан count"}
-		model.ResponseWithJson(w, 400, response)
-		return
-	}
-	limitInt, err := strconv.Atoi(limit[0])
+	a.UserCase.LogInfo("Передано на сервер USER")
+	feed, err := a.Server.CreateFeed(r.Context(), &userProto.UserNothing{})
 	if err != nil {
-		response := model.ErrorResponse{Err: "Неверный формат count"}
-		model.ResponseWithJson(w, 400, response)
+		st, _ := status.FromError(err)
+		models.Process(models.LoggerFunc(st.Message(), a.UserCase.LogError), models.ResponseFunc(w, int(st.Code()), st.Message()), models.MetricFunc(int(st.Code()), r, st.Err()))
 		return
 	}
+	a.UserCase.LogInfo("Получен результат из сервера USER")
 
-	feed, err := a.UserCase.Db.GetFeed(id, limitInt)
-	if err != nil {
-		a.UserCase.Logger.Logger.Error(err)
-		model.ResponseWithJson(w, 500, nil)
-		return
-	}
-	if len(feed) < limitInt {
-		err = a.UserCase.Db.CreateFeed(id)
-		if err != nil {
-			a.UserCase.Logger.Logger.Error(err)
-			model.ResponseWithJson(w, 500, nil)
-			return
-		}
-		feed, err = a.UserCase.Db.GetFeed(id, limitInt)
-		if err != nil {
-			a.UserCase.Logger.Info(err)
-			model.ResponseWithJson(w, 500, nil)
-			return
-		}
-	}
-	if len(feed) == 0 {
-		err := a.UserCase.Db.ClearFeed(id)
-		if err != nil {
-			a.UserCase.Logger.Info(err)
-			model.ResponseWithJson(w, 500, nil)
-			return
-		}
-		feed, err = a.UserCase.Db.GetFeed(id, limitInt)
-		if err != nil {
-			a.UserCase.Logger.Info(err)
-			model.ResponseWithJson(w, 500, nil)
-			return
-		}
+	var users []int
+	for _, user := range feed.GetUsers() {
+		users = append(users, int(user.GetId()))
 	}
 
-	if len(feed) == 0 {
-		feed = make([]int, 0)
-	}
-	model.ResponseWithJson(w, 200, feed)
+	models.Process(models.LoggerFunc("Create Feed", a.UserCase.LogInfo), models.ResponseFunc(w, 200, users), models.MetricFunc(200, r, nil))
 	return
 }

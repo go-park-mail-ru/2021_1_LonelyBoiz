@@ -1,6 +1,7 @@
 package delivery
 
 import (
+	"fmt"
 	"net/http"
 	model "server/internal/pkg/models"
 
@@ -14,21 +15,22 @@ var upgrader = websocket.Upgrader{
 }
 
 func (a *UserHandler) WsHandler(w http.ResponseWriter, r *http.Request) {
-	id, ok := a.Sessions.GetIdFromContext(r.Context())
+	a.UserCase.LogInfo("Попытка подключиться по вэбсокету")
+	id, ok := a.UserCase.GetIdFromContext(r.Context())
 	if !ok {
+		fmt.Println("Ne ok")
 		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
-		model.ResponseWithJson(w, 403, response)
-		a.UserCase.Logger.Info(response.Err)
+		model.Process(model.LoggerFunc(response.Err, a.UserCase.LogInfo), model.ResponseFunc(w, 403, response), model.MetricFunc(403, r, response))
 		return
 	}
 
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		model.ResponseWithJson(w, 500, nil)
-		a.UserCase.Logger.Error(err)
+		fmt.Println("Ne up")
+		model.Process(model.LoggerFunc(err.Error(), a.UserCase.LogError), model.ResponseFunc(w, 500, nil), model.MetricFunc(500, r, err))
 		return
 	}
 
-	(*a.UserCase.Clients)[id] = ws
-	a.UserCase.Logger.Error("Текущие подключиения к вэбсокету", (*a.UserCase.Clients))
+	a.UserCase.SetChat(ws, id)
+	a.UserCase.LogInfo(fmt.Sprintf("Новое подключение по вэбсокету id =%d", id))
 }

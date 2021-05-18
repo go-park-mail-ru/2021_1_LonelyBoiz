@@ -1,44 +1,28 @@
 package delivery
 
 import (
+	"google.golang.org/grpc/status"
 	"net/http"
 	model "server/internal/pkg/models"
-	"strconv"
-
-	"github.com/gorilla/mux"
+	userProto "server/internal/user_server/delivery/proto"
 )
 
 func (a *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
-	cookieId, ok := a.Sessions.GetIdFromContext(r.Context())
-	if !ok {
-		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
-		model.ResponseWithJson(w, 403, response)
-		a.UserCase.Logger.Info(response.Err)
-		return
-	}
-
-	vars := mux.Vars(r)
-	userId, err := strconv.Atoi(vars["id"])
+	a.UserCase.LogInfo("Передано на сервер USER")
+	_, err := a.Server.DeleteUser(r.Context(), &userProto.UserNothing{})
 	if err != nil {
-		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
-		response.Description["id"] = "Юзера с таким id нет"
-		model.ResponseWithJson(w, 400, response)
-		return
+		st, _ := status.FromError(err)
+		if st.Code() != 200 {
+			model.Process(model.LoggerFunc(st.Message(), a.UserCase.LogError), model.ResponseFunc(w, int(st.Code()), st.Message()), model.MetricFunc(int(st.Code()), r, st.Err()))
+			return
+		}
 	}
+	a.UserCase.LogInfo("Получен результат из сервера USER")
 
-	if cookieId != userId {
-		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
-		response.Description["id"] = "Пытаешься удалить не себя"
-		model.ResponseWithJson(w, 403, response)
-		return
-	}
+	cookie, _ := r.Cookie("token")
 
-	err = a.UserCase.Db.DeleteUser(userId)
-	if err != nil {
-		a.UserCase.Logger.Error(err)
-		model.ResponseWithJson(w, 500, nil)
-		return
-	}
+	a.UserCase.DeleteSession(cookie)
+	http.SetCookie(w, cookie)
 
-	a.LogOut(w, r)
+	model.Process(model.LoggerFunc("Delete User", a.UserCase.LogInfo), model.ResponseFunc(w, 200, nil), model.MetricFunc(200, r, nil))
 }

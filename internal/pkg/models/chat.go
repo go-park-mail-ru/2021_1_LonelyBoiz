@@ -1,17 +1,15 @@
 package models
 
-import (
-	"github.com/google/uuid"
-)
+import "github.com/lib/pq"
 
 type Chat struct {
-	ChatId              int         `json:"chatId"`
-	PartnerId           int         `json:"partnerId"`
-	PartnerName         string      `json:"partnerName"`
-	LastMessage         string      `json:"lastMessage,omitempty"`
-	LastMessageTime     int64       `json:"lastMessageTime,omitempty"`
-	LastMessageAuthorId int         `json:"lastMessageAuthor,omitempty"`
-	Photos              []uuid.UUID `json:"photos"`
+	ChatId              int            `json:"chatId" db:"chatid"`
+	PartnerId           int            `json:"partnerId" db:"partnerid"`
+	PartnerName         string         `json:"partnerName" db:"partnername"`
+	LastMessage         string         `json:"lastMessage,omitempty" db:"lastmessage"`
+	LastMessageTime     int64          `json:"lastMessageTime,omitempty" db:"lastmessagetime"`
+	LastMessageAuthorId int            `json:"lastMessageAuthor,omitempty" db:"lastmessageauthorid"`
+	Photos              pq.StringArray `json:"photos" db:"photos"`
 }
 
 var ChatsChan = make(chan *Chat)

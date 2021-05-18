@@ -1,74 +1,26 @@
 package delivery
 
 import (
+	"google.golang.org/grpc/status"
 	"net/http"
-	"reflect"
 	model "server/internal/pkg/models"
-	"strconv"
-
-	"github.com/gorilla/mux"
 )
 
 func (a *UserHandler) ChangeUserInfo(w http.ResponseWriter, r *http.Request) {
-	cookieId, ok := a.Sessions.GetIdFromContext(r.Context())
-	if !ok {
-		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
-		model.ResponseWithJson(w, 403, response)
-		a.UserCase.Logger.Info(response.Err)
-		return
-	}
-
-	vars := mux.Vars(r)
-	userId, err := strconv.Atoi(vars["id"])
-	if err != nil {
-		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
-		response.Description["id"] = "Юзера с таким id нет"
-		model.ResponseWithJson(w, 400, response)
-		return
-	}
-
-	if cookieId != userId {
-		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
-		response.Description["id"] = "Пытаешься поменять не себя"
-		model.ResponseWithJson(w, 403, response)
-		return
-	}
-
 	newUser, err := a.UserCase.ParseJsonToUser(r.Body)
 	if err != nil {
-		a.UserCase.Logger.Logger.Error(err)
 		response := model.ErrorResponse{Err: "Не удалось прочитать тело запроса"}
-		model.ResponseWithJson(w, 400, response)
+		model.Process(model.LoggerFunc(response.Err, a.UserCase.LogError), model.ResponseFunc(w, 400, response), model.MetricFunc(400, r, response))
 		return
 	}
 
-	newUser.Id = userId
-
-	if newUser.Password != "" {
-		err := a.UserCase.ChangeUserPassword(&newUser)
-		if err != nil {
-			model.ResponseWithJson(w, 400, err)
-			return
-		}
-		newUser.Password = ""
-		newUser.OldPassword = ""
-		newUser.SecondPassword = ""
-	}
-
-	newUser.Id = userId
-	err = a.UserCase.ChangeUserProperties(&newUser)
+	a.UserCase.LogInfo("Передано на сервер USER")
+	user, err := a.Server.ChangeUser(r.Context(), a.UserCase.User2ProtoUser(newUser))
 	if err != nil {
-		if reflect.TypeOf(err) != reflect.TypeOf(model.ErrorDescriptionResponse{}) {
-			a.UserCase.Logger.Logger.Error(err)
-			model.ResponseWithJson(w, 500, nil)
-			return
-		}
-		model.ResponseWithJson(w, 400, err)
+		st, _ := status.FromError(err)
+		model.Process(model.LoggerFunc(st.Message(), a.UserCase.LogError), model.ResponseFunc(w, int(st.Code()), st.Message()), model.MetricFunc(int(st.Code()), r, st.Err()))
 		return
 	}
-
-	newUser.PasswordHash = nil
-	model.ResponseWithJson(w, 200, newUser)
-
-	a.UserCase.Logger.Info("Success Change User Info")
+	a.UserCase.LogInfo("Получен результат из сервера USER")
+	model.Process(model.LoggerFunc("Success Change User Info", a.UserCase.LogInfo), model.ResponseFunc(w, 200, a.UserCase.ProtoUser2User(user)), model.MetricFunc(200, r, nil))
 }

@@ -10,7 +10,7 @@ type Message struct {
 	MessageOrder int    `json:"messageOrder,omitempty"`
 }
 
-type WebsocketReesponse struct {
+type WebsocketResponse struct {
 	ResponseType string      `json:"type"`
 	Object       interface{} `json:"obj"`
 }
