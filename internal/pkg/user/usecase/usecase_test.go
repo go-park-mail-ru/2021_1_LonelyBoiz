@@ -1507,3 +1507,93 @@ func TestGetSecreteAlbum_GetSecretePhotos_Error(t *testing.T) {
 	assert.Equal(t, 500, code)
 	assert.Equal(t, res, []string{})
 }
+
+func TestUnblockSecreteAlbum(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	dbMock := mocks.NewMockUserRepositoryInterface(mockCtrl)
+
+	UserUsecaseTest := UserUsecase{
+		Clients:         nil,
+		Db:              dbMock,
+		LoggerInterface: &models.Logger{Logger: logrus.New().WithField("test", "test")},
+		Sanitizer:       bluemonday.NewPolicy(),
+	}
+
+	ownerId := 1
+	getterId := 2
+
+	dbMock.EXPECT().UnblockSecreteAlbum(ownerId, getterId).Return(nil)
+
+	code, err := UserUsecaseTest.UnblockSecreteAlbum(ownerId, getterId)
+	assert.Equal(t, nil, err)
+	assert.Equal(t, 204, code)
+}
+
+func TestUnblockSecreteAlbum_Error(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	dbMock := mocks.NewMockUserRepositoryInterface(mockCtrl)
+
+	UserUsecaseTest := UserUsecase{
+		Clients:         nil,
+		Db:              dbMock,
+		LoggerInterface: &models.Logger{Logger: logrus.New().WithField("test", "test")},
+		Sanitizer:       bluemonday.NewPolicy(),
+	}
+
+	bufErr := errors.New("Some error")
+	ownerId := 1
+	getterId := 2
+
+	dbMock.EXPECT().UnblockSecreteAlbum(ownerId, getterId).Return(bufErr)
+
+	code, err := UserUsecaseTest.UnblockSecreteAlbum(ownerId, getterId)
+	assert.Equal(t, bufErr, err)
+	assert.Equal(t, 500, code)
+}
+
+func TestAddToSecreteAlbum(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	dbMock := mocks.NewMockUserRepositoryInterface(mockCtrl)
+
+	UserUsecaseTest := UserUsecase{
+		Clients:         nil,
+		Db:              dbMock,
+		LoggerInterface: &models.Logger{Logger: logrus.New().WithField("test", "test")},
+		Sanitizer:       bluemonday.NewPolicy(),
+	}
+
+	ownerId := 1
+	photos := []string{"1", "2"}
+
+	dbMock.EXPECT().AddToSecreteAlbum(ownerId, photos).Return(nil)
+
+	code, err := UserUsecaseTest.AddToSecreteAlbum(ownerId, photos)
+	assert.Equal(t, nil, err)
+	assert.Equal(t, 204, code)
+}
+
+func TestAddToSecreteAlbum_Error(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	dbMock := mocks.NewMockUserRepositoryInterface(mockCtrl)
+
+	UserUsecaseTest := UserUsecase{
+		Clients:         nil,
+		Db:              dbMock,
+		LoggerInterface: &models.Logger{Logger: logrus.New().WithField("test", "test")},
+		Sanitizer:       bluemonday.NewPolicy(),
+	}
+
+	bufErr := errors.New("Some error")
+	ownerId := 1
+	photos := []string{"1", "2"}
+
+	dbMock.EXPECT().AddToSecreteAlbum(ownerId, photos).Return(bufErr)
+
+	code, err := UserUsecaseTest.AddToSecreteAlbum(ownerId, photos)
+	assert.Equal(t, bufErr, err)
+	assert.Equal(t, 500, code)
+}
