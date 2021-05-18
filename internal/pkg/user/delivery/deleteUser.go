@@ -20,9 +20,10 @@ func (a *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	}
 	a.UserCase.LogInfo("Получен результат из сервера USER")
 
-	cookie, ok := r.Cookie("token")
-	if ok != nil {
+	cookie, err := r.Cookie("token")
+	if err != nil {
 		model.ResponseFunc(w, 401, nil)
+		return
 	}
 
 	a.UserCase.DeleteSession(cookie)

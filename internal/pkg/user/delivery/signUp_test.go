@@ -11,8 +11,8 @@ import (
 	"net/url"
 	sessionMocks "server/internal/auth_server/delivery/session/mocks"
 	"server/internal/pkg/models"
+
 	mock_usecase "server/internal/pkg/user/usecase/mocks"
-	usecaseMocks "server/internal/pkg/user/usecase/mocks"
 	user_proto "server/internal/user_server/delivery/proto"
 	serverMocks "server/internal/user_server/delivery/proto/mocks"
 	"testing"
@@ -67,7 +67,7 @@ func TestSignUpParseJsonToUserError(t *testing.T) {
 func TestSignUp(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
-	userUseCaseMock := usecaseMocks.NewMockUserUseCaseInterface(mockCtrl)
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
 	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
 	serverMock := serverMocks.NewMockUserServiceClient(mockCtrl)
 
@@ -131,7 +131,7 @@ func TestSignUp(t *testing.T) {
 func TestSignUp_CreateUser_Error(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
-	userUseCaseMock := usecaseMocks.NewMockUserUseCaseInterface(mockCtrl)
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
 	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
 	serverMock := serverMocks.NewMockUserServiceClient(mockCtrl)
 
