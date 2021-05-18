@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"github.com/prometheus/client_golang/prometheus"
 	"math/rand"
 	"net/http"
 	chatUsecase "server/internal/pkg/chat/usecase"
@@ -8,20 +9,22 @@ import (
 	messageUsecase "server/internal/pkg/message/usecase"
 	"server/internal/pkg/models"
 	"server/internal/pkg/user/usecase"
+	"server/internal/pkg/utils/metrics"
 	"strconv"
 	"time"
 
 	"google.golang.org/grpc/metadata"
 
 	"github.com/sirupsen/logrus"
-
-	"github.com/prometheus/client_golang/prometheus"
 )
 
+<<<<<<< HEAD
 var Hits = prometheus.NewCounterVec(prometheus.CounterOpts{
 	Name: "hits",
 }, []string{"status", "path"})
 
+=======
+>>>>>>> PIC-138 Добавлены метрики
 type LoggerMiddleware struct {
 	Logger *models.Logger
 	User   *usecase.UserUsecase
@@ -33,7 +36,10 @@ type LoggerMiddleware struct {
 
 func (logger *LoggerMiddleware) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		tm := prometheus.NewTimer(metrics.Duration.WithLabelValues(strings.Split(r.URL.Path, "/")[1], r.Method))
+
 		defer func() {
+			tm.ObserveDuration()
 			if err := recover(); err != nil {
 				logger.Logger.LogError(err)
 			}
@@ -62,11 +68,5 @@ func (logger *LoggerMiddleware) Middleware(next http.Handler) http.Handler {
 		ctx := r.Context()
 		ctx = metadata.AppendToOutgoingContext(ctx, "requestId", strconv.FormatInt(reqId, 10))
 		next.ServeHTTP(w, r.WithContext(ctx))
-
-		/*if r.RequestURI != "/metrics" {
-			fmt.Println("padenie")
-			Hits.WithLabelValues(strconv.Itoa(r.Response.StatusCode), strings.Split(r.URL.Path, "/")[0]).Inc()
-		}
-		*/
 	})
 }

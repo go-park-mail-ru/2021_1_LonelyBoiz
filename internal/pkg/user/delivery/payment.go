@@ -12,6 +12,7 @@ func (a *UserHandler) Payment(w http.ResponseWriter, r *http.Request) {
 		a.UserCase.LogError(err)
 		w.WriteHeader(400)
 		w.Write([]byte(err.Error()))
+		models.MetricFunc(400, r, err)
 		return
 	}
 
@@ -39,6 +40,7 @@ func (a *UserHandler) Payment(w http.ResponseWriter, r *http.Request) {
 		a.UserCase.LogError(err)
 		w.WriteHeader(400)
 		w.Write([]byte(err.Error()))
+		models.MetricFunc(400, r, err)
 		return
 	}
 	a.UserCase.LogInfo(labelStruct)
@@ -48,8 +50,10 @@ func (a *UserHandler) Payment(w http.ResponseWriter, r *http.Request) {
 		a.UserCase.LogError(err)
 		w.WriteHeader(400)
 		w.Write([]byte(err.Error()))
+		models.MetricFunc(400, r, err)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
+	models.MetricFunc(200, r, nil)
 }

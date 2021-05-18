@@ -14,7 +14,7 @@ func (a *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		st, _ := status.FromError(err)
 		if st.Code() != 200 {
-			model.Process(model.LoggerFunc(st.Message(), a.UserCase.LogError), model.ResponseFunc(w, int(st.Code()), st.Message()))
+			model.Process(model.LoggerFunc(st.Message(), a.UserCase.LogError), model.ResponseFunc(w, int(st.Code()), st.Message()), model.MetricFunc(int(st.Code()), r, st.Err()))
 			return
 		}
 	}
@@ -29,6 +29,5 @@ func (a *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	a.UserCase.DeleteSession(cookie)
 	http.SetCookie(w, cookie)
 
-	a.UserCase.LogInfo(cookie.Expires)
-	model.ResponseFunc(w, 200, nil)
+	model.Process(model.LoggerFunc("Delete User", a.UserCase.LogInfo), model.ResponseFunc(w, 200, nil), model.MetricFunc(200, r, nil))
 }

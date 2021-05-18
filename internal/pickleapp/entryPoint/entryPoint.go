@@ -24,6 +24,7 @@ import (
 	userDelivery "server/internal/pkg/user/delivery"
 	userRepository "server/internal/pkg/user/repository"
 	"server/internal/pkg/user/usecase"
+	"server/internal/pkg/utils/metrics"
 	user_proto "server/internal/user_server/delivery/proto"
 	"time"
 
@@ -39,6 +40,10 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/jmoiron/sqlx"
 	"github.com/microcosm-cc/bluemonday"
+<<<<<<< HEAD
+=======
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+>>>>>>> PIC-138 Добавлены метрики
 	cors2 "github.com/rs/cors"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
@@ -135,7 +140,7 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 		grpc.WithInsecure(),
 	}
 
-	authConn, err := grpc.Dial("auth:5400", opts...)
+	authConn, err := grpc.Dial("localhost:5400", opts...)
 
 	if err != nil {
 		log.Print(1)
@@ -221,7 +226,13 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 		Session: authClient,
 	}
 
+<<<<<<< HEAD
 	a.router.Handle("/metrics", promhttp.Handler())
+=======
+	metrics.New()
+
+	a.router.Handle("/metrics", promhttp.Handler()).Methods("GET")
+>>>>>>> PIC-138 Добавлены метрики
 
 	rawRouter := a.router.NewRoute().Subrouter()
 

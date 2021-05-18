@@ -14,7 +14,7 @@ func (a *UserHandler) GetSecreteAlbum(w http.ResponseWriter, r *http.Request) {
 	protoPhotos, err := a.Server.GetSecreteAlbum(r.Context(), &userProto.UserNothing{})
 	if err != nil {
 		st, _ := status.FromError(err)
-		model.Process(model.LoggerFunc(st.Message(), a.UserCase.LogError), model.ResponseFunc(w, int(st.Code()), st.Message()))
+		model.Process(model.LoggerFunc(st.Message(), a.UserCase.LogError), model.ResponseFunc(w, int(st.Code()), st.Message()), model.MetricFunc(int(st.Code()), r, st.Err()))
 		return
 	}
 	a.UserCase.LogInfo("Получен результат из сервера USER")
@@ -33,4 +33,5 @@ func (a *UserHandler) GetSecreteAlbum(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(res)
 
 	a.UserCase.LogInfo("Success get secrete album")
+	model.MetricFunc(200, r, nil)
 }
