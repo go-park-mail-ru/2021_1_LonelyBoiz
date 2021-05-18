@@ -31,7 +31,6 @@ import (
 	awsSession "github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	authHandler "server/internal/pkg/session/delivery"
@@ -40,7 +39,6 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/jmoiron/sqlx"
 	"github.com/microcosm-cc/bluemonday"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	cors2 "github.com/rs/cors"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
@@ -56,8 +54,6 @@ type App struct {
 
 func (a *App) Start() error {
 	a.Logger.Info("Server Start")
-
-	prometheus.MustRegister(middleware.Hits)
 
 	cors := cors2.New(cors2.Options{
 		AllowedOrigins:   []string{"http://localhost:3000", "https://lepick.online"},

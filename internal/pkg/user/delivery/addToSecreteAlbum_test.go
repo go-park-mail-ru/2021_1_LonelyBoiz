@@ -40,7 +40,7 @@ func TestAddToSecreteAlbum(t *testing.T) {
 		Photos: []string{"1", "2"},
 	}
 
-	murl, er := url.Parse("secretAlbum")
+	murl, er := url.Parse("/secretAlbum")
 	if er != nil {
 		t.Error(er)
 	}
@@ -99,7 +99,7 @@ func TestAddToSecreteAlbum_ParseJsonToUser_Error(t *testing.T) {
 		Photos: []string{"1", "2"},
 	}
 
-	murl, er := url.Parse("secretAlbum")
+	murl, er := url.Parse("/secretAlbum")
 	if er != nil {
 		t.Error(er)
 	}
@@ -150,7 +150,7 @@ func TestAddToSecreteAlbum_Error(t *testing.T) {
 		Photos: []string{"1", "2"},
 	}
 
-	murl, er := url.Parse("secretAlbum")
+	murl, er := url.Parse("/secretAlbum")
 	if er != nil {
 		t.Error(er)
 	}

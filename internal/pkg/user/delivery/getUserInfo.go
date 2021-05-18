@@ -4,8 +4,6 @@ import (
 	"net/http"
 	model "server/internal/pkg/models"
 	user_proto "server/internal/user_server/delivery/proto"
-
-	"google.golang.org/grpc/status"
 )
 
 func (a *UserHandler) GetUserInfo(w http.ResponseWriter, r *http.Request) {

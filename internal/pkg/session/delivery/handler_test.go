@@ -23,7 +23,7 @@ func TestLogOut(t *testing.T) {
 		Usecase: sessionManagerMock,
 	}
 
-	murl, er := url.Parse("login")
+	murl, er := url.Parse("/login")
 	if er != nil {
 		t.Error(er)
 	}
@@ -68,7 +68,7 @@ func TestLogOut_DeleteSessionByToken_Error(t *testing.T) {
 		Usecase: sessionManagerMock,
 	}
 
-	murl, er := url.Parse("login")
+	murl, er := url.Parse("/login")
 	if er != nil {
 		t.Error(er)
 	}
@@ -112,7 +112,7 @@ func TestLogOut_NoCookie(t *testing.T) {
 		Usecase: sessionManagerMock,
 	}
 
-	murl, er := url.Parse("login")
+	murl, er := url.Parse("/login")
 	if er != nil {
 		t.Error(er)
 	}

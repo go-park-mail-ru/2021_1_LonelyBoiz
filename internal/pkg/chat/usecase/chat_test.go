@@ -3,16 +3,12 @@ package usecase
 import (
 	"context"
 	"net/http"
-	"reflect"
 	"server/internal/pkg/models"
 	model "server/internal/pkg/models"
 
-	chat_rep "server/internal/pkg/chat/repository"
 	user_proto "server/internal/user_server/delivery/proto"
 	"testing"
 
-	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -98,7 +94,7 @@ func TestGetIdFromContext_Error(t *testing.T) {
 
 }
 
-func TestGetChats(t *testing.T) {
+/*func TestGetChats(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("cant create mock: %s", err)
@@ -160,3 +156,4 @@ func TestGetChats(t *testing.T) {
 		return
 	}
 }
+*/

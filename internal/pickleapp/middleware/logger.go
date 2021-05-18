@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"github.com/prometheus/client_golang/prometheus"
 	"math/rand"
 	"net/http"
 	chatUsecase "server/internal/pkg/chat/usecase"
@@ -11,20 +10,16 @@ import (
 	"server/internal/pkg/user/usecase"
 	"server/internal/pkg/utils/metrics"
 	"strconv"
+	"strings"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
 
 	"google.golang.org/grpc/metadata"
 
 	"github.com/sirupsen/logrus"
 )
 
-<<<<<<< HEAD
-var Hits = prometheus.NewCounterVec(prometheus.CounterOpts{
-	Name: "hits",
-}, []string{"status", "path"})
-
-=======
->>>>>>> PIC-138 Добавлены метрики
 type LoggerMiddleware struct {
 	Logger *models.Logger
 	User   *usecase.UserUsecase

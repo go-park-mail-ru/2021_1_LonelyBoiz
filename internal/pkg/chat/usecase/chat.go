@@ -2,7 +2,7 @@ package usecase
 
 import (
 	"server/internal/pkg/chat/repository"
-	model "server/internal/pkg/models"
+	"server/internal/pkg/models"
 	userProto "server/internal/user_server/delivery/proto"
 
 	"github.com/lib/pq"
@@ -10,26 +10,26 @@ import (
 )
 
 type ChatUsecaseInterface interface {
-	model.LoggerInterface
-	GetChat(userId, limitInt, offsetInt int) ([]model.Chat, error)
+	models.LoggerInterface
+	GetChat(userId, limitInt, offsetInt int) ([]models.Chat, error)
 	GetIdFromContext(ctx context.Context) (int, bool)
 	Photos2ProtoPhotos(userPhotos pq.StringArray) (photos []string)
 	ProtoPhotos2Photos(userPhotos []string) (photos pq.StringArray)
-	ProtoChat2Chat(chat *userProto.Chat) model.Chat
-	Chat2ProtoChat(chat model.Chat) *userProto.Chat
+	ProtoChat2Chat(chat *userProto.Chat) models.Chat
+	Chat2ProtoChat(chat models.Chat) *userProto.Chat
 }
 
 type ChatUsecase struct {
-	model.LoggerInterface
+	models.LoggerInterface
 	Db repository.ChatRepositoryInterface
 }
 
-func (u *ChatUsecase) GetChat(userId, limitInt, offsetInt int) ([]model.Chat, error) {
+func (u *ChatUsecase) GetChat(userId, limitInt, offsetInt int) ([]models.Chat, error) {
 	return u.Db.GetChats(userId, limitInt, offsetInt)
 }
 
 func (u *ChatUsecase) GetIdFromContext(ctx context.Context) (int, bool) {
-	id, ok := ctx.Value(model.CtxUserId).(int)
+	id, ok := ctx.Value(models.CtxUserId).(int)
 	if !ok {
 		return 0, false
 	}
@@ -50,8 +50,8 @@ func (u *ChatUsecase) ProtoPhotos2Photos(userPhotos []string) (photos pq.StringA
 	return photos
 }
 
-func (u *ChatUsecase) ProtoChat2Chat(chat *userProto.Chat) model.Chat {
-	return model.Chat{
+func (u *ChatUsecase) ProtoChat2Chat(chat *userProto.Chat) models.Chat {
+	return models.Chat{
 		ChatId:              int(chat.GetChatId()),
 		PartnerId:           int(chat.GetPartnerId()),
 		PartnerName:         chat.GetPartnerName(),
@@ -62,7 +62,7 @@ func (u *ChatUsecase) ProtoChat2Chat(chat *userProto.Chat) model.Chat {
 	}
 }
 
-func (u *ChatUsecase) Chat2ProtoChat(chat model.Chat) *userProto.Chat {
+func (u *ChatUsecase) Chat2ProtoChat(chat models.Chat) *userProto.Chat {
 	return &userProto.Chat{
 		ChatId:              int32(chat.ChatId),
 		PartnerId:           int32(chat.PartnerId),

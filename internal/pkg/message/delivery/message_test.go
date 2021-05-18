@@ -29,7 +29,7 @@ func TestGetMessages(t *testing.T) {
 		Server:  serverMock,
 	}
 
-	murl, er := url.Parse("chat")
+	murl, er := url.Parse("/chat")
 	if er != nil {
 		t.Error(er)
 	}
@@ -79,7 +79,7 @@ func TestGetMessagesError(t *testing.T) {
 		Server:  serverMock,
 	}
 
-	murl, er := url.Parse("chat")
+	murl, er := url.Parse("/chat")
 	if er != nil {
 		t.Error(er)
 	}
@@ -129,7 +129,7 @@ func TestSendMessage(t *testing.T) {
 		Server:  serverMock,
 	}
 
-	murl, er := url.Parse("chat")
+	murl, er := url.Parse("/chat")
 	if er != nil {
 		t.Error(er)
 	}
@@ -186,7 +186,7 @@ func TestSendMessage_ParseJsonToMessage_Error(t *testing.T) {
 		Server:  serverMock,
 	}
 
-	murl, er := url.Parse("chat")
+	murl, er := url.Parse("/chat")
 	if er != nil {
 		t.Error(er)
 	}
@@ -238,7 +238,7 @@ func TestSendMessage_CreateMessage_Error(t *testing.T) {
 		Server:  serverMock,
 	}
 
-	murl, er := url.Parse("chat")
+	murl, er := url.Parse("/chat")
 	if er != nil {
 		t.Error(er)
 	}
@@ -293,7 +293,7 @@ func TestChangeMessage(t *testing.T) {
 		Server:  serverMock,
 	}
 
-	murl, er := url.Parse("chat")
+	murl, er := url.Parse("/chat")
 	if er != nil {
 		t.Error(er)
 	}
@@ -350,7 +350,7 @@ func TestChangeMessage_ParseJsonToMessage_Error(t *testing.T) {
 		Server:  serverMock,
 	}
 
-	murl, er := url.Parse("chat")
+	murl, er := url.Parse("/chat")
 	if er != nil {
 		t.Error(er)
 	}
@@ -403,7 +403,7 @@ func TestChangeMessage_Error(t *testing.T) {
 		Server:  serverMock,
 	}
 
-	murl, er := url.Parse("chat")
+	murl, er := url.Parse("/chat")
 	if er != nil {
 		t.Error(er)
 	}
