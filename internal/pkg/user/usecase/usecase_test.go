@@ -1409,3 +1409,101 @@ func TestParseJsonToUser(t *testing.T) {
 	_, err = UserUsecaseTest.ParseJsonToUser(r)
 	assert.Equal(t, nil, err)
 }
+
+func TestGetSecreteAlbum(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	dbMock := mocks.NewMockUserRepositoryInterface(mockCtrl)
+
+	UserUsecaseTest := UserUsecase{
+		Clients:         nil,
+		Db:              dbMock,
+		LoggerInterface: &models.Logger{Logger: logrus.New().WithField("test", "test")},
+		Sanitizer:       bluemonday.NewPolicy(),
+	}
+
+	photos := []string{"1", "2"}
+	ownerId := 1
+	getterId := 2
+
+	dbMock.EXPECT().CheckPermission(ownerId, getterId).Return(true, nil)
+	dbMock.EXPECT().GetSecretePhotos(ownerId).Return(photos, nil)
+
+	res, code, err := UserUsecaseTest.GetSecreteAlbum(ownerId, getterId)
+	assert.Equal(t, nil, err)
+	assert.Equal(t, 200, code)
+	assert.Equal(t, res, photos)
+}
+
+func TestGetSecreteAlbum_CheckPermission_Error(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	dbMock := mocks.NewMockUserRepositoryInterface(mockCtrl)
+
+	UserUsecaseTest := UserUsecase{
+		Clients:         nil,
+		Db:              dbMock,
+		LoggerInterface: &models.Logger{Logger: logrus.New().WithField("test", "test")},
+		Sanitizer:       bluemonday.NewPolicy(),
+	}
+
+	ownerId := 1
+	getterId := 2
+
+	bufErr := errors.New("Some error")
+	dbMock.EXPECT().CheckPermission(ownerId, getterId).Return(false, bufErr)
+
+	res, code, err := UserUsecaseTest.GetSecreteAlbum(ownerId, getterId)
+	assert.Equal(t, bufErr, err)
+	assert.Equal(t, 500, code)
+	assert.Equal(t, []string{}, res)
+}
+
+func TestGetSecreteAlbum_CheckPermission_NotOk(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	dbMock := mocks.NewMockUserRepositoryInterface(mockCtrl)
+
+	UserUsecaseTest := UserUsecase{
+		Clients:         nil,
+		Db:              dbMock,
+		LoggerInterface: &models.Logger{Logger: logrus.New().WithField("test", "test")},
+		Sanitizer:       bluemonday.NewPolicy(),
+	}
+
+	ownerId := 1
+	getterId := 2
+
+	dbMock.EXPECT().CheckPermission(ownerId, getterId).Return(false, nil)
+
+	res, code, err := UserUsecaseTest.GetSecreteAlbum(ownerId, getterId)
+	assert.Equal(t, nil, err)
+	assert.Equal(t, 403, code)
+	assert.Equal(t, []string{}, res)
+}
+
+func TestGetSecreteAlbum_GetSecretePhotos_Error(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	dbMock := mocks.NewMockUserRepositoryInterface(mockCtrl)
+
+	UserUsecaseTest := UserUsecase{
+		Clients:         nil,
+		Db:              dbMock,
+		LoggerInterface: &models.Logger{Logger: logrus.New().WithField("test", "test")},
+		Sanitizer:       bluemonday.NewPolicy(),
+	}
+
+	bufErr := errors.New("Some error")
+	photos := []string{"1", "2"}
+	ownerId := 1
+	getterId := 2
+
+	dbMock.EXPECT().CheckPermission(ownerId, getterId).Return(true, nil)
+	dbMock.EXPECT().GetSecretePhotos(ownerId).Return(photos, bufErr)
+
+	res, code, err := UserUsecaseTest.GetSecreteAlbum(ownerId, getterId)
+	assert.Equal(t, bufErr, err)
+	assert.Equal(t, 500, code)
+	assert.Equal(t, res, []string{})
+}

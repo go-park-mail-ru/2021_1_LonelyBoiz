@@ -110,8 +110,6 @@ func (u *UserUsecase) GetSecreteAlbum(ownerId int, getterId int) ([]string, int,
 		return make([]string, 0), 500, err
 	}
 
-	fmt.Println(photos)
-
 	return photos, 200, err
 }
 
