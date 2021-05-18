@@ -40,10 +40,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/jmoiron/sqlx"
 	"github.com/microcosm-cc/bluemonday"
-<<<<<<< HEAD
-=======
 	"github.com/prometheus/client_golang/prometheus/promhttp"
->>>>>>> PIC-138 Добавлены метрики
 	cors2 "github.com/rs/cors"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
