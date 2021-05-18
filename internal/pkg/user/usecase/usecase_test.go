@@ -188,6 +188,56 @@ func TestUserUsecaseSignInError(t *testing.T) {
 	assert.Equal(t, nil, err)
 }
 
+func TestCreateChatNon_ReduceScrolls_Error(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	dbMock := mocks.NewMockUserRepositoryInterface(mockCtrl)
+
+	UserUsecaseTest := UserUsecase{
+		Clients:         nil,
+		Db:              dbMock,
+		LoggerInterface: &models.Logger{Logger: logrus.New().WithField("test", "test")},
+		Sanitizer:       bluemonday.NewPolicy(),
+	}
+
+	like := models.Like{
+		UserId:   1,
+		Reaction: "asdf",
+	}
+
+	bufErr := errors.New("Some error")
+
+	dbMock.EXPECT().ReduceScrolls(1).Return(1, bufErr)
+
+	_, code, err := UserUsecaseTest.CreateChat(1, like)
+	assert.Equal(t, nil, err)
+	assert.Equal(t, 500, code)
+}
+
+func TestCreateChatNon_ReduceScrolls_Less0(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	dbMock := mocks.NewMockUserRepositoryInterface(mockCtrl)
+
+	UserUsecaseTest := UserUsecase{
+		Clients:         nil,
+		Db:              dbMock,
+		LoggerInterface: &models.Logger{Logger: logrus.New().WithField("test", "test")},
+		Sanitizer:       bluemonday.NewPolicy(),
+	}
+
+	like := models.Like{
+		UserId:   1,
+		Reaction: "asdf",
+	}
+
+	dbMock.EXPECT().ReduceScrolls(1).Return(-1, nil)
+
+	_, code, err := UserUsecaseTest.CreateChat(1, like)
+	assert.NotEqual(t, nil, err)
+	assert.Equal(t, 402, code)
+}
+
 func TestCreateChatNonValidReaction(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
