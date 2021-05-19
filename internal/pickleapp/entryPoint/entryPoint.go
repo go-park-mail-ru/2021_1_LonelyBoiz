@@ -67,8 +67,8 @@ func (a *App) Start() error {
 		IdleTimeout:  120 * time.Second,
 	}
 
-	err := s.ListenAndServe()
-	//err := s.ListenAndServeTLS(os.Getenv("SSL_PUBLIC"), os.Getenv("SSL_PRIVATE"))
+	//err := s.ListenAndServe()
+	err := s.ListenAndServeTLS(os.Getenv("SSL_PUBLIC"), os.Getenv("SSL_PRIVATE"))
 	if err != nil {
 		return err
 	}
@@ -119,7 +119,7 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 		grpc.WithInsecure(),
 	}
 
-	authConn, err := grpc.Dial("localhost:5400", opts...)
+	authConn, err := grpc.Dial("auth:5400", opts...)
 
 	if err != nil {
 		log.Print(1)
@@ -134,7 +134,7 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 		grpc.WithInsecure(),
 	}
 
-	userConn, err := grpc.Dial("localhost:5500", opts...)
+	userConn, err := grpc.Dial("user:5500", opts...)
 	if err != nil {
 		grpclog.Fatalf("fail to dial: %v", err)
 		panic(err)

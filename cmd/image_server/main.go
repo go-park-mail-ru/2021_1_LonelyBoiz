@@ -64,8 +64,8 @@ func main() {
 	opts := []grpc.DialOption{
 		grpc.WithInsecure(),
 	}
-	//TODO:: поменять на auth
-	authConn, err := grpc.Dial("localhost:5400", opts...)
+
+	authConn, err := grpc.Dial("auth:5400", opts...)
 
 	defer authConn.Close()
 

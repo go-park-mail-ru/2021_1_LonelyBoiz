@@ -62,7 +62,7 @@ func main() {
 		grpc.WithInsecure(),
 	}
 
-	authConn, err := grpc.Dial("localhost:5400", opts...)
+	authConn, err := grpc.Dial("auth:5400", opts...)
 
 	if err != nil {
 		log.Print(1)
