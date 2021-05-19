@@ -50,6 +50,8 @@ func (e *NotificationByEmail) SendMessage() {
 
 		if err != nil {
 			log.Println("Can't send message to " + bucket.email + " Error: " + err.Error())
+		} else {
+			log.Println("Send Email to " + bucket.email)
 		}
 	}
 }

@@ -39,22 +39,26 @@ type MessageUsecase struct {
 	email2.NotificationInterface
 }
 
-func (m *MessageUsecase) SendEmailNotification(chatId, id int) {
-	userId, err := m.Db.GetPartnerId(chatId, id)
+func (m *MessageUsecase) SendEmailNotification(chatId, authorId int) {
+	sendEmailId, err := m.Db.GetPartnerId(chatId, authorId)
 	if err != nil {
 		m.LogError("SendEmailNotification  - " + err.Error())
 		return
 	}
 
-	userEmail, err := m.Db.GetEmailById(userId)
+	userEmail, err := m.Db.GetEmailById(sendEmailId)
 	if err != nil {
 		m.LogError("SendEmailNotification  - " + err.Error())
 		return
 	}
 
-	m.LogError(userEmail)
+	name, err := m.Db.GetNameById(authorId)
+	if err != nil {
+		m.LogError("SendEmailNotification  - " + err.Error())
+		return
+	}
 
-	m.AddEmailLetterToQueue(userEmail, "Вам пришло новое сообщение!")
+	m.AddEmailLetterToQueue(userEmail, "Вам пришло новое сообщение от "+name+"!")
 }
 
 func (m *MessageUsecase) WebsocketMessage(newMessage model.Message) {

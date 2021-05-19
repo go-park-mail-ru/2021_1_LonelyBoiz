@@ -19,10 +19,25 @@ type MessageRepositoryInterface interface {
 	GetMessages(chatId int, limit int, offset int) ([]model.Message, error)
 	GetMessage(messageId int) (model.Message, error)
 	GetEmailById(id int) (email string, err error)
+	GetNameById(id int) (name string, err error)
 }
 
 type MessageRepository struct {
 	DB *sqlx.DB
+}
+
+func (repo *MessageRepository) GetNameById(id int) (name string, err error) {
+	var names []string
+	err = repo.DB.Select(&names, `SELECT name FROM users WHERE users.id = $1;`, id)
+	if err != nil {
+		return "", err
+	}
+
+	if len(names) == 0 {
+		return "", errors.New("name Not Found")
+	}
+
+	return names[0], nil
 }
 
 func (repo *MessageRepository) GetEmailById(id int) (email string, err error) {

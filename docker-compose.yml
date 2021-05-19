@@ -1,10 +1,10 @@
 version: "3"
 
-volumes:
-  dbbackups:
-  postgis-data:
-
 services:
+  mail:
+    image: bytemark/smtp
+    restart: always
+
   auth:
     image: auth_server
     ports:
@@ -21,6 +21,10 @@ services:
       AWS_REGION: ${AWS_REGION}
       SSL_PUBLIC: ${SSL_PUBLIC}
       SSL_PRIVATE: ${SSL_PRIVATE}
+      EMAILFROM: ${EMAILFROM}
+      PASS: ${PASS}
+      SMTPHOST: ${SMTPHOST}
+      SMTPPORT: ${SMTPPORT}
     image: pickleapp_server
     ports:
       - "8000:8000"
