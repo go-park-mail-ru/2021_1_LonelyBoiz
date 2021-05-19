@@ -25,6 +25,7 @@ func (a *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	a.UserCase.LogInfo("Получен результат из сервера USER")
+	println(userResponse.GetToken())
 
 	cookie := a.UserCase.SetCookie(userResponse.GetToken())
 	http.SetCookie(w, &cookie)

@@ -1,10 +1,9 @@
 package middleware
 
 import (
-	"net/http"
-
 	"github.com/gorilla/mux"
 	"google.golang.org/grpc/metadata"
+	"net/http"
 )
 
 func SetContextMiddleware(next http.Handler) http.Handler {
@@ -26,10 +25,16 @@ func SetContextMiddleware(next http.Handler) http.Handler {
 			ctx = metadata.AppendToOutgoingContext(ctx, "urlMessageId", vars["messageId"])
 		}
 
-		_, ok = vars["uuid"]
-		if ok {
-			ctx = metadata.AppendToOutgoingContext(ctx, "urlUUID", vars["uuid"])
-		}
+		//_, ok = vars["uuid"]
+		//if ok {
+		//	ctx := r.Context()
+		//	ctx = context.WithValue(ctx,
+		//		model.CtxImageId,
+		//		vars["uuid"],
+		//	)
+		//
+		//	ctx = metadata.AppendToOutgoingContext(ctx, "urlUUID", vars["uuid"])
+		//}
 
 		_, ok = vars["chatId"]
 		if ok {

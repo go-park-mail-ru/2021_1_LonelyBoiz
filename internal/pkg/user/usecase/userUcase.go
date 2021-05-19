@@ -678,7 +678,7 @@ func (u *UserUsecase) SetCookie(token string) http.Cookie {
 		Domain: "localhost:8000",
 		//Secure:   true,
 		HttpOnly: true,
-		//Path:     "/",
+		Path:     "/",
 	}
 }
 

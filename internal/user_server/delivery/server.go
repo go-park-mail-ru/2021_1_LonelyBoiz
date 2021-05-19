@@ -7,6 +7,7 @@ import (
 	model "server/internal/pkg/models"
 	"server/internal/pkg/user/usecase"
 	userProto "server/internal/user_server/delivery/proto"
+	"strconv"
 
 	"golang.org/x/net/context"
 	codes "google.golang.org/grpc/codes"
@@ -26,11 +27,14 @@ func (u UserServer) CreateUser(ctx context.Context, user *userProto.User) (*user
 	if code != 200 {
 		return &userProto.UserResponse{}, status.New(codes.Code(code), responseError.Error()).Err()
 	}
+	u.UserUsecase.LogInfo("Аккаунт с id = " + strconv.Itoa(newUser.Id) + " создан")
 
 	token, err := u.Sessions.Create(ctx, &session_proto2.SessionId{Id: int32(newUser.Id)})
 	if err != nil {
-		return &userProto.UserResponse{}, status.Error(codes.Code(500), err.Error())
+		u.UserUsecase.LogError(err.Error())
+		return &userProto.UserResponse{}, status.Error(codes.Code(code), err.Error())
 	}
+	u.UserUsecase.LogInfo("Для аккаунта с id = " + strconv.Itoa(newUser.Id) + " создан токен")
 
 	return &userProto.UserResponse{
 		User:  u.UserUsecase.User2ProtoUser(newUser),

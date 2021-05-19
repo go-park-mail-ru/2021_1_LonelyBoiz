@@ -30,8 +30,10 @@ type ImageUsecaseInterface interface {
 	AddImage(userId int, image []byte) (models.Image, error)
 	DeleteImage(userId int, imageUuid uuid.UUID) error
 	GetParamFromContext(ctx context.Context, param string) (int, bool)
-	SetUUID(ctx context.Context, vars map[string]string) context.Context
 	GetUUID(ctx context.Context) (uuid.UUID, bool)
+	GetIdFromContext(ctx context.Context) (int, bool)
+	GetUUIDFromContext(ctx context.Context) (uuid.UUID, bool)
+
 	models.LoggerInterface
 }
 
@@ -58,11 +60,6 @@ func (u *ImageUsecase) GetUUID(ctx context.Context) (uuid.UUID, bool) {
 	}
 
 	return uid, true
-}
-
-func (u *ImageUsecase) SetUUID(ctx context.Context, vars map[string]string) context.Context {
-	sUuid := vars["uuid"]
-	return metadata.AppendToOutgoingContext(ctx, "urlUUID", sUuid)
 }
 
 func (u *ImageUsecase) GetParamFromContext(ctx context.Context, param string) (int, bool) {
@@ -156,4 +153,23 @@ func userImagesContains(db repository.DbRepositoryInterface, userId int, uuid uu
 
 func b2mb(bytes int) int {
 	return bytes / MB
+}
+
+func (u *ImageUsecase) GetIdFromContext(ctx context.Context) (int, bool) {
+	id, ok := ctx.Value(models.CtxUserId).(int)
+	if !ok {
+		return 0, false
+	}
+	return id, true
+}
+
+func (u *ImageUsecase) GetUUIDFromContext(ctx context.Context) (uuid.UUID, bool) {
+	uuidString, ok := ctx.Value(models.CtxImageId).(string)
+	if !ok {
+		return uuid.New(), false
+	}
+
+	id := uuid.MustParse(uuidString)
+
+	return id, true
 }
