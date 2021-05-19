@@ -12,6 +12,7 @@ func (a *UserHandler) Payment(w http.ResponseWriter, r *http.Request) {
 		a.UserCase.LogError(err)
 		w.WriteHeader(400)
 		w.Write([]byte(err.Error()))
+		models.MetricFunc(400, r, err)
 		return
 	}
 
@@ -25,11 +26,8 @@ func (a *UserHandler) Payment(w http.ResponseWriter, r *http.Request) {
 
 	amountString := r.PostFormValue("withdraw_amount")
 	a.UserCase.LogInfo(amountString)
-	tarif := make(map[string]int, 3)
-	tarif["1.00"] = 10
-	tarif["2.00"] = 20
-	tarif["3.00"] = 40
-	amountInt, ok := tarif[amountString]
+
+	amountInt, ok := models.Tarif[amountString]
 	if !ok {
 		a.UserCase.LogError("Неправильный amount")
 		w.WriteHeader(400)
@@ -42,6 +40,7 @@ func (a *UserHandler) Payment(w http.ResponseWriter, r *http.Request) {
 		a.UserCase.LogError(err)
 		w.WriteHeader(400)
 		w.Write([]byte(err.Error()))
+		models.MetricFunc(400, r, err)
 		return
 	}
 	a.UserCase.LogInfo(labelStruct)
@@ -51,8 +50,10 @@ func (a *UserHandler) Payment(w http.ResponseWriter, r *http.Request) {
 		a.UserCase.LogError(err)
 		w.WriteHeader(400)
 		w.Write([]byte(err.Error()))
+		models.MetricFunc(400, r, err)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
+	models.MetricFunc(200, r, nil)
 }

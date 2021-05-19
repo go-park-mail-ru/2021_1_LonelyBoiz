@@ -3,7 +3,7 @@ name: Go
 
 on:
   push:
-    branches: [ main ]
+    branches: [ 'PIC-142_UserDeliveryTests' ]
   pull_request:
     branches: [ main ]
 
@@ -20,4 +20,7 @@ jobs:
         go-version: 1.15
 
     - name: Test
-      run: go test ./... -cover
+      run: |
+        go test ./... -v -coverpkg=./... -coverprofile=cover.out.tmp 
+        cat cover.out.tmp | grep -v "mock.go" | grep -v "pb.go" > cover.out
+        go tool cover -func=cover.out

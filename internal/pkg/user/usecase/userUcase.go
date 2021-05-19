@@ -87,8 +87,6 @@ func (u *UserUsecase) SetChat(ws *websocket.Conn, id int) {
 
 func (u *UserUsecase) AddToSecreteAlbum(ownerId int, photos []string) (int, error) {
 	err := u.Db.AddToSecreteAlbum(ownerId, photos)
-	fmt.Println(photos)
-	fmt.Println(ownerId)
 	if err != nil {
 		return 500, err
 	}
@@ -111,8 +109,6 @@ func (u *UserUsecase) GetSecreteAlbum(ownerId int, getterId int) ([]string, int,
 	if err != nil {
 		return make([]string, 0), 500, err
 	}
-
-	fmt.Println(photos)
 
 	return photos, 200, err
 }
@@ -678,9 +674,9 @@ func (u *UserUsecase) SetCookie(token string) http.Cookie {
 		Value:    token,
 		Expires:  time.Now().AddDate(0, 0, 1),
 		SameSite: http.SameSiteStrictMode,
-		Domain:   "lepick.online:8000",
-		//Domain: "localhost:8000",
-		Secure:   true,
+		//Domain:   "lepick.online:8000",
+		Domain: "localhost:8000",
+		//Secure:   true,
 		HttpOnly: true,
 		Path:     "/",
 	}

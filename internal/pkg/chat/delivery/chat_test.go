@@ -11,12 +11,15 @@ import (
 	serverMocks "server/internal/user_server/delivery/proto/mocks"
 	"testing"
 
+	"server/internal/pkg/utils/metrics"
+
 	"github.com/golang/mock/gomock"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestGetChats(t *testing.T) {
+	metrics.New()
 	mockCtrl := gomock.NewController(t)
 
 	chatUseCaseMock := mockUsecase.NewMockChatUsecaseInterface(mockCtrl)
@@ -27,7 +30,7 @@ func TestGetChats(t *testing.T) {
 		Server:  serverMock,
 	}
 
-	murl, er := url.Parse("chat")
+	murl, er := url.Parse("/chat")
 	if er != nil {
 		t.Error(er)
 	}
@@ -77,7 +80,7 @@ func TestGetChatsError(t *testing.T) {
 		Server:  serverMock,
 	}
 
-	murl, er := url.Parse("chat")
+	murl, er := url.Parse("/chat")
 	if er != nil {
 		t.Error(er)
 	}

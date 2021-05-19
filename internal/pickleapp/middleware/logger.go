@@ -8,24 +8,16 @@ import (
 	messageUsecase "server/internal/pkg/message/usecase"
 	"server/internal/pkg/models"
 	"server/internal/pkg/user/usecase"
+	"server/internal/pkg/utils/metrics"
 	"strconv"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
 
 	"google.golang.org/grpc/metadata"
 
 	"github.com/sirupsen/logrus"
-
-	"github.com/prometheus/client_golang/prometheus"
 )
-
-var FooCount = prometheus.NewCounter(prometheus.CounterOpts{
-	Name: "foo_total",
-	Help: "Number of foo successfully processed.",
-})
-
-var Hits = prometheus.NewCounterVec(prometheus.CounterOpts{
-	Name: "hits",
-}, []string{"status", "path"})
 
 type LoggerMiddleware struct {
 	Logger *models.Logger
@@ -38,7 +30,10 @@ type LoggerMiddleware struct {
 
 func (logger *LoggerMiddleware) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		tm := prometheus.NewTimer(metrics.Duration.WithLabelValues(strings.Split(r.URL.Path, "/")[1], r.Method))
+
 		defer func() {
+			tm.ObserveDuration()
 			if err := recover(); err != nil {
 				logger.Logger.LogError(err)
 			}
@@ -77,11 +72,5 @@ func (logger *LoggerMiddleware) Middleware(next http.Handler) http.Handler {
 		ctx := r.Context()
 		ctx = metadata.AppendToOutgoingContext(ctx, "requestId", strconv.FormatInt(reqId, 10))
 		next.ServeHTTP(w, r.WithContext(ctx))
-
-		//if r.RequestURI != "/metrics" {
-		//	Hits.WithLabelValues(strconv.Itoa(r.Response.StatusCode), strings.Split(r.URL.Path, "/")[0]).Inc()
-		//	FooCount.Add(1)
-		//}
-
 	})
 }

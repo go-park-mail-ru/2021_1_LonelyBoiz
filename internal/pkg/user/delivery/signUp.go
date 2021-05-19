@@ -11,7 +11,7 @@ func (a *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 	newUser, err := a.UserCase.ParseJsonToUser(r.Body)
 	if err != nil {
 		response := models.ErrorResponse{Err: "Не удалось прочитать тело запроса"}
-		models.Process(models.LoggerFunc(response.Err, a.UserCase.LogInfo), models.ResponseFunc(w, 400, response))
+		models.Process(models.LoggerFunc(response.Err, a.UserCase.LogInfo), models.ResponseFunc(w, 400, response), models.MetricFunc(401, r, response))
 		return
 	}
 
@@ -20,7 +20,7 @@ func (a *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		st, _ := status.FromError(err)
 		if st.Code() != 200 {
-			models.Process(models.LoggerFunc(st.Message(), a.UserCase.LogError), models.ResponseFunc(w, int(st.Code()), models.ParseGrpcError(st.Message())))
+			models.Process(models.LoggerFunc(st.Message(), a.UserCase.LogError), models.ResponseFunc(w, int(st.Code()), models.ParseGrpcError(st.Message())), models.MetricFunc(int(st.Code()), r, st.Err()))
 			return
 		}
 	}
@@ -30,5 +30,5 @@ func (a *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 	cookie := a.UserCase.SetCookie(userResponse.GetToken())
 	http.SetCookie(w, &cookie)
 
-	models.Process(models.LoggerFunc("Success SignUp", a.UserCase.LogInfo), models.ResponseFunc(w, 200, a.UserCase.ProtoUser2User(userResponse.GetUser())))
+	models.Process(models.LoggerFunc("Success SignUp", a.UserCase.LogInfo), models.ResponseFunc(w, 200, a.UserCase.ProtoUser2User(userResponse.GetUser())), models.MetricFunc(200, r, nil))
 }

@@ -1,7 +1,6 @@
 package delivery
 
 import (
-	"fmt"
 	session_proto2 "server/internal/auth_server/delivery/session"
 	chatUsecase "server/internal/pkg/chat/usecase"
 	messageUsecase "server/internal/pkg/message/usecase"
@@ -142,13 +141,13 @@ func (u UserServer) CreateFeed(ctx context.Context, nothing *userProto.UserNothi
 		return &userProto.Feed{}, status.Error(codes.Code(code), err.Error())
 	}
 
-	var feed1 []*userProto.UserId
+	var protoFeed []*userProto.UserId
 
 	for _, idFromFeed := range feed {
-		feed1 = append(feed1, &userProto.UserId{Id: int32(idFromFeed)})
+		protoFeed = append(protoFeed, &userProto.UserId{Id: int32(idFromFeed)})
 	}
 
-	return &userProto.Feed{Users: feed1}, nil
+	return &userProto.Feed{Users: protoFeed}, nil
 }
 
 func (u UserServer) CreateChat(ctx context.Context, like *userProto.Like) (*userProto.Chat, error) {
@@ -195,7 +194,6 @@ func (u UserServer) GetChats(ctx context.Context, nothing *userProto.UserNothing
 
 	limit, ok := u.UserUsecase.GetParamFromContext(ctx, "urlCount")
 	if !ok {
-		fmt.Println(limit)
 		response := model.ErrorResponse{Err: "Неверный формат count"}
 		return &userProto.ChatsResponse{}, status.Error(400, response.Err)
 	}
@@ -274,7 +272,6 @@ func (u UserServer) CreateMessage(ctx context.Context, message *userProto.Messag
 	}
 
 	newMessage, code, err := u.MessageUsecase.CreateMessage(u.MessageUsecase.ProtoMessage2Message(message), chatId, id)
-
 	if code != 200 {
 		return &userProto.Message{}, status.Error(codes.Code(code), err.Error())
 	}

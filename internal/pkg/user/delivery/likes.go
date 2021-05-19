@@ -2,10 +2,11 @@ package delivery
 
 import (
 	"encoding/json"
-	"google.golang.org/grpc/status"
 	"net/http"
 	"server/internal/pkg/models"
 	userproto "server/internal/user_server/delivery/proto"
+
+	"google.golang.org/grpc/status"
 )
 
 func (a *UserHandler) LikesHandler(w http.ResponseWriter, r *http.Request) {
@@ -15,7 +16,7 @@ func (a *UserHandler) LikesHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	if err != nil {
 		response := models.ErrorResponse{Err: "Не удалось прочитать тело запроса"}
-		models.Process(models.LoggerFunc(response.Err, a.UserCase.LogError), models.ResponseFunc(w, 400, response))
+		models.Process(models.LoggerFunc(response.Err, a.UserCase.LogError), models.ResponseFunc(w, 400, response), models.MetricFunc(400, r, response))
 		return
 	}
 
@@ -24,6 +25,7 @@ func (a *UserHandler) LikesHandler(w http.ResponseWriter, r *http.Request) {
 		UserId:   int32(like.UserId),
 		Reaction: like.Reaction,
 	})
+	a.UserCase.LogInfo("Получен результат из сервера USER")
 
 	if err != nil {
 		st, _ := status.FromError(err)
@@ -31,10 +33,9 @@ func (a *UserHandler) LikesHandler(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(204)
 			return
 		}
-		models.Process(models.LoggerFunc(st.Message(), a.UserCase.LogError), models.ResponseFunc(w, int(st.Code()), st.Message()))
+		models.Process(models.LoggerFunc(st.Message(), a.UserCase.LogError), models.ResponseFunc(w, int(st.Code()), st.Message()), models.MetricFunc(int(st.Code()), r, st.Err()))
 		return
 	}
-	a.UserCase.LogInfo("Получен результат из сервера USER")
 
 	nChat := models.Chat{
 		ChatId:              int(chat.GetChatId()),
@@ -46,7 +47,7 @@ func (a *UserHandler) LikesHandler(w http.ResponseWriter, r *http.Request) {
 		Photos:              a.UserCase.ProtoPhotos2Photos(chat.GetPhotos()),
 	}
 
-	models.Process(models.LoggerFunc("Create Feed", a.UserCase.LogInfo), models.ResponseFunc(w, 200, nChat))
+	models.Process(models.LoggerFunc("Create Feed", a.UserCase.LogInfo), models.ResponseFunc(w, 200, nChat), models.MetricFunc(200, r, nil))
 
 	a.UserCase.WebsocketChat(&nChat)
 }

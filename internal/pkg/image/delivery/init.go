@@ -51,6 +51,7 @@ func (h *ImageHandler) UploadImage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	models.Process(models.LoggerFunc("Success Upload Image", h.Usecase.LogInfo), models.ResponseFunc(w, http.StatusOK, model))
+
 }
 
 func (h *ImageHandler) DeleteImage(w http.ResponseWriter, r *http.Request) {
@@ -75,11 +76,11 @@ func (h *ImageHandler) DeleteImage(w http.ResponseWriter, r *http.Request) {
 	status := setStatusCode(err, http.StatusBadRequest)
 	if err != nil {
 		responseBody := models.ErrorResponse{Err: err.Error()}
-		models.Process(models.LoggerFunc(responseBody, h.Usecase.LogInfo), models.ResponseFunc(w, status, responseBody))
+		models.Process(models.LoggerFunc(responseBody, h.Usecase.LogInfo), models.ResponseFunc(w, status, responseBody), models.MetricFunc(status, r, err)))
 		return
 	}
 
-	models.Process(models.LoggerFunc("Success Delete Image", h.Usecase.LogInfo), models.ResponseFunc(w, http.StatusNoContent, nil))
+	models.Process(models.LoggerFunc("Success Delete Image", h.Usecase.LogInfo), models.ResponseFunc(w, http.StatusNoContent, nil), models.MetricFunc(http.StatusNoContent, r, nil))
 }
 
 func setStatusCode(err error, initStatus int) int {

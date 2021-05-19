@@ -3,10 +3,11 @@ package usecase
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"server/internal/pkg/models"
+	model "server/internal/pkg/models"
 	mocks "server/internal/pkg/user/repository/mocks"
+	user_proto "server/internal/user_server/delivery/proto"
 	"strings"
 	"testing"
 
@@ -15,6 +16,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
+
+const bcryptPass = "$2a$05$xaL9iW4Opbrgn52nyBO0/OIbfx1jjuIVy.SYCBG2VIqHzHnkj05le"
 
 func TestUserUsecaseSignInNonValidEmail(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
@@ -55,10 +58,7 @@ func TestUserUsecaseSignInWrongPassword(t *testing.T) {
 		Sanitizer:       bluemonday.NewPolicy(),
 	}
 
-	pass, err := UserUsecaseTest.HashPassword("12345678")
-	if err != nil {
-		fmt.Println("bcrypt error:", err)
-	}
+	pass := []byte(bcryptPass)
 
 	user := models.User{
 		Email:          "windes@ya.ru",
@@ -118,10 +118,7 @@ func TestUserUsecaseSignInSuccess(t *testing.T) {
 		Sanitizer:       bluemonday.NewPolicy(),
 	}
 
-	pass, err := UserUsecaseTest.HashPassword("12345678")
-	if err != nil {
-		fmt.Println("bcrypt error:", err)
-	}
+	pass := []byte(bcryptPass)
 
 	user1 := models.User{
 		Id:             1,
@@ -173,10 +170,7 @@ func TestUserUsecaseSignInError(t *testing.T) {
 		Sanitizer:       bluemonday.NewPolicy(),
 	}
 
-	pass, err := UserUsecaseTest.HashPassword("12345678")
-	if err != nil {
-		fmt.Println("bcrypt error:", err)
-	}
+	pass := []byte(bcryptPass)
 
 	user := models.User{
 		Email:          "windes@ya.ru",
@@ -194,6 +188,56 @@ func TestUserUsecaseSignInError(t *testing.T) {
 
 	assert.Equal(t, 500, code)
 	assert.Equal(t, nil, err)
+}
+
+func TestCreateChatNon_ReduceScrolls_Error(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	dbMock := mocks.NewMockUserRepositoryInterface(mockCtrl)
+
+	UserUsecaseTest := UserUsecase{
+		Clients:         nil,
+		Db:              dbMock,
+		LoggerInterface: &models.Logger{Logger: logrus.New().WithField("test", "test")},
+		Sanitizer:       bluemonday.NewPolicy(),
+	}
+
+	like := models.Like{
+		UserId:   1,
+		Reaction: "asdf",
+	}
+
+	bufErr := errors.New("Some error")
+
+	dbMock.EXPECT().ReduceScrolls(1).Return(1, bufErr)
+
+	_, code, err := UserUsecaseTest.CreateChat(1, like)
+	assert.Equal(t, nil, err)
+	assert.Equal(t, 500, code)
+}
+
+func TestCreateChatNon_ReduceScrolls_Less0(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	dbMock := mocks.NewMockUserRepositoryInterface(mockCtrl)
+
+	UserUsecaseTest := UserUsecase{
+		Clients:         nil,
+		Db:              dbMock,
+		LoggerInterface: &models.Logger{Logger: logrus.New().WithField("test", "test")},
+		Sanitizer:       bluemonday.NewPolicy(),
+	}
+
+	like := models.Like{
+		UserId:   1,
+		Reaction: "asdf",
+	}
+
+	dbMock.EXPECT().ReduceScrolls(1).Return(-1, nil)
+
+	_, code, err := UserUsecaseTest.CreateChat(1, like)
+	assert.NotEqual(t, nil, err)
+	assert.Equal(t, 402, code)
 }
 
 func TestCreateChatNonValidReaction(t *testing.T) {
@@ -573,10 +617,7 @@ func TestChangeUserInfo(t *testing.T) {
 		Sanitizer:       bluemonday.NewPolicy(),
 	}
 
-	pass, err := UserUsecaseTest.HashPassword("12345678")
-	if err != nil {
-		fmt.Println("bcrypt error:", err)
-	}
+	pass := []byte(bcryptPass)
 
 	newUser := models.User{
 		Id:             1,
@@ -804,10 +845,7 @@ func TestChangeUserInfoChangePasswordError(t *testing.T) {
 		Sanitizer:       bluemonday.NewPolicy(),
 	}
 
-	pass, err := UserUsecaseTest.HashPassword("12345678")
-	if err != nil {
-		fmt.Println("bcrypt error:", err)
-	}
+	pass := []byte(bcryptPass)
 
 	newUser := models.User{
 		Id:             1,
@@ -845,10 +883,7 @@ func TestChangeUserInfoGetUserInfoError(t *testing.T) {
 		Sanitizer:       bluemonday.NewPolicy(),
 	}
 
-	pass, err := UserUsecaseTest.HashPassword("12345678")
-	if err != nil {
-		fmt.Println("bcrypt error:", err)
-	}
+	pass := []byte(bcryptPass)
 
 	newUser := models.User{
 		Id:             1,
@@ -887,10 +922,7 @@ func TestChangeUserInfoNonValidEmail(t *testing.T) {
 		Sanitizer:       bluemonday.NewPolicy(),
 	}
 
-	pass, err := UserUsecaseTest.HashPassword("12345678")
-	if err != nil {
-		fmt.Println("bcrypt error:", err)
-	}
+	pass := []byte(bcryptPass)
 
 	newUser := models.User{
 		Id:             1,
@@ -929,10 +961,7 @@ func TestChangeUserInfoEmailIsSignedUpError(t *testing.T) {
 		Sanitizer:       bluemonday.NewPolicy(),
 	}
 
-	pass, err := UserUsecaseTest.HashPassword("12345678")
-	if err != nil {
-		fmt.Println("bcrypt error:", err)
-	}
+	pass := []byte(bcryptPass)
 
 	newUser := models.User{
 		Id:             1,
@@ -972,10 +1001,7 @@ func TestChangeUserInfoEmailIsSignedUp(t *testing.T) {
 		Sanitizer:       bluemonday.NewPolicy(),
 	}
 
-	pass, err := UserUsecaseTest.HashPassword("12345678")
-	if err != nil {
-		fmt.Println("bcrypt error:", err)
-	}
+	pass := []byte(bcryptPass)
 
 	newUser := models.User{
 		Id:             1,
@@ -1015,10 +1041,7 @@ func TestChangeUserInfoNonValidSex(t *testing.T) {
 		Sanitizer:       bluemonday.NewPolicy(),
 	}
 
-	pass, err := UserUsecaseTest.HashPassword("12345678")
-	if err != nil {
-		fmt.Println("bcrypt error:", err)
-	}
+	pass := []byte(bcryptPass)
 
 	newUser := models.User{
 		Id:             1,
@@ -1058,10 +1081,7 @@ func TestChangeUserInfoNonValidPreference(t *testing.T) {
 		Sanitizer:       bluemonday.NewPolicy(),
 	}
 
-	pass, err := UserUsecaseTest.HashPassword("12345678")
-	if err != nil {
-		fmt.Println("bcrypt error:", err)
-	}
+	pass := []byte(bcryptPass)
 
 	newUser := models.User{
 		Id:             1,
@@ -1101,10 +1121,7 @@ func TestChangeUserInfoIsActiveError(t *testing.T) {
 		Sanitizer:       bluemonday.NewPolicy(),
 	}
 
-	pass, err := UserUsecaseTest.HashPassword("12345678")
-	if err != nil {
-		fmt.Println("bcrypt error:", err)
-	}
+	pass := []byte(bcryptPass)
 
 	newUser := models.User{
 		Id:             1,
@@ -1144,10 +1161,7 @@ func TestChangeUserInfoIsActiveFalse(t *testing.T) {
 		Sanitizer:       bluemonday.NewPolicy(),
 	}
 
-	pass, err := UserUsecaseTest.HashPassword("12345678")
-	if err != nil {
-		fmt.Println("bcrypt error:", err)
-	}
+	pass := []byte(bcryptPass)
 
 	newUser := models.User{
 		Id:             1,
@@ -1189,10 +1203,7 @@ func TestChangeUserInfoChangeUserError(t *testing.T) {
 		Sanitizer:       bluemonday.NewPolicy(),
 	}
 
-	pass, err := UserUsecaseTest.HashPassword("12345678")
-	if err != nil {
-		fmt.Println("bcrypt error:", err)
-	}
+	pass := []byte(bcryptPass)
 
 	newUser := models.User{
 		Id:             1,
@@ -1449,4 +1460,284 @@ func TestParseJsonToUser(t *testing.T) {
 
 	_, err = UserUsecaseTest.ParseJsonToUser(r)
 	assert.Equal(t, nil, err)
+}
+
+func TestGetSecreteAlbum(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	dbMock := mocks.NewMockUserRepositoryInterface(mockCtrl)
+
+	UserUsecaseTest := UserUsecase{
+		Clients:         nil,
+		Db:              dbMock,
+		LoggerInterface: &models.Logger{Logger: logrus.New().WithField("test", "test")},
+		Sanitizer:       bluemonday.NewPolicy(),
+	}
+
+	photos := []string{"1", "2"}
+	ownerId := 1
+	getterId := 2
+
+	dbMock.EXPECT().CheckPermission(ownerId, getterId).Return(true, nil)
+	dbMock.EXPECT().GetSecretePhotos(ownerId).Return(photos, nil)
+
+	res, code, err := UserUsecaseTest.GetSecreteAlbum(ownerId, getterId)
+	assert.Equal(t, nil, err)
+	assert.Equal(t, 200, code)
+	assert.Equal(t, res, photos)
+}
+
+func TestGetSecreteAlbum_CheckPermission_Error(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	dbMock := mocks.NewMockUserRepositoryInterface(mockCtrl)
+
+	UserUsecaseTest := UserUsecase{
+		Clients:         nil,
+		Db:              dbMock,
+		LoggerInterface: &models.Logger{Logger: logrus.New().WithField("test", "test")},
+		Sanitizer:       bluemonday.NewPolicy(),
+	}
+
+	ownerId := 1
+	getterId := 2
+
+	bufErr := errors.New("Some error")
+	dbMock.EXPECT().CheckPermission(ownerId, getterId).Return(false, bufErr)
+
+	res, code, err := UserUsecaseTest.GetSecreteAlbum(ownerId, getterId)
+	assert.Equal(t, bufErr, err)
+	assert.Equal(t, 500, code)
+	assert.Equal(t, []string{}, res)
+}
+
+func TestGetSecreteAlbum_CheckPermission_NotOk(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	dbMock := mocks.NewMockUserRepositoryInterface(mockCtrl)
+
+	UserUsecaseTest := UserUsecase{
+		Clients:         nil,
+		Db:              dbMock,
+		LoggerInterface: &models.Logger{Logger: logrus.New().WithField("test", "test")},
+		Sanitizer:       bluemonday.NewPolicy(),
+	}
+
+	ownerId := 1
+	getterId := 2
+
+	dbMock.EXPECT().CheckPermission(ownerId, getterId).Return(false, nil)
+
+	res, code, err := UserUsecaseTest.GetSecreteAlbum(ownerId, getterId)
+	assert.Equal(t, nil, err)
+	assert.Equal(t, 403, code)
+	assert.Equal(t, []string{}, res)
+}
+
+func TestGetSecreteAlbum_GetSecretePhotos_Error(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	dbMock := mocks.NewMockUserRepositoryInterface(mockCtrl)
+
+	UserUsecaseTest := UserUsecase{
+		Clients:         nil,
+		Db:              dbMock,
+		LoggerInterface: &models.Logger{Logger: logrus.New().WithField("test", "test")},
+		Sanitizer:       bluemonday.NewPolicy(),
+	}
+
+	bufErr := errors.New("Some error")
+	photos := []string{"1", "2"}
+	ownerId := 1
+	getterId := 2
+
+	dbMock.EXPECT().CheckPermission(ownerId, getterId).Return(true, nil)
+	dbMock.EXPECT().GetSecretePhotos(ownerId).Return(photos, bufErr)
+
+	res, code, err := UserUsecaseTest.GetSecreteAlbum(ownerId, getterId)
+	assert.Equal(t, bufErr, err)
+	assert.Equal(t, 500, code)
+	assert.Equal(t, res, []string{})
+}
+
+func TestUnblockSecreteAlbum(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	dbMock := mocks.NewMockUserRepositoryInterface(mockCtrl)
+
+	UserUsecaseTest := UserUsecase{
+		Clients:         nil,
+		Db:              dbMock,
+		LoggerInterface: &models.Logger{Logger: logrus.New().WithField("test", "test")},
+		Sanitizer:       bluemonday.NewPolicy(),
+	}
+
+	ownerId := 1
+	getterId := 2
+
+	dbMock.EXPECT().UnblockSecreteAlbum(ownerId, getterId).Return(nil)
+
+	code, err := UserUsecaseTest.UnblockSecreteAlbum(ownerId, getterId)
+	assert.Equal(t, nil, err)
+	assert.Equal(t, 204, code)
+}
+
+func TestUnblockSecreteAlbum_Error(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	dbMock := mocks.NewMockUserRepositoryInterface(mockCtrl)
+
+	UserUsecaseTest := UserUsecase{
+		Clients:         nil,
+		Db:              dbMock,
+		LoggerInterface: &models.Logger{Logger: logrus.New().WithField("test", "test")},
+		Sanitizer:       bluemonday.NewPolicy(),
+	}
+
+	bufErr := errors.New("Some error")
+	ownerId := 1
+	getterId := 2
+
+	dbMock.EXPECT().UnblockSecreteAlbum(ownerId, getterId).Return(bufErr)
+
+	code, err := UserUsecaseTest.UnblockSecreteAlbum(ownerId, getterId)
+	assert.Equal(t, bufErr, err)
+	assert.Equal(t, 500, code)
+}
+
+func TestAddToSecreteAlbum(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	dbMock := mocks.NewMockUserRepositoryInterface(mockCtrl)
+
+	UserUsecaseTest := UserUsecase{
+		Clients:         nil,
+		Db:              dbMock,
+		LoggerInterface: &models.Logger{Logger: logrus.New().WithField("test", "test")},
+		Sanitizer:       bluemonday.NewPolicy(),
+	}
+
+	ownerId := 1
+	photos := []string{"1", "2"}
+
+	dbMock.EXPECT().AddToSecreteAlbum(ownerId, photos).Return(nil)
+
+	code, err := UserUsecaseTest.AddToSecreteAlbum(ownerId, photos)
+	assert.Equal(t, nil, err)
+	assert.Equal(t, 204, code)
+}
+
+func TestAddToSecreteAlbum_Error(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	dbMock := mocks.NewMockUserRepositoryInterface(mockCtrl)
+
+	UserUsecaseTest := UserUsecase{
+		Clients:         nil,
+		Db:              dbMock,
+		LoggerInterface: &models.Logger{Logger: logrus.New().WithField("test", "test")},
+		Sanitizer:       bluemonday.NewPolicy(),
+	}
+
+	bufErr := errors.New("Some error")
+	ownerId := 1
+	photos := []string{"1", "2"}
+
+	dbMock.EXPECT().AddToSecreteAlbum(ownerId, photos).Return(bufErr)
+
+	code, err := UserUsecaseTest.AddToSecreteAlbum(ownerId, photos)
+	assert.Equal(t, bufErr, err)
+	assert.Equal(t, 500, code)
+}
+
+func TestProtoUser2User(t *testing.T) {
+	user := model.User{
+		Id:             1,
+		Email:          "email",
+		Password:       "pass",
+		SecondPassword: "pass",
+		PasswordHash:   nil,
+		OldPassword:    "pass",
+		Name:           "Serega",
+		Birthday:       123,
+		Description:    "desc",
+		City:           "Moscow",
+		Instagram:      "Inst",
+		Sex:            "male",
+		DatePreference: "female",
+		IsDeleted:      false,
+		IsActive:       true,
+		Photos:         []string{"1", "2"},
+	}
+
+	protoUser := user_proto.User{
+		Id:             1,
+		Email:          "email",
+		Password:       "pass",
+		SecondPassword: "pass",
+		PasswordHash:   nil,
+		OldPassword:    "pass",
+		Name:           "Serega",
+		Birthday:       123,
+		Description:    "desc",
+		City:           "Moscow",
+		Instagram:      "Inst",
+		Sex:            "male",
+		DatePreference: "female",
+		IsDeleted:      false,
+		IsActive:       true,
+		Photos:         []string{"1", "2"},
+	}
+
+	UserUsecaseTest := UserUsecase{}
+
+	res := UserUsecaseTest.ProtoUser2User(&protoUser)
+
+	assert.Equal(t, res, user)
+}
+
+func TestUser2ProtoUser(t *testing.T) {
+	user := model.User{
+		Id:             1,
+		Email:          "email",
+		Password:       "pass",
+		SecondPassword: "pass",
+		PasswordHash:   nil,
+		OldPassword:    "pass",
+		Name:           "Serega",
+		Birthday:       123,
+		Description:    "desc",
+		City:           "Moscow",
+		Instagram:      "Inst",
+		Sex:            "male",
+		DatePreference: "female",
+		IsDeleted:      false,
+		IsActive:       true,
+		Photos:         []string{"1", "2"},
+	}
+
+	protoUser := user_proto.User{
+		Id:             1,
+		Email:          "email",
+		Password:       "pass",
+		SecondPassword: "pass",
+		PasswordHash:   nil,
+		OldPassword:    "pass",
+		Name:           "Serega",
+		Birthday:       123,
+		Description:    "desc",
+		City:           "Moscow",
+		Instagram:      "Inst",
+		Sex:            "male",
+		DatePreference: "female",
+		IsDeleted:      false,
+		IsActive:       true,
+		Photos:         []string{"1", "2"},
+	}
+
+	UserUsecaseTest := UserUsecase{}
+
+	res := UserUsecaseTest.User2ProtoUser(user)
+
+	assert.Equal(t, res, &protoUser)
 }

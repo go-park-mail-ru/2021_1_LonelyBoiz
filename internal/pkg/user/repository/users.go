@@ -88,10 +88,11 @@ func (repo *UserRepository) UpdatePayment(userId int, amount int) error {
 }
 
 func (repo *UserRepository) AddToSecreteAlbum(ownerId int, photos []string) error {
-	err := repo.DB.QueryRowx(
+	_, err := repo.DB.Exec(
 		`UPDATE secretPhotos set photos=$1 WHERE userId = $2`,
 		pq.Array(photos), ownerId)
-	return err.Err()
+
+	return err
 }
 
 func (repo *UserRepository) GetSecretePhotos(ownerId int) ([]string, error) {
