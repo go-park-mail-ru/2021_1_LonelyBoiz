@@ -13,7 +13,7 @@ func (a *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 	feed, err := a.Server.CreateFeed(r.Context(), &userProto.UserNothing{})
 	if err != nil {
 		st, _ := status.FromError(err)
-		models.Process(models.LoggerFunc(st.Message(), a.UserCase.LogError), models.ResponseFunc(w, int(st.Code()), st.Message()))
+		models.Process(models.LoggerFunc(st.Message(), a.UserCase.LogError), models.ResponseFunc(w, int(st.Code()), st.Message()), models.MetricFunc(int(st.Code()), r, st.Err()))
 		return
 	}
 	a.UserCase.LogInfo("Получен результат из сервера USER")
@@ -23,6 +23,6 @@ func (a *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 		users = append(users, int(user.GetId()))
 	}
 
-	models.Process(models.LoggerFunc("Create Feed", a.UserCase.LogInfo), models.ResponseFunc(w, 200, users))
+	models.Process(models.LoggerFunc("Create Feed", a.UserCase.LogInfo), models.ResponseFunc(w, 200, users), models.MetricFunc(200, r, nil))
 	return
 }

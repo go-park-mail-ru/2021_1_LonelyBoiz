@@ -12,7 +12,7 @@ func (a *UserHandler) GetUserInfo(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Неправильные входные данные"}
 		response.Description["id"] = "Пользователя с таким id нет"
-		model.Process(model.LoggerFunc(err, a.UserCase.LogError), model.ResponseFunc(w, 401, response))
+		model.Process(model.LoggerFunc(err, a.UserCase.LogError), model.ResponseFunc(w, 401, response), model.MetricFunc(401, r, err))
 		return
 	}
 
@@ -22,5 +22,5 @@ func (a *UserHandler) GetUserInfo(w http.ResponseWriter, r *http.Request) {
 		ret.Photos = make([]string, 0)
 	}
 	a.UserCase.LogInfo("Получен результат из сервера USER")
-	model.Process(model.LoggerFunc("Get User Info", a.UserCase.LogInfo), model.ResponseFunc(w, 200, ret))
+	model.Process(model.LoggerFunc("Get User Info", a.UserCase.LogInfo), model.ResponseFunc(w, 200, ret), model.MetricFunc(200, r, nil))
 }

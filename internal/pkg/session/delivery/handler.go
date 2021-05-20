@@ -22,12 +22,14 @@ func (a *AuthHandler) LogOut(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		response := model.ErrorResponse{Err: "Не удалось взять куку"}
 		model.ResponseFunc(w, 400, response)
+		model.MetricFunc(400, r, response)
 		return
 	}
 
 	err = a.Usecase.DeleteSessionByToken(cookie.Value)
 	if err != nil {
 		model.ResponseFunc(w, 500, nil)
+		model.MetricFunc(500, r, err)
 		return
 	}
 
@@ -35,4 +37,5 @@ func (a *AuthHandler) LogOut(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, cookie)
 
 	model.ResponseFunc(w, 200, nil)
+	model.MetricFunc(200, r, nil)
 }

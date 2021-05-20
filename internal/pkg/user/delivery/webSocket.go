@@ -15,19 +15,19 @@ var upgrader = websocket.Upgrader{
 }
 
 func (a *UserHandler) WsHandler(w http.ResponseWriter, r *http.Request) {
-	a.UserCase.LogError("Попытка подключиться по вэбсокету")
+	a.UserCase.LogInfo("Попытка подключиться по вэбсокету")
 	id, ok := a.UserCase.GetIdFromContext(r.Context())
 	if !ok {
 		fmt.Println("Ne ok")
 		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
-		model.Process(model.LoggerFunc(response.Err, a.UserCase.LogInfo), model.ResponseFunc(w, 403, response))
+		model.Process(model.LoggerFunc(response.Err, a.UserCase.LogInfo), model.ResponseFunc(w, 403, response), model.MetricFunc(403, r, response))
 		return
 	}
 
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		fmt.Println("Ne up")
-		model.Process(model.LoggerFunc(err.Error(), a.UserCase.LogError), model.ResponseFunc(w, 500, nil))
+		model.Process(model.LoggerFunc(err.Error(), a.UserCase.LogError), model.ResponseFunc(w, 500, nil), model.MetricFunc(500, r, err))
 		return
 	}
 
