@@ -192,42 +192,6 @@ func TestSignIn(t *testing.T) {
 	}
 }
 
-/*func TestGetPhoto(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("cant create mock: %s", err)
-	}
-	defer db.Close()
-
-	photoid := 1
-	value := "abc"
-
-	rows := sqlmock.NewRows([]string{"value"}).AddRow(value)
-
-	mock.
-		ExpectQuery("SELECT value FROM photos").
-		WithArgs(photoid).
-		WillReturnRows(rows)
-
-	repo := UserRepository{
-		DB: sqlx.NewDb(db, "psx"),
-	}
-
-	res, err := repo.GetPhoto(photoid)
-	if err != nil {
-		t.Errorf("unexpected err: %s", err)
-		return
-	}
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
-		return
-	}
-	if !reflect.DeepEqual(res, value) {
-		t.Errorf("results not match, want %v, have %v", value, res)
-		return
-	}
-}*/
-
 func TestGetChatById(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
@@ -347,6 +311,82 @@ func TestAddUser(t *testing.T) {
 	}
 	if !reflect.DeepEqual(res, user.Id) {
 		t.Errorf("results not match, want %v, have %v", user.Id, res)
+		return
+	}
+}
+
+func TestGetUser(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("cant create mock: %s", err)
+	}
+	defer db.Close()
+
+	user := models.User{
+		Id:             1,
+		Email:          "exmaple@mail.ru",
+		Name:           "name",
+		Birthday:       123,
+		Description:    "desc",
+		City:           "city",
+		Sex:            "male",
+		Instagram:      "inst",
+		PasswordHash:   []byte{1, 2},
+		DatePreference: "male",
+		IsActive:       true,
+		IsDeleted:      true,
+		Photos:         []string{"1", "2"},
+	}
+
+	rows := sqlmock.NewRows([]string{
+		"id",
+		"email",
+		"name",
+		"birthday",
+		"description",
+		"city",
+		"sex",
+		"instagram",
+		"passwordhash",
+		"datepreference",
+		"isactive",
+		"isdeleted",
+		"photos"}).AddRow(
+		user.Id,
+		user.Email,
+		user.Name,
+		user.Birthday,
+		user.Description,
+		user.City,
+		user.Sex,
+		user.Instagram,
+		user.PasswordHash,
+		user.DatePreference,
+		user.IsActive,
+		user.IsDeleted,
+		user.Photos,
+	)
+
+	mock.
+		ExpectQuery("SELECT id, email, name, birthday,").
+		WithArgs(user.Id).
+		WillReturnRows(rows)
+
+	repo := UserRepository{
+		DB: sqlx.NewDb(db, "psx"),
+	}
+
+	res, err := repo.GetUser(user.Id)
+	if err != nil {
+		t.Errorf("unexpected err: %s", err)
+		return
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+		return
+	}
+	if !reflect.DeepEqual(res, user) {
+		t.Errorf("results not match, want %v, have %v", user, res)
 		return
 	}
 }
