@@ -26,13 +26,13 @@ func CSRFMiddleware(next http.Handler) http.Handler {
 		if (r.RequestURI == "/login" || r.RequestURI == "/users") && r.Method == "POST" || r.RequestURI == "/auth" {
 			key := keyGen()
 			expiration := time.Now().Add(24 * time.Hour)
+
 			cookie := http.Cookie{
 				Name:     "csrf-token",
 				Value:    key,
 				Expires:  expiration,
 				SameSite: http.SameSiteStrictMode,
-				Domain:   "lepick.online:8000",
-				//Domain:   "localhost:8000",
+				Domain:   model.GetDomain(),
 				Secure:   true,
 				HttpOnly: true,
 			}

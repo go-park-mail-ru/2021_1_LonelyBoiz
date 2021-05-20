@@ -6,6 +6,8 @@ networks:
 
 services:
   auth:
+    environment: 
+      MODE: ${MODE}
     image: auth_server
     ports:
       - "5400:5400"
@@ -26,6 +28,7 @@ services:
       AWS_REGION: ${AWS_REGION}
       SSL_PUBLIC: ${SSL_PUBLIC}
       SSL_PRIVATE: ${SSL_PRIVATE}
+      MODE: ${MODE}
     image: pickleapp_server
     ports:
       - "8000:8000"
@@ -61,6 +64,7 @@ services:
   user:
     environment: 
       CAPTCHA: ${CAPTCHA}
+      MODE: ${MODE}
     image: user_server
     ports:
       - "5500:5500"
@@ -127,7 +131,7 @@ services:
     depends_on:
       - prometheus
     ports:
-      - 3000:3000
+      - 3001:3001
     networks:
       - back-tier
       - front-tier

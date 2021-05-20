@@ -2,12 +2,13 @@ package middleware
 
 import (
 	"context"
-	"google.golang.org/grpc/metadata"
 	"log"
 	"net/http"
 	session_proto "server/internal/auth_server/delivery/session"
 	model "server/internal/pkg/models"
 	"strconv"
+
+	"google.golang.org/grpc/metadata"
 )
 
 type ValidateCookieMiddleware struct {
@@ -41,8 +42,6 @@ func (m *ValidateCookieMiddleware) Middleware(next http.Handler) http.Handler {
 
 		ctx = metadata.AppendToOutgoingContext(ctx, "cookieId", strconv.Itoa(id))
 
-		//m.Session.Logger.LogInfo("Pass ValidateCookie middleware")
 		next.ServeHTTP(w, r.WithContext(ctx))
-		return
 	})
 }

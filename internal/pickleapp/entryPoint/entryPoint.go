@@ -65,7 +65,6 @@ func (a *App) Start() error {
 	}
 
 	err := s.ListenAndServe()
-	//err := s.ListenAndServeTLS(os.Getenv("SSL_PUBLIC"), os.Getenv("SSL_PRIVATE"))
 	if err != nil {
 		return err
 	}
