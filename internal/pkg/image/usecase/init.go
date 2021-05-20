@@ -3,10 +3,11 @@ package usecase
 import (
 	"context"
 	"errors"
-	"google.golang.org/grpc/metadata"
 	"server/internal/pkg/image/repository"
 	"server/internal/pkg/models"
 	"strconv"
+
+	"google.golang.org/grpc/metadata"
 
 	"github.com/google/uuid"
 )
@@ -87,21 +88,17 @@ func (u *ImageUsecase) AddImage(userId int, image []byte) (models.Image, error) 
 	}
 
 	newUuid := uuid.New()
-
 	err := u.ImageStorage.AddImage(newUuid, image)
 	if err != nil {
-		u.LogInfo("1")
 		u.LogError(err)
 		return models.Image{}, ErrUsecaseFailedToUpload
 	}
 
 	model, err := u.Db.AddImage(userId, newUuid)
 	if err == repository.ErrRepositoryConnection {
-		u.LogInfo("2")
 		u.LogError(err)
 		return models.Image{}, ErrUsecaseFatal
 	} else if err != nil {
-		u.LogInfo("3")
 		u.LogError(err)
 		return models.Image{}, ErrUsecaseFailedToUpload
 	}
