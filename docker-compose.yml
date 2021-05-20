@@ -24,7 +24,6 @@ services:
 
   pickleapp:
     environment: 
-      DATABASE_URL: ${DATABASE_URL}
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
       AWS_REGION: ${AWS_REGION}
@@ -45,7 +44,6 @@ services:
 
   image:
     environment: 
-      DATABASE_URL: ${DATABASE_URL}
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
       AWS_REGION: ${AWS_REGION}
@@ -64,7 +62,6 @@ services:
 
   user:
     environment: 
-      DATABASE_URL: ${DATABASE_URL}
       CAPTCHA: ${CAPTCHA}
       MODE: ${MODE}
     image: user_server
