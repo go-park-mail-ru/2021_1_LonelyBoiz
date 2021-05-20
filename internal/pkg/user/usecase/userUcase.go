@@ -675,7 +675,7 @@ func (u *UserUsecase) SetCookie(token string) http.Cookie {
 		Expires:  time.Now().AddDate(0, 0, 1),
 		SameSite: http.SameSiteStrictMode,
 		Domain:   model.GetDomain(),
-		Secure:   true,
+		Secure:   model.GetSecure(),
 		HttpOnly: true,
 		Path:     "/",
 	}
@@ -788,8 +788,8 @@ func (u *UserUsecase) GetParamFromContext(ctx context.Context, param string) (in
 
 func (u *UserUsecase) DeleteSession(cookie *http.Cookie) {
 	cookie.Expires = time.Now().AddDate(0, 0, -1)
-	cookie.SameSite = http.SameSiteLaxMode
-	cookie.Secure = true
+	cookie.SameSite = http.SameSiteStrictMode
+	cookie.Secure = model.GetSecure()
 	cookie.HttpOnly = true
 	cookie.Domain = model.GetDomain()
 	cookie.Value = ""

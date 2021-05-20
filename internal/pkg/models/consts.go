@@ -13,3 +13,11 @@ func GetDomain() string {
 
 	return "lepick.ru"
 }
+
+func GetSecure() bool {
+	if Mode == "DEBUG" {
+		return false
+	}
+
+	return true
+}

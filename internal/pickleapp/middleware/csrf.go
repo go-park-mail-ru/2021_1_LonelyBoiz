@@ -33,7 +33,7 @@ func CSRFMiddleware(next http.Handler) http.Handler {
 				Expires:  expiration,
 				SameSite: http.SameSiteStrictMode,
 				Domain:   model.GetDomain(),
-				Secure:   true,
+				Secure:   model.GetSecure(),
 				HttpOnly: true,
 			}
 			http.SetCookie(w, &cookie)
