@@ -5,6 +5,7 @@ import (
 	"errors"
 	"server/internal/pkg/image/repository"
 	"server/internal/pkg/models"
+	"strconv"
 
 	"google.golang.org/grpc/metadata"
 
@@ -60,6 +61,25 @@ func (u *ImageUsecase) GetUUID(ctx context.Context) (uuid.UUID, bool) {
 	}
 
 	return uid, true
+}
+
+func (u *ImageUsecase) GetParamFromContext(ctx context.Context, param string) (int, bool) {
+	data, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return -1, false
+	}
+
+	dataByParam := data.Get(param)
+	if len(dataByParam) == 0 {
+		return -1, false
+	}
+
+	value, err := strconv.Atoi(dataByParam[0])
+	if err != nil {
+		return -1, false
+	}
+
+	return value, true
 }
 
 func (u *ImageUsecase) AddImage(userId int, image []byte) (models.Image, error) {
