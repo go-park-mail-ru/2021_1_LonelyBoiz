@@ -7,6 +7,7 @@ import (
 	"os"
 	session_proto2 "server/internal/auth_server/delivery/session"
 	image_proto "server/internal/image_server/delivery/proto"
+	email2 "server/internal/pickleapp/email"
 	"server/internal/pickleapp/middleware"
 	"server/internal/pickleapp/repository"
 	"server/internal/pkg/chat/delivery"
@@ -56,7 +57,7 @@ func (a *App) Start() error {
 	a.Logger.Info("Server Start")
 
 	cors := cors2.New(cors2.Options{
-		AllowedOrigins:   []string{"http://localhost:3000", "https://lepick.online"},
+		AllowedOrigins:   []string{"http://localhost:3000", "https://lepick.ru"},
 		AllowCredentials: true,
 		AllowedMethods:   []string{"GET", "POST", "DELETE", "PATCH", "OPTIONS"},
 		AllowedHeaders:   []string{"Content-Type", "Access-Control-Allow-Headers", "Access-Control-Expose-Headers", "Access-Control-Allow-Origin", "Authorization", "X-Requested-With", "X-CSRF-Token"},
@@ -73,8 +74,7 @@ func (a *App) Start() error {
 		IdleTimeout:  120 * time.Second,
 	}
 
-	//err := s.ListenAndServe()
-	err := s.ListenAndServeTLS(os.Getenv("SSL_PUBLIC"), os.Getenv("SSL_PRIVATE"))
+	err := s.ListenAndServe()
 	if err != nil {
 		return err
 	}
@@ -101,7 +101,7 @@ func NewConfig() Config {
 	return newConfig
 }
 
-func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
+func (a *App) InitializeRoutes(currConfig Config) ([]*grpc.ClientConn, chan email2.EmailBucket) {
 
 	//init config
 	a.addr = currConfig.addr
@@ -169,11 +169,22 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 
 	imageClient := image_proto.NewImageServiceClient(imagesConn)
 
+	// init notification email
+	emails := make(chan email2.EmailBucket)
+	emailNot := email2.NotificationByEmail{
+		Buckets: &emails,
+	}
+
 	// init uCases & handlers
 	sanitizer := bluemonday.UGCPolicy()
 	userUcase := usecase.UserUsecase{Db: &userRep, Clients: &clients, Sanitizer: sanitizer}
 	chatUcase := chatUsecase.ChatUsecase{Db: &chatRep}
-	messUcase := messageUsecase.MessageUsecase{Db: &messageRep, Clients: &clients, Sanitizer: sanitizer}
+	messUcase := messageUsecase.MessageUsecase{
+		Clients:               &clients,
+		Db:                    &messageRep,
+		NotificationInterface: &emailNot,
+		Sanitizer:             sanitizer,
+	}
 	sessionManager := session.SessionsManager{DB: &sessionRep}
 	imageUcase := imageUsecase.ImageUsecase{
 		Db:           &imageRepository.PostgresRepository{Db: a.Db},
@@ -244,5 +255,7 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 	imageHandler.SetHandlers(subRouter)
 	authHandler.SetAuthHandler(csrfRouter)
 
-	return []*grpc.ClientConn{userConn, authConn, imagesConn}
+	go emailNot.EmailHandler()
+
+	return []*grpc.ClientConn{userConn, authConn, imagesConn}, emails
 }

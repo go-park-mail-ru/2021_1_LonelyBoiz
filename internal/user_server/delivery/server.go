@@ -270,10 +270,11 @@ func (u UserServer) CreateMessage(ctx context.Context, message *userProto.Messag
 	}
 
 	newMessage, code, err := u.MessageUsecase.CreateMessage(u.MessageUsecase.ProtoMessage2Message(message), chatId, id)
-
 	if code != 200 {
 		return &userProto.Message{}, status.Error(codes.Code(code), err.Error())
 	}
+
+	//u.MessageUsecase.SendEmailNotification(chatId, id)
 
 	return u.MessageUsecase.Message2ProtoMessage(newMessage), nil
 }

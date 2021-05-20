@@ -85,6 +85,12 @@ func main() {
 
 	db := repository.Init()
 
+	mesUcase := messageUsecase.MessageUsecase{
+		Db:              &repository3.MessageRepository{DB: db},
+		LoggerInterface: ServerInterceptor.Logger,
+		Sanitizer:       bluemonday.NewPolicy(),
+	}
+
 	userServer := delivery2.UserServer{
 		UserUsecase: &usecase.UserUsecase{
 			Db:              &repository2.UserRepository{DB: db},
@@ -95,16 +101,13 @@ func main() {
 			LoggerInterface: ServerInterceptor.Logger,
 			Db:              &chatRepository.ChatRepository{DB: db},
 		},
-		MessageUsecase: &messageUsecase.MessageUsecase{
-			Db:              &repository3.MessageRepository{DB: db},
-			LoggerInterface: ServerInterceptor.Logger,
-			Sanitizer:       bluemonday.NewPolicy(),
-		},
-		Sessions: auth,
+		MessageUsecase: &mesUcase,
+		Sessions:       auth,
 	}
 
 	userProto.RegisterUserServiceServer(grpcServer, &userServer)
 	log.Print("User Server START at 5500")
+
 	err = grpcServer.Serve(listener)
 
 	if err != nil {

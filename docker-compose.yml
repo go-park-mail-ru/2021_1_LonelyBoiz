@@ -1,9 +1,5 @@
 version: "3"
 
-networks:
-  front-tier:
-  back-tier:
-
 services:
   auth:
     image: auth_server
@@ -15,6 +11,9 @@ services:
       - back-tier
     depends_on:
       - postgres
+    build:
+      context: .
+      dockerfile: ./build/auth.Dockerfile
 
   pickleapp:
     environment: 
@@ -23,6 +22,10 @@ services:
       AWS_REGION: ${AWS_REGION}
       SSL_PUBLIC: ${SSL_PUBLIC}
       SSL_PRIVATE: ${SSL_PRIVATE}
+      EMAILFROM: ${EMAILFROM}
+      PASS: ${PASS}
+      SMTPHOST: ${SMTPHOST}
+      SMTPPORT: ${SMTPPORT}
     image: pickleapp_server
     ports:
       - "8000:8000"
@@ -33,6 +36,9 @@ services:
       - ./static:/app/static
     depends_on:
       - postgres
+    build:
+      context: .
+      dockerfile: ./build/pickleapp.Dockerfile
 
   image:
     environment: 
@@ -48,6 +54,9 @@ services:
       - ./static:/app/static
     depends_on:
       - postgres
+    build:
+      context: .
+      dockerfile: ./build/image.Dockerfile
 
   user:
     environment: 
@@ -61,6 +70,9 @@ services:
       - ./static:/app/static
     depends_on:
       - postgres
+    build:
+      context: .
+      dockerfile: ./build/user.Dockerfile
 
   postgres:
     image: postgres:latest
