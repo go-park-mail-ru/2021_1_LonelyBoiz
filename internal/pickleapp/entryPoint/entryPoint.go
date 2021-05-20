@@ -25,6 +25,7 @@ import (
 	userDelivery "server/internal/pkg/user/delivery"
 	userRepository "server/internal/pkg/user/repository"
 	"server/internal/pkg/user/usecase"
+	"server/internal/pkg/utils/metrics"
 	user_proto "server/internal/user_server/delivery/proto"
 	"time"
 
@@ -38,7 +39,6 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/jmoiron/sqlx"
 	"github.com/microcosm-cc/bluemonday"
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	cors2 "github.com/rs/cors"
 	"github.com/sirupsen/logrus"
@@ -55,8 +55,6 @@ type App struct {
 
 func (a *App) Start() error {
 	a.Logger.Info("Server Start")
-
-	prometheus.MustRegister(middleware.FooCount, middleware.Hits)
 
 	cors := cors2.New(cors2.Options{
 		AllowedOrigins:   []string{"http://localhost:3000", "https://lepick.ru"},
@@ -135,7 +133,7 @@ func (a *App) InitializeRoutes(currConfig Config) ([]*grpc.ClientConn, chan emai
 		grpc.WithInsecure(),
 	}
 
-	authConn, err := grpc.Dial("auth:5400", opts...)
+	authConn, err := grpc.Dial("localhost:5400", opts...)
 
 	if err != nil {
 		log.Print(1)
@@ -231,6 +229,8 @@ func (a *App) InitializeRoutes(currConfig Config) ([]*grpc.ClientConn, chan emai
 	checkcookiem := middleware.ValidateCookieMiddleware{
 		Session: authClient,
 	}
+
+	metrics.New()
 
 	a.router.Handle("/metrics", promhttp.Handler()).Methods("GET")
 

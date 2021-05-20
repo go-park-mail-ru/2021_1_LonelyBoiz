@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"net/http"
+	"server/internal/pkg/utils/metrics"
 )
 
 type ErrorDescriptionResponse struct {
@@ -40,6 +41,7 @@ func ParseGrpcError(str string) ErrorResponse {
 type (
 	logfunc      func()
 	responsefunc func()
+	metricfunc   func()
 )
 
 func LoggerFunc(body interface{}, logfunc func(string2 interface{})) logfunc {
@@ -54,7 +56,18 @@ func ResponseFunc(w http.ResponseWriter, code int, body interface{}) responsefun
 	}
 }
 
-func Process(logfunc logfunc, responsefunc responsefunc) {
+func MetricFunc(code int, r *http.Request, err error) metricfunc {
+	return func() {
+		if code == 500 {
+			metrics.CreateRequestErrors(r, err)
+			return
+		}
+		metrics.CreateRequestHits(code, r)
+	}
+}
+
+func Process(logfunc logfunc, responsefunc responsefunc, metricfunc metricfunc) {
 	logfunc()
 	responsefunc()
+	metricfunc()
 }

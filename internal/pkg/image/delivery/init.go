@@ -43,12 +43,12 @@ func (h *ImageHandler) UploadImage(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		st, _ := status.FromError(err)
 		if st.Code() != 200 {
-			models.Process(models.LoggerFunc(st.Message(), h.Usecase.LogError), models.ResponseFunc(w, int(st.Code()), models.ParseGrpcError(st.Message())))
+			models.Process(models.LoggerFunc(st.Message(), h.Usecase.LogError), models.ResponseFunc(w, int(st.Code()), models.ParseGrpcError(st.Message())), models.MetricFunc(int(st.Code()), r, st.Err()))
 			return
 		}
 	}
 
-	models.Process(models.LoggerFunc("Success Upload Image", h.Usecase.LogInfo), models.ResponseFunc(w, http.StatusOK, models.Image{Uuid: uuid.MustParse(model.GetImage())}))
+	models.Process(models.LoggerFunc("Success Upload Image", h.Usecase.LogInfo), models.ResponseFunc(w, http.StatusOK, models.Image{Uuid: uuid.MustParse(model.GetImage())}), models.MetricFunc(http.StatusOK, r, nil))
 }
 
 func (h *ImageHandler) DeleteImage(w http.ResponseWriter, r *http.Request) {
@@ -59,10 +59,10 @@ func (h *ImageHandler) DeleteImage(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		st, _ := status.FromError(err)
 		if st.Code() != 200 {
-			models.Process(models.LoggerFunc(st.Message(), h.Usecase.LogError), models.ResponseFunc(w, int(st.Code()), models.ParseGrpcError(st.Message())))
+			models.Process(models.LoggerFunc(st.Message(), h.Usecase.LogError), models.ResponseFunc(w, int(st.Code()), models.ParseGrpcError(st.Message())), models.MetricFunc(int(st.Code()), r, st.Err()))
 			return
 		}
 	}
 
-	models.Process(models.LoggerFunc("Success Delete Image", h.Usecase.LogInfo), models.ResponseFunc(w, http.StatusNoContent, nil))
+	models.Process(models.LoggerFunc("Success Delete Image", h.Usecase.LogInfo), models.ResponseFunc(w, http.StatusNoContent, nil), models.MetricFunc(http.StatusNoContent, r, nil))
 }
