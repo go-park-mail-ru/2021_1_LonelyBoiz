@@ -31,8 +31,8 @@ func CSRFMiddleware(next http.Handler) http.Handler {
 				Value:    key,
 				Expires:  expiration,
 				SameSite: http.SameSiteStrictMode,
-				//Domain:   "lepick.online:8000",
-				Domain:   "localhost:8000",
+				Domain:   "lepick.online:8000",
+				//Domain:   "localhost:8000",
 				Secure:   true,
 				HttpOnly: true,
 			}

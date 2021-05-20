@@ -10,6 +10,7 @@ import (
 	"server/internal/pkg/user/usecase"
 	"server/internal/pkg/utils/metrics"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"

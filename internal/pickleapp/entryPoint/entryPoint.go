@@ -16,6 +16,7 @@ import (
 	messageUsecase "server/internal/pkg/message/usecase"
 	"server/internal/pkg/models"
 	"server/internal/pkg/session"
+	authHandler "server/internal/pkg/session/delivery"
 	sessionRepository "server/internal/pkg/session/repository"
 	userDelivery "server/internal/pkg/user/delivery"
 	userRepository "server/internal/pkg/user/repository"
@@ -23,12 +24,12 @@ import (
 	"server/internal/pkg/utils/metrics"
 	user_proto "server/internal/user_server/delivery/proto"
 	"time"
-	authHandler "server/internal/pkg/session/delivery"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/jmoiron/sqlx"
 	"github.com/microcosm-cc/bluemonday"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	cors2 "github.com/rs/cors"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
@@ -180,7 +181,7 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 
 	metrics.New()
 
-	a.router.Handle("/metrics", promhttp.Handler()).Methods("GET")
+	a.Router.Handle("/metrics", promhttp.Handler()).Methods("GET")
 
 	rawRouter := a.Router.NewRoute().Subrouter()
 

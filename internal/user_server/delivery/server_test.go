@@ -44,10 +44,12 @@ func TestCreateUser(t *testing.T) {
 
 	ctx := req.Context()
 
+	userUseCaseMock.EXPECT().LogInfo(gomock.Any()).Return()
 	userUseCaseMock.EXPECT().ProtoUser2User(userUseCase.User2ProtoUser(user)).Return(user)
 	userUseCaseMock.EXPECT().CreateNewUser(user).Return(user, 200, nil)
 	userUseCaseMock.EXPECT().User2ProtoUser(user).Return(userUseCase.User2ProtoUser(user))
 	sessionManagerMock.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, nil)
+	userUseCaseMock.EXPECT().LogInfo(gomock.Any()).Return()
 
 	_, err := server.CreateUser(ctx, userUseCase.User2ProtoUser(user))
 
@@ -112,13 +114,15 @@ func TestCreateUser_Session_Error(t *testing.T) {
 
 	newErr := status.Error(codes.Code(500), "Some error")
 
+	userUseCaseMock.EXPECT().LogInfo(gomock.Any()).Return()
+	userUseCaseMock.EXPECT().LogError(gomock.Any()).Return()
 	userUseCaseMock.EXPECT().ProtoUser2User(userUseCase.User2ProtoUser(user)).Return(user)
 	userUseCaseMock.EXPECT().CreateNewUser(user).Return(user, 200, nil)
-	sessionManagerMock.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, errors.New("Some error"))
+	sessionManagerMock.EXPECT().Create(gomock.Any(), gomock.Any()).Return(nil, newErr)
 
 	_, err := server.CreateUser(ctx, userUseCase.User2ProtoUser(user))
 
-	assert.Equal(t, err, newErr)
+	assert.NotEqual(t, err, nil)
 }
 
 func TestDeleteUser(t *testing.T) {
