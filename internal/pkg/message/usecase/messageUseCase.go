@@ -86,6 +86,7 @@ func (m *MessageUsecase) WebsocketMessage(newMessage model.Message) {
 
 	err = client.WriteJSON(response)
 	if err != nil {
+		m.SendEmailNotification(newMessage.ChatId, newMessage.AuthorId)
 		m.LogError("Не удалось отправить сообщение")
 		return
 	}
