@@ -116,7 +116,6 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 	}
 
 	authConn, err := grpc.Dial("localhost:5400", opts...)
-
 	if err != nil {
 		log.Print(1)
 		grpclog.Fatalf("fail to dial: %v", err)

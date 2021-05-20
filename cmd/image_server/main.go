@@ -1,13 +1,6 @@
 package main
 
 import (
-	awsSession "github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/gorilla/mux"
-	"github.com/sirupsen/logrus"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/grpclog"
 	"log"
 	"math/rand"
 	"os"
@@ -20,6 +13,14 @@ import (
 	imageUsecase "server/internal/pkg/image/usecase"
 	"server/internal/pkg/models"
 	"time"
+
+	awsSession "github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/gorilla/mux"
+	"github.com/sirupsen/logrus"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/grpclog"
 )
 
 type Config struct {
@@ -66,14 +67,13 @@ func main() {
 	}
 
 	authConn, err := grpc.Dial("auth:5400", opts...)
-
-	defer authConn.Close()
-
 	if err != nil {
 		log.Print(1)
 		grpclog.Fatalf("fail to dial: %v", err)
 		panic(err)
 	}
+	defer authConn.Close()
+
 	authClient := session_proto2.NewAuthCheckerClient(authConn)
 
 	// init uCases & handlers
