@@ -30,7 +30,7 @@ func (h *ImageHandler) SetHandlers(subRouter *mux.Router) {
 func (h *ImageHandler) UploadImage(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1<<20))
-	if err != nil {
+	if err != nil || len(body) == 0 {
 		responseBody := models.ErrorResponse{Err: "Не удалось прочитать файл"}
 		models.Process(models.LoggerFunc(responseBody.Err, h.Usecase.LogInfo), models.ResponseFunc(w, http.StatusBadRequest, responseBody), models.MetricFunc(http.StatusBadRequest, r, err))
 		return
