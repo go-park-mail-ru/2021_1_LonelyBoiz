@@ -87,7 +87,7 @@ func (session *SessionsManager) DeleteCookie(cookie *http.Cookie) {
 	cookie.SameSite = http.SameSiteStrictMode
 	cookie.Secure = true
 	cookie.HttpOnly = true
-	cookie.Domain = "lepick.online:8000"
+	cookie.Domain = "lepick.ru:8000"
 }
 
 func (session *SessionsManager) GetIdFromContext(ctx context.Context) (int, bool) {

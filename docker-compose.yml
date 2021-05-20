@@ -1,10 +1,6 @@
 version: "3"
 
 services:
-  mail:
-    image: bytemark/smtp
-    restart: always
-
   auth:
     image: auth_server
     ports:
@@ -13,6 +9,9 @@ services:
       - ./static:/app/static
     depends_on:
       - postgres
+    build:
+      context: .
+      dockerfile: ./build/auth.Dockerfile
 
   pickleapp:
     environment: 
@@ -32,6 +31,9 @@ services:
       - ./static:/app/static
     depends_on:
       - postgres
+    build:
+      context: .
+      dockerfile: ./build/pickleapp.Dockerfile
 
   image:
     environment: 
@@ -45,6 +47,9 @@ services:
       - ./static:/app/static
     depends_on:
       - postgres
+    build:
+      context: .
+      dockerfile: ./build/image.Dockerfile
 
   user:
     environment: 
@@ -56,6 +61,9 @@ services:
       - ./static:/app/static
     depends_on:
       - postgres
+    build:
+      context: .
+      dockerfile: ./build/user.Dockerfile
 
   postgres:
     image: postgres:latest
