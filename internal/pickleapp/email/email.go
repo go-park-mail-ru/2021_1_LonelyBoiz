@@ -8,7 +8,7 @@ import (
 )
 
 type NotificationInterface interface {
-	SendMessage()
+	EmailHandler()
 	AddEmailLetterToQueue(email string, body string)
 }
 
@@ -29,7 +29,7 @@ func (e *NotificationByEmail) AddEmailLetterToQueue(email string, body string) {
 	}
 }
 
-func (e *NotificationByEmail) SendMessage() {
+func (e *NotificationByEmail) EmailHandler() {
 	emailFrom := os.Getenv("EMAILFROM")
 	pass := os.Getenv("PASS")
 	smtpHost := os.Getenv("SMTPHOST")

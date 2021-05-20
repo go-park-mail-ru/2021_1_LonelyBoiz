@@ -255,7 +255,7 @@ func (a *App) InitializeRoutes(currConfig Config) ([]*grpc.ClientConn, chan emai
 	imageHandler.SetHandlers(subRouter)
 	authHandler.SetAuthHandler(csrfRouter)
 
-	go emailNot.SendMessage()
+	go emailNot.EmailHandler()
 
 	return []*grpc.ClientConn{userConn, authConn, imagesConn}, emails
 }
