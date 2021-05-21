@@ -12,6 +12,7 @@ import (
 	imageRepository "server/internal/pkg/image/repository"
 	imageUsecase "server/internal/pkg/image/usecase"
 	"server/internal/pkg/models"
+	"server/internal/pkg/utils/metrics"
 	"time"
 
 	awsSession "github.com/aws/aws-sdk-go/aws/session"
@@ -94,6 +95,8 @@ func main() {
 	checkcookiem := middleware.ValidateCookieMiddleware{
 		Session: authClient,
 	}
+
+	metrics.New()
 
 	csrfRouter := a.Router.NewRoute().Subrouter()
 
