@@ -2,12 +2,13 @@ package models
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"server/internal/pkg/utils/metrics"
 )
 
 type ErrorDescriptionResponse struct {
-	Description map[string]string `json:"description"`
+	Description map[string]string `json:"description,omitempty"`
 	Err         string            `json:"error"`
 }
 
@@ -29,13 +30,18 @@ func (e ErrorDescriptionResponse) Error() string {
 
 func ResponseWithJson(w http.ResponseWriter, code int, body interface{}) {
 	w.WriteHeader(code)
-	json.NewEncoder(w).Encode(body)
+	newBody, err := ParseGrpcError(fmt.Sprintf("%v", body))
+	if err != nil {
+		json.NewEncoder(w).Encode(body)
+		return
+	}
+	json.NewEncoder(w).Encode(newBody)
 }
 
-func ParseGrpcError(str string) ErrorResponse {
-	var res ErrorResponse
-	json.Unmarshal([]byte(str), &res)
-	return res
+func ParseGrpcError(str string) (ErrorDescriptionResponse, error) {
+	var res ErrorDescriptionResponse
+	err := json.Unmarshal([]byte(str), &res)
+	return res, err
 }
 
 type (

@@ -20,7 +20,7 @@ func (a *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		st, _ := status.FromError(err)
 		if st.Code() != 200 {
-			models.Process(models.LoggerFunc(st.Message(), a.UserCase.LogError), models.ResponseFunc(w, int(st.Code()), models.ParseGrpcError(st.Message())), models.MetricFunc(int(st.Code()), r, st.Err()))
+			models.Process(models.LoggerFunc(st.Message(), a.UserCase.LogError), models.ResponseFunc(w, int(st.Code()), st.Message()), models.MetricFunc(int(st.Code()), r, st.Err()))
 			return
 		}
 	}
