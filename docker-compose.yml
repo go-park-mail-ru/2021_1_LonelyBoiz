@@ -49,7 +49,7 @@ services:
       AWS_REGION: ${AWS_REGION}
     image: image_server
     ports:
-      - "5200:5200"
+      - "7000:7000"
     networks:
       - back-tier
     volumes:

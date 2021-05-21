@@ -3,7 +3,6 @@ package repository
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	model "server/internal/pkg/models"
 
 	"github.com/lib/pq"
@@ -193,7 +192,6 @@ func (repo *UserRepository) AddUser(newUser model.User) (int, error) {
 
 func (repo *UserRepository) GetUser(id int) (model.User, error) {
 	var user []model.User
-	fmt.Println("here")
 	err := repo.DB.Select(&user,
 		`SELECT id, 
 			email,

@@ -9,7 +9,6 @@ import (
 	"strconv"
 
 	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/status"
 )
 
 type ValidateCookieMiddleware struct {
@@ -28,8 +27,8 @@ func (m *ValidateCookieMiddleware) Middleware(next http.Handler) http.Handler {
 
 		idProto, err := m.Session.Check(r.Context(), &session_proto.SessionToken{Token: token.Value})
 		if err != nil {
-			st, _ := status.FromError(err)
-			model.ResponseWithJson(w, int(st.Code()), st.Message())
+			response := model.ErrorResponse{Err: err.Error()}
+			model.ResponseWithJson(w, 401, response)
 			return
 		}
 
