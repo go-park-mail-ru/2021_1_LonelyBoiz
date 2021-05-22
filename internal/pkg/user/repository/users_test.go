@@ -390,3 +390,83 @@ func TestGetUser(t *testing.T) {
 		return
 	}
 }
+
+func TestCheckPermission(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("cant create mock: %s", err)
+	}
+	defer db.Close()
+
+	ownerId := 1
+	getterId := 2
+
+	rows := sqlmock.NewRows([]string{
+		"ownerId",
+	}).AddRow(
+		ownerId,
+	)
+
+	mock.
+		ExpectQuery("SELECT ownerId FROM secretPermiss").
+		WithArgs(ownerId, getterId).
+		WillReturnRows(rows)
+
+	repo := UserRepository{
+		DB: sqlx.NewDb(db, "psx"),
+	}
+
+	res, err := repo.CheckPermission(ownerId, getterId)
+	if err != nil {
+		t.Errorf("unexpected err: %s", err)
+		return
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+		return
+	}
+	if !reflect.DeepEqual(res, true) {
+		t.Errorf("results not match, want %v, have %v", true, res)
+		return
+	}
+}
+
+func TestReduceScrolls(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("cant create mock: %s", err)
+	}
+	defer db.Close()
+
+	scrolls := 1
+	userId := 1
+
+	rows := sqlmock.NewRows([]string{
+		"scrolls",
+	}).AddRow(
+		scrolls,
+	)
+
+	mock.
+		ExpectQuery("UPDATE users SET scrol").
+		WithArgs(userId).
+		WillReturnRows(rows)
+
+	repo := UserRepository{
+		DB: sqlx.NewDb(db, "psx"),
+	}
+
+	res, err := repo.ReduceScrolls(userId)
+	if err != nil {
+		t.Errorf("unexpected err: %s", err)
+		return
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+		return
+	}
+	if !reflect.DeepEqual(res, scrolls) {
+		t.Errorf("results not match, want %v, have %v", scrolls, res)
+		return
+	}
+}
