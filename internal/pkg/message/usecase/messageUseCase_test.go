@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	mocks "server/internal/pkg/message/repository/mocks"
 	"server/internal/pkg/models"
+	userProto "server/internal/user_server/delivery/proto"
 	"strings"
 	"testing"
 
@@ -468,4 +469,58 @@ func TestParseJsonToMessage(t *testing.T) {
 
 	_, err = UserUsecaseTest.ParseJsonToMessage(r)
 	assert.Equal(t, nil, err)
+}
+
+func TestMessage2ProtoMessage(t *testing.T) {
+	message := models.Message{
+		MessageId:    1,
+		AuthorId:     1,
+		ChatId:       1,
+		Text:         "asdf",
+		Reaction:     1,
+		Time:         123123,
+		MessageOrder: 1,
+	}
+
+	protoMessage := userProto.Message{
+		MessageId:    1,
+		AuthorId:     1,
+		ChatId:       1,
+		Text:         "asdf",
+		Reaction:     1,
+		Time:         123123,
+		MessageOrder: 1,
+	}
+
+	UserUsecaseTest := MessageUsecase{}
+
+	res := UserUsecaseTest.Message2ProtoMessage(message)
+	assert.Equal(t, res, &protoMessage)
+}
+
+func TestProtoMessage2Message(t *testing.T) {
+	message := models.Message{
+		MessageId:    1,
+		AuthorId:     1,
+		ChatId:       1,
+		Text:         "asdf",
+		Reaction:     1,
+		Time:         123123,
+		MessageOrder: 1,
+	}
+
+	protoMessage := userProto.Message{
+		MessageId:    1,
+		AuthorId:     1,
+		ChatId:       1,
+		Text:         "asdf",
+		Reaction:     1,
+		Time:         123123,
+		MessageOrder: 1,
+	}
+
+	UserUsecaseTest := MessageUsecase{}
+
+	res := UserUsecaseTest.ProtoMessage2Message(&protoMessage)
+	assert.Equal(t, res, message)
 }
