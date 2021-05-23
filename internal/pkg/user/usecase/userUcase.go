@@ -505,6 +505,26 @@ func (u *UserUsecase) ChangeUserProperties(newUser *model.User) error {
 		bufUser.Photos = newUser.Photos
 	}
 
+	if newUser.Height != 0 {
+		bufUser.Height = newUser.Height
+	}
+
+	if newUser.PartnerHeight != 0 {
+		bufUser.PartnerHeight = newUser.PartnerHeight
+	}
+
+	if newUser.Weight != 0 {
+		bufUser.Weight = newUser.Weight
+	}
+
+	if newUser.PartnerWeight != 0 {
+		bufUser.PartnerWeight = newUser.PartnerWeight
+	}
+
+	if newUser.PartnerAge != 0 {
+		bufUser.PartnerAge = newUser.PartnerAge
+	}
+
 	response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Не удалось поменять данные"}
 	if newUser.Sex != "" {
 		if !u.ValidateSex(newUser.Sex) {
@@ -686,6 +706,9 @@ func (u *UserUsecase) ParseJsonToUser(body io.ReadCloser) (model.User, error) {
 	var newUser model.User
 	decoder := json.NewDecoder(body)
 	err := decoder.Decode(&newUser)
+	if err != nil {
+		u.LogError(err)
+	}
 	defer body.Close()
 
 	newUser.Email = u.Sanitizer.Sanitize(newUser.Email)
@@ -738,6 +761,11 @@ func (u *UserUsecase) ProtoUser2User(user *userProto.User) model.User {
 		IsActive:       user.IsActive,
 		Photos:         u.ProtoPhotos2Photos(user.Photos),
 		CaptchaToken:   user.CaptchaToken,
+		Height:         int(user.Height),
+		PartnerHeight:  int(user.PartnerHeight),
+		Weight:         int(user.Weight),
+		PartnerWeight:  int(user.PartnerWeight),
+		PartnerAge:     int(user.PartnerAge),
 	}
 	if len(ret.Photos) == 0 {
 		ret.Photos = make([]string, 0)
@@ -765,6 +793,11 @@ func (u *UserUsecase) User2ProtoUser(user model.User) *userProto.User {
 		IsActive:       user.IsActive,
 		Photos:         u.Photos2ProtoPhotos(user.Photos),
 		CaptchaToken:   user.CaptchaToken,
+		Height:         int32(user.Height),
+		PartnerHeight:  int32(user.PartnerHeight),
+		Weight:         int32(user.Weight),
+		PartnerWeight:  int32(user.PartnerWeight),
+		PartnerAge:     int32(user.PartnerAge),
 	}
 }
 

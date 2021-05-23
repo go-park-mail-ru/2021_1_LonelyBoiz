@@ -204,7 +204,12 @@ func (repo *UserRepository) GetUser(id int) (model.User, error) {
     		datepreference,
     		isactive,
     		isdeleted,
-			COALESCE(photos, '{}') AS photos
+			COALESCE(photos, '{}') AS photos,
+			height,
+			partnerHeight,
+			weight,
+			partnerWeight,
+			partnerAge
 		FROM users WHERE id = $1`,
 		id)
 	if err != nil {
@@ -237,11 +242,15 @@ func (repo *UserRepository) ChangeUser(newUser model.User) error {
 		`UPDATE users 
 			SET email = $1, name = $2, birthday = $3, 
 			description = $4, city = $5, sex = $6, 
-			datePreference = $7, isActive = $8, instagram = $9, photos = $10
-		WHERE id = $11`,
+			datePreference = $7, isActive = $8, instagram = $9, 
+			photos = $10, height = $11, partnerHeight = $12,
+			weight = $13, partnerWeight = $14, partnerAge = $15
+		WHERE id = $16`,
 		newUser.Email, newUser.Name, newUser.Birthday,
 		newUser.Description, newUser.City, newUser.Sex,
-		newUser.DatePreference, newUser.IsActive, newUser.Instagram, newUser.Photos,
+		newUser.DatePreference, newUser.IsActive, newUser.Instagram,
+		newUser.Photos, newUser.Height, newUser.PartnerHeight,
+		newUser.Weight, newUser.PartnerWeight, newUser.PartnerAge,
 		newUser.Id,
 	)
 
@@ -308,7 +317,12 @@ func (repo *UserRepository) SignIn(email string) (model.User, error) {
     		datepreference,
     		isactive,
     		isdeleted,
-			photos
+			photos,
+			height,
+			partnerHeight,
+			weight,
+			partnerWeight,
+			partnerAge
 		FROM users WHERE email = $1`, email)
 	if err != nil {
 		return model.User{}, err

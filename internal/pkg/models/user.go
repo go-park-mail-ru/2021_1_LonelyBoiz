@@ -36,6 +36,7 @@ type User struct {
 	PartnerHeight  int            `json:"partnerHeight"`
 	Weight         int            `json:"weight"`
 	PartnerWeight  int            `json:"partnerWeight"`
+	PartnerAge     int            `json:"partnerAge"`
 }
 
 type Label struct {

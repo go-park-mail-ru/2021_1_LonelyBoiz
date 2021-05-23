@@ -24,6 +24,30 @@ func (repo *UserRepository) CreateFeed(userId int) error {
                     user2.datepreference = user1.sex
                     OR user2.datepreference = 'both'
                 )
+				AND (
+					user1.partnerHeight = -1
+					OR user1.partnerHeight = user2.height
+				)
+				AND (
+					user2.partnerHeight = -1
+					OR user2.partnerHeight = user1.height
+				)
+				AND (
+					user1.partnerWeight = -1
+					OR user1.partnerWeight = user2.weight
+				)
+				AND (
+					user2.partnerWeight = -1
+					OR user2.partnerWeight = user1.weight
+				)
+				AND (
+					user1.partnerAge = -1
+					OR user1.partnerAge = (user2.birthday/60/60/24/365-2003+1970)
+				)
+				AND (
+					user2.partnerAge = -1
+					OR user2.partnerAge = (user1.birthday/60/60/24/365-2003+1970)
+				)
                 AND user1.id <> user2.id
                 AND user2.isDeleted = false
                 AND user2.isActive = true
