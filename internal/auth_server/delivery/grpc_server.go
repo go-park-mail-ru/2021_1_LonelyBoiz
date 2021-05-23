@@ -2,10 +2,10 @@ package delivery
 
 import (
 	"errors"
-	"fmt"
-	"golang.org/x/net/context"
-	"server/internal/auth_server/delivery/session"
+	session_proto "server/internal/auth_server/delivery/session"
 	auth_server "server/internal/pkg/session"
+
+	"golang.org/x/net/context"
 )
 
 type AuthServer struct {
@@ -26,12 +26,11 @@ func (a AuthServer) Create(ctx context.Context, id *session_proto.SessionId) (*s
 
 // Check проверят куку
 func (a AuthServer) Check(ctx context.Context, token *session_proto.SessionToken) (*session_proto.SessionId, error) {
-	fmt.Println(token.GetToken())
 	id, ok := a.Usecase.CheckSession([]string{token.GetToken()})
-	if ok == false {
-		return nil, errors.New("Пользователь не найден")
+	if !ok {
+		return nil, errors.New("пользователь не найден")
 	}
-	fmt.Println(id)
+
 	return &session_proto.SessionId{Id: int32(id)}, nil
 }
 
