@@ -37,6 +37,9 @@ func (m *MessageHandler) GetMessages(w http.ResponseWriter, r *http.Request) {
 	for _, message := range protoMessages.GetMessages() {
 		nMesssages = append(nMesssages, m.Usecase.ProtoMessage2Message(message))
 	}
+	if len(nMesssages) == 0 {
+		nMesssages = make([]models.Message, 0)
+	}
 
 	models.Process(models.LoggerFunc("Success: Get Messages", m.Usecase.LogInfo), models.ResponseFunc(w, 200, nMesssages), models.MetricFunc(200, r, nil))
 }
