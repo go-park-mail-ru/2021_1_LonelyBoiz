@@ -1529,7 +1529,7 @@ func TestGetSecreteAlbum_CheckPermission_NotOk(t *testing.T) {
 	dbMock.EXPECT().CheckPermission(ownerId, getterId).Return(false, nil)
 
 	res, code, err := UserUsecaseTest.GetSecreteAlbum(ownerId, getterId)
-	assert.Equal(t, nil, err)
+	assert.NotEqual(t, nil, err)
 	assert.Equal(t, 403, code)
 	assert.Equal(t, []string{}, res)
 }
