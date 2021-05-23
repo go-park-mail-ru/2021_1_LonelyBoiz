@@ -39,11 +39,14 @@ message User {
   bool IsActive = 15;
   repeated string Photos = 16;
   string CaptchaToken = 17;
-  int32 Height =18;
-	int32	PartnerHeight=19;
-	int32	Weight    =20;
-	int32	PartnerWeight=21;
-	int32	PartnerAge=22;
+  int32 Height = 18;
+	int32	PartnerHeightTop = 19;
+  int32	PartnerHeightBot = 20;
+	int32	Weight = 21;
+	int32	PartnerWeightTop = 22;
+  int32	PartnerWeightBot = 23;
+	int32	PartnerAgeTop = 24;
+  int32	PartnerAgeBot = 25;
 }
 
 message UserResponse {

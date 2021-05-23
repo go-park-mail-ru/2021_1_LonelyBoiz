@@ -15,28 +15,32 @@ type GoogleCaptcha struct {
 }
 
 type User struct {
-	Id             int            `json:"id"`
-	Email          string         `json:"mail" valid:"email~Почта не прошла валидацию"`
-	Password       string         `json:"password,omitempty" valid:"length(8|64)~Пароль не прошел валидацию"`
-	SecondPassword string         `json:"passwordRepeat,omitempty" valid:"length(8|64)"`
-	PasswordHash   []byte         `json:",omitempty"`
-	OldPassword    string         `json:"passwordOld,omitempty"`
-	Name           string         `json:"name"`
-	Birthday       int64          `json:"birthday" valid:"ageValid~Вам должно быть 18!"`
-	Description    string         `json:"description"`
-	City           string         `json:"city"`
-	Instagram      string         `json:"instagram"`
-	Sex            string         `json:"sex"`
-	DatePreference string         `json:"datePreference"`
-	IsDeleted      bool           `json:"isDeleted"`
-	IsActive       bool           `json:"isActive"`
-	Photos         pq.StringArray `json:"photos"`
-	CaptchaToken   string         `json:"captchaToken"`
-	Height         int            `json:"height"`
-	PartnerHeight  int            `json:"partnerHeight"`
-	Weight         int            `json:"weight"`
-	PartnerWeight  int            `json:"partnerWeight"`
-	PartnerAge     int            `json:"partnerAge"`
+	Id               int            `json:"id"`
+	Email            string         `json:"mail" valid:"email~Почта не прошла валидацию"`
+	Password         string         `json:"password,omitempty" valid:"length(8|64)~Пароль не прошел валидацию"`
+	SecondPassword   string         `json:"passwordRepeat,omitempty" valid:"length(8|64)"`
+	PasswordHash     []byte         `json:",omitempty"`
+	OldPassword      string         `json:"passwordOld,omitempty"`
+	Name             string         `json:"name"`
+	Birthday         int64          `json:"birthday" valid:"ageValid~Вам должно быть 18!"`
+	Description      string         `json:"description"`
+	City             string         `json:"city"`
+	Instagram        string         `json:"instagram"`
+	Sex              string         `json:"sex"`
+	DatePreference   string         `json:"datePreference"`
+	IsDeleted        bool           `json:"isDeleted"`
+	IsActive         bool           `json:"isActive"`
+	Photos           pq.StringArray `json:"photos"`
+	CaptchaToken     string         `json:"captchaToken"`
+	Height           int            `json:"height"`
+	PartnerHeightTop int            `json:"partnerHeightTop"`
+	PartnerHeightBot int            `json:"partnerHeightBot"`
+	Weight           int            `json:"weight"`
+	PartnerWeightTop int            `json:"partnerWeightTop"`
+	PartnerWeightBot int            `json:"partnerWeightBot"`
+	PartnerAgeTop    int            `json:"partnerAgeTop"`
+	PartnerAgeBot    int            `json:"partnerAgeBot"`
+	//Interests        pq.Int64Array  `json:"interests"`
 }
 
 type Label struct {

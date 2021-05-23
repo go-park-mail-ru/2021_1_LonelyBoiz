@@ -509,20 +509,32 @@ func (u *UserUsecase) ChangeUserProperties(newUser *model.User) error {
 		bufUser.Height = newUser.Height
 	}
 
-	if newUser.PartnerHeight != 0 {
-		bufUser.PartnerHeight = newUser.PartnerHeight
+	if newUser.PartnerHeightTop != 0 {
+		bufUser.PartnerHeightTop = newUser.PartnerHeightTop
+	}
+
+	if newUser.PartnerHeightBot != 0 {
+		bufUser.PartnerHeightBot = newUser.PartnerHeightBot
 	}
 
 	if newUser.Weight != 0 {
 		bufUser.Weight = newUser.Weight
 	}
 
-	if newUser.PartnerWeight != 0 {
-		bufUser.PartnerWeight = newUser.PartnerWeight
+	if newUser.PartnerWeightTop != 0 {
+		bufUser.PartnerWeightTop = newUser.PartnerWeightTop
 	}
 
-	if newUser.PartnerAge != 0 {
-		bufUser.PartnerAge = newUser.PartnerAge
+	if newUser.PartnerWeightBot != 0 {
+		bufUser.PartnerWeightBot = newUser.PartnerWeightBot
+	}
+
+	if newUser.PartnerAgeTop != 0 {
+		bufUser.PartnerAgeTop = newUser.PartnerAgeTop
+	}
+
+	if newUser.PartnerAgeBot != 0 {
+		bufUser.PartnerAgeBot = newUser.PartnerAgeBot
 	}
 
 	response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Не удалось поменять данные"}
@@ -744,28 +756,31 @@ func (u *UserUsecase) ProtoPhotos2Photos(userPhotos []string) (photos pq.StringA
 
 func (u *UserUsecase) ProtoUser2User(user *userProto.User) model.User {
 	ret := model.User{
-		Id:             int(user.GetId()),
-		Email:          user.GetEmail(),
-		Password:       user.GetPassword(),
-		SecondPassword: user.GetSecondPassword(),
-		PasswordHash:   nil,
-		OldPassword:    user.GetOldPassword(),
-		Name:           user.GetName(),
-		Birthday:       user.GetBirthday(),
-		Description:    user.GetDescription(),
-		City:           user.GetCity(),
-		Instagram:      user.GetInstagram(),
-		Sex:            user.GetSex(),
-		DatePreference: user.GetDatePreference(),
-		IsDeleted:      user.IsDeleted,
-		IsActive:       user.IsActive,
-		Photos:         u.ProtoPhotos2Photos(user.Photos),
-		CaptchaToken:   user.CaptchaToken,
-		Height:         int(user.Height),
-		PartnerHeight:  int(user.PartnerHeight),
-		Weight:         int(user.Weight),
-		PartnerWeight:  int(user.PartnerWeight),
-		PartnerAge:     int(user.PartnerAge),
+		Id:               int(user.GetId()),
+		Email:            user.GetEmail(),
+		Password:         user.GetPassword(),
+		SecondPassword:   user.GetSecondPassword(),
+		PasswordHash:     nil,
+		OldPassword:      user.GetOldPassword(),
+		Name:             user.GetName(),
+		Birthday:         user.GetBirthday(),
+		Description:      user.GetDescription(),
+		City:             user.GetCity(),
+		Instagram:        user.GetInstagram(),
+		Sex:              user.GetSex(),
+		DatePreference:   user.GetDatePreference(),
+		IsDeleted:        user.IsDeleted,
+		IsActive:         user.IsActive,
+		Photos:           u.ProtoPhotos2Photos(user.Photos),
+		CaptchaToken:     user.CaptchaToken,
+		Height:           int(user.Height),
+		PartnerHeightTop: int(user.PartnerHeightTop),
+		PartnerHeightBot: int(user.PartnerHeightBot),
+		Weight:           int(user.Weight),
+		PartnerWeightTop: int(user.PartnerWeightTop),
+		PartnerWeightBot: int(user.PartnerWeightBot),
+		PartnerAgeTop:    int(user.PartnerAgeTop),
+		PartnerAgeBot:    int(user.PartnerAgeBot),
 	}
 	if len(ret.Photos) == 0 {
 		ret.Photos = make([]string, 0)
@@ -776,28 +791,31 @@ func (u *UserUsecase) ProtoUser2User(user *userProto.User) model.User {
 
 func (u *UserUsecase) User2ProtoUser(user model.User) *userProto.User {
 	return &userProto.User{
-		Id:             int32(user.Id),
-		Email:          user.Email,
-		Password:       user.Password,
-		SecondPassword: user.SecondPassword,
-		PasswordHash:   nil,
-		OldPassword:    user.OldPassword,
-		Name:           user.Name,
-		Birthday:       user.Birthday,
-		Description:    user.Description,
-		City:           user.City,
-		Instagram:      user.Instagram,
-		Sex:            user.Sex,
-		DatePreference: user.DatePreference,
-		IsDeleted:      user.IsDeleted,
-		IsActive:       user.IsActive,
-		Photos:         u.Photos2ProtoPhotos(user.Photos),
-		CaptchaToken:   user.CaptchaToken,
-		Height:         int32(user.Height),
-		PartnerHeight:  int32(user.PartnerHeight),
-		Weight:         int32(user.Weight),
-		PartnerWeight:  int32(user.PartnerWeight),
-		PartnerAge:     int32(user.PartnerAge),
+		Id:               int32(user.Id),
+		Email:            user.Email,
+		Password:         user.Password,
+		SecondPassword:   user.SecondPassword,
+		PasswordHash:     nil,
+		OldPassword:      user.OldPassword,
+		Name:             user.Name,
+		Birthday:         user.Birthday,
+		Description:      user.Description,
+		City:             user.City,
+		Instagram:        user.Instagram,
+		Sex:              user.Sex,
+		DatePreference:   user.DatePreference,
+		IsDeleted:        user.IsDeleted,
+		IsActive:         user.IsActive,
+		Photos:           u.Photos2ProtoPhotos(user.Photos),
+		CaptchaToken:     user.CaptchaToken,
+		Height:           int32(user.Height),
+		PartnerHeightTop: int32(user.PartnerHeightTop),
+		PartnerHeightBot: int32(user.PartnerHeightBot),
+		Weight:           int32(user.Weight),
+		PartnerWeightTop: int32(user.PartnerWeightTop),
+		PartnerWeightBot: int32(user.PartnerWeightBot),
+		PartnerAgeTop:    int32(user.PartnerAgeTop),
+		PartnerAgeBot:    int32(user.PartnerAgeBot),
 	}
 }
 

@@ -22,6 +22,9 @@ func (a *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 	for _, user := range feed.GetUsers() {
 		users = append(users, int(user.GetId()))
 	}
+	if len(users) == 0 {
+		users = make([]int, 0)
+	}
 
 	models.Process(models.LoggerFunc("Create Feed", a.UserCase.LogInfo), models.ResponseFunc(w, 200, users), models.MetricFunc(200, r, nil))
 }

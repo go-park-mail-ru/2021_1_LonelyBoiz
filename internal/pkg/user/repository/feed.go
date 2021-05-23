@@ -25,28 +25,28 @@ func (repo *UserRepository) CreateFeed(userId int) error {
                     OR user2.datepreference = 'both'
                 )
 				AND (
-					user1.partnerHeight = -1
-					OR user1.partnerHeight = user2.height
+					user1.partnerHeightTop = -1
+					OR (user1.partnerHeightTop >= user2.height AND user1.partnerHeightBot <= user2.height)
 				)
 				AND (
-					user2.partnerHeight = -1
-					OR user2.partnerHeight = user1.height
+					user2.partnerHeightTop = -1
+					OR (user2.partnerHeightTop >= user1.height AND user2.partnerHeightBot <= user1.height)
 				)
 				AND (
-					user1.partnerWeight = -1
-					OR user1.partnerWeight = user2.weight
+					user1.partnerWeightTop = -1
+					OR (user1.partnerWeightTop >= user2.weight AND user1.partnerWeightBot <= user2.weight)
 				)
 				AND (
-					user2.partnerWeight = -1
-					OR user2.partnerWeight = user1.weight
+					user2.partnerWeightTop = -1
+					OR (user2.partnerWeightTop >= user1.weight AND user2.partnerWeightBot <= user1.weight)
 				)
 				AND (
-					user1.partnerAge = -1
-					OR user1.partnerAge = (user2.birthday/60/60/24/365-2003+1970)
+					user1.partnerAgeTop = -1
+					OR (user1.partnerAgeTop >= (user2.birthday/60/60/24/365-2003+1970) AND user1.partnerAgeBot <= (user2.birthday/60/60/24/365-2003+1970))
 				)
 				AND (
-					user2.partnerAge = -1
-					OR user2.partnerAge = (user1.birthday/60/60/24/365-2003+1970)
+					user2.partnerAgeTop = -1
+					OR (user2.partnerAgeTop >= (user1.birthday/60/60/24/365-2003+1970) AND user2.partnerAgeBot <= (user1.birthday/60/60/24/365-2003+1970))
 				)
                 AND user1.id <> user2.id
                 AND user2.isDeleted = false

@@ -206,10 +206,13 @@ func (repo *UserRepository) GetUser(id int) (model.User, error) {
     		isdeleted,
 			COALESCE(photos, '{}') AS photos,
 			height,
-			partnerHeight,
+			partnerHeightTop,
+			partnerHeightBot,
 			weight,
-			partnerWeight,
-			partnerAge
+			partnerWeightTop,
+			partnerWeightBot,
+			partnerAgeTop,
+			partnerAgeBot
 		FROM users WHERE id = $1`,
 		id)
 	if err != nil {
@@ -243,14 +246,16 @@ func (repo *UserRepository) ChangeUser(newUser model.User) error {
 			SET email = $1, name = $2, birthday = $3, 
 			description = $4, city = $5, sex = $6, 
 			datePreference = $7, isActive = $8, instagram = $9, 
-			photos = $10, height = $11, partnerHeight = $12,
-			weight = $13, partnerWeight = $14, partnerAge = $15
-		WHERE id = $16`,
+			photos = $10, height = $11, partnerHeightTop = $12, 
+			partnerHeightBot = $13, weight = $14, partnerWeightTop = $15, 
+			partnerWeightBot = $16, partnerAgeTop = $17, partnerAgeBot = $18
+		WHERE id = $19`,
 		newUser.Email, newUser.Name, newUser.Birthday,
 		newUser.Description, newUser.City, newUser.Sex,
 		newUser.DatePreference, newUser.IsActive, newUser.Instagram,
-		newUser.Photos, newUser.Height, newUser.PartnerHeight,
-		newUser.Weight, newUser.PartnerWeight, newUser.PartnerAge,
+		newUser.Photos, newUser.Height, newUser.PartnerHeightTop,
+		newUser.PartnerHeightBot, newUser.Weight, newUser.PartnerWeightTop,
+		newUser.PartnerWeightBot, newUser.PartnerAgeTop, newUser.PartnerAgeBot,
 		newUser.Id,
 	)
 
@@ -319,10 +324,13 @@ func (repo *UserRepository) SignIn(email string) (model.User, error) {
     		isdeleted,
 			photos,
 			height,
-			partnerHeight,
+			partnerHeightTop,
+			partnerHeightBot,
 			weight,
-			partnerWeight,
-			partnerAge
+			partnerWeightTop,
+			partnerWeightBot,
+			partnerAgeTop,
+			partnerAgeBot
 		FROM users WHERE email = $1`, email)
 	if err != nil {
 		return model.User{}, err
