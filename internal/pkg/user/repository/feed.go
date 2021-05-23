@@ -48,6 +48,10 @@ func (repo *UserRepository) CreateFeed(userId int) error {
 					user2.partnerAgeTop = -1
 					OR (user2.partnerAgeTop >= (user1.birthday/60/60/24/365-2003+1970) AND user2.partnerAgeBot <= (user1.birthday/60/60/24/365-2003+1970))
 				)
+				AND (
+					(array_length(user1.interests, 1) = 0) IS NULL
+					OR (user1.interests && user2.interests)
+				)
                 AND user1.id <> user2.id
                 AND user2.isDeleted = false
                 AND user2.isActive = true

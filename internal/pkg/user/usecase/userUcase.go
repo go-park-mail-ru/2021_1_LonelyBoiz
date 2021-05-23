@@ -537,6 +537,10 @@ func (u *UserUsecase) ChangeUserProperties(newUser *model.User) error {
 		bufUser.PartnerAgeBot = newUser.PartnerAgeBot
 	}
 
+	if len(newUser.Interests) != 0 {
+		bufUser.Interests = newUser.Interests
+	}
+
 	response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Не удалось поменять данные"}
 	if newUser.Sex != "" {
 		if !u.ValidateSex(newUser.Sex) {
@@ -781,6 +785,7 @@ func (u *UserUsecase) ProtoUser2User(user *userProto.User) model.User {
 		PartnerWeightBot: int(user.PartnerWeightBot),
 		PartnerAgeTop:    int(user.PartnerAgeTop),
 		PartnerAgeBot:    int(user.PartnerAgeBot),
+		Interests:        []int64(user.Interests),
 	}
 	if len(ret.Photos) == 0 {
 		ret.Photos = make([]string, 0)
@@ -816,6 +821,7 @@ func (u *UserUsecase) User2ProtoUser(user model.User) *userProto.User {
 		PartnerWeightBot: int32(user.PartnerWeightBot),
 		PartnerAgeTop:    int32(user.PartnerAgeTop),
 		PartnerAgeBot:    int32(user.PartnerAgeBot),
+		Interests:        []int64(user.Interests),
 	}
 }
 

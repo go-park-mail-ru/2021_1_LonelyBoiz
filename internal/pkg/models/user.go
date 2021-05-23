@@ -40,7 +40,7 @@ type User struct {
 	PartnerWeightBot int            `json:"partnerWeightBot"`
 	PartnerAgeTop    int            `json:"partnerAgeTop"`
 	PartnerAgeBot    int            `json:"partnerAgeBot"`
-	//Interests        pq.Int64Array  `json:"interests"`
+	Interests        pq.Int64Array  `json:"interests"`
 }
 
 type Label struct {

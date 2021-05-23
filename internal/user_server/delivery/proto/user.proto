@@ -47,6 +47,7 @@ message User {
   int32	PartnerWeightBot = 23;
 	int32	PartnerAgeTop = 24;
   int32	PartnerAgeBot = 25;
+  repeated int64 Interests = 26;
 }
 
 message UserResponse {

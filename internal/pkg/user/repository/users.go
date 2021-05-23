@@ -212,7 +212,8 @@ func (repo *UserRepository) GetUser(id int) (model.User, error) {
 			partnerWeightTop,
 			partnerWeightBot,
 			partnerAgeTop,
-			partnerAgeBot
+			partnerAgeBot,
+			COALESCE(interests, '{}') AS interests
 		FROM users WHERE id = $1`,
 		id)
 	if err != nil {
@@ -224,6 +225,9 @@ func (repo *UserRepository) GetUser(id int) (model.User, error) {
 
 	if len(user[0].Photos) == 0 {
 		user[0].Photos = make([]string, 0)
+	}
+	if len(user[0].Interests) == 0 {
+		user[0].Interests = make(pq.Int64Array, 0)
 	}
 
 	return user[0], nil
@@ -248,14 +252,16 @@ func (repo *UserRepository) ChangeUser(newUser model.User) error {
 			datePreference = $7, isActive = $8, instagram = $9, 
 			photos = $10, height = $11, partnerHeightTop = $12, 
 			partnerHeightBot = $13, weight = $14, partnerWeightTop = $15, 
-			partnerWeightBot = $16, partnerAgeTop = $17, partnerAgeBot = $18
-		WHERE id = $19`,
+			partnerWeightBot = $16, partnerAgeTop = $17, partnerAgeBot = $18,
+			interests = $19
+		WHERE id = $20`,
 		newUser.Email, newUser.Name, newUser.Birthday,
 		newUser.Description, newUser.City, newUser.Sex,
 		newUser.DatePreference, newUser.IsActive, newUser.Instagram,
 		newUser.Photos, newUser.Height, newUser.PartnerHeightTop,
 		newUser.PartnerHeightBot, newUser.Weight, newUser.PartnerWeightTop,
 		newUser.PartnerWeightBot, newUser.PartnerAgeTop, newUser.PartnerAgeBot,
+		newUser.Interests,
 		newUser.Id,
 	)
 
@@ -330,13 +336,17 @@ func (repo *UserRepository) SignIn(email string) (model.User, error) {
 			partnerWeightTop,
 			partnerWeightBot,
 			partnerAgeTop,
-			partnerAgeBot
+			partnerAgeBot,
+			COALESCE(interests, '{}') AS interests
 		FROM users WHERE email = $1`, email)
 	if err != nil {
 		return model.User{}, err
 	}
 	if len(user) == 0 {
 		return model.User{}, errors.New("пользователь не найден")
+	}
+	if len(user[0].Interests) == 0 {
+		user[0].Interests = make(pq.Int64Array, 0)
 	}
 
 	return user[0], nil

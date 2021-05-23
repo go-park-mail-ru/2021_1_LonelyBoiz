@@ -105,7 +105,6 @@ func (u UserServer) GetUserById(ctx context.Context, nothing *userProto.UserNoth
 	id, ok := u.UserUsecase.GetParamFromContext(ctx, "urlId")
 	if !ok {
 		id, ok = u.UserUsecase.GetParamFromContext(ctx, "cookieId")
-
 		if !ok {
 			response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
 			return &userProto.User{}, status.Error(403, response.Error())
