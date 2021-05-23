@@ -663,6 +663,64 @@ func TestChangeUserInfo(t *testing.T) {
 	assert.Equal(t, 200, code)
 }
 
+func TestChangeUserInfo_CLeanFeed_Error(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	dbMock := mocks.NewMockUserRepositoryInterface(mockCtrl)
+
+	UserUsecaseTest := UserUsecase{
+		Clients:         nil,
+		Db:              dbMock,
+		LoggerInterface: &models.Logger{Logger: logrus.New().WithField("test", "test")},
+		Sanitizer:       bluemonday.NewPolicy(),
+	}
+
+	pass := []byte(bcryptPass)
+
+	newUser := models.User{
+		Id:             1,
+		Email:          "windes@ya.ru",
+		Password:       "123456789",
+		SecondPassword: "123456789",
+		OldPassword:    "12345678",
+		Name:           "nick",
+		Birthday:       123123,
+		Description:    "desc",
+		City:           "city",
+		Instagram:      "inst",
+		Sex:            "male",
+		DatePreference: "male",
+		Photos:         make([]string, 0),
+	}
+
+	oldUser := models.User{
+		Id:             1,
+		Email:          "windes1@ya.ru",
+		PasswordHash:   pass,
+		Name:           "notnick",
+		Birthday:       0,
+		Description:    "",
+		City:           "",
+		Instagram:      "",
+		Sex:            "female",
+		DatePreference: "female",
+		IsDeleted:      false,
+		Photos:         make([]string, 0),
+	}
+
+	dbMock.EXPECT().GetPassWithId(newUser.Id).Return(pass, nil)
+	dbMock.EXPECT().CheckMail(newUser.Email).Return(false, nil)
+	dbMock.EXPECT().GetPhotos(newUser.Id).Return([]string{"1"}, nil)
+	dbMock.EXPECT().ChangePassword(newUser.Id, gomock.Any()).Return(nil)
+	dbMock.EXPECT().GetUser(newUser.Id).Return(oldUser, nil)
+	dbMock.EXPECT().ChangeUser(gomock.Any()).Return(nil)
+	dbMock.EXPECT().CleanFeed(newUser.Id).Return(errors.New("Some error"))
+
+	_, code, err := UserUsecaseTest.ChangeUserInfo(newUser, newUser.Id)
+	assert.Equal(t, nil, err)
+	assert.Equal(t, 500, code)
+}
+
 func TestChangeUserInfoPasswordValidationError(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
@@ -1669,8 +1727,8 @@ func TestProtoUser2User(t *testing.T) {
 		DatePreference: "female",
 		IsDeleted:      false,
 		IsActive:       true,
-		Photos:         []string{"1", "2"},
-		Interests:      []int64{},
+		Photos:         make([]string, 0),
+		Interests:      make([]int64, 0),
 	}
 
 	protoUser := user_proto.User{
@@ -1689,8 +1747,8 @@ func TestProtoUser2User(t *testing.T) {
 		DatePreference: "female",
 		IsDeleted:      false,
 		IsActive:       true,
-		Photos:         []string{"1", "2"},
-		Interests:      []int64{},
+		Photos:         make([]string, 0),
+		Interests:      make([]int64, 0),
 	}
 
 	UserUsecaseTest := UserUsecase{}
@@ -1717,8 +1775,8 @@ func TestUser2ProtoUser(t *testing.T) {
 		DatePreference: "female",
 		IsDeleted:      false,
 		IsActive:       true,
-		Photos:         []string{"1", "2"},
-		Interests:      []int64{},
+		Photos:         nil,
+		Interests:      nil,
 	}
 
 	protoUser := user_proto.User{
@@ -1737,8 +1795,8 @@ func TestUser2ProtoUser(t *testing.T) {
 		DatePreference: "female",
 		IsDeleted:      false,
 		IsActive:       true,
-		Photos:         []string{"1", "2"},
-		Interests:      []int64{},
+		Photos:         nil,
+		Interests:      nil,
 	}
 
 	UserUsecaseTest := UserUsecase{}
