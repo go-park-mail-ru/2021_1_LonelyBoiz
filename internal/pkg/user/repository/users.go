@@ -33,6 +33,7 @@ type UserRepositoryInterface interface {
 
 	//лента
 	ClearFeed(userId int) error
+	CleanFeed(userId int) error
 	CreateFeed(userId int) error
 	GetFeed(userId int, limit int) ([]int, error)
 

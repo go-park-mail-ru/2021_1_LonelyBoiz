@@ -457,6 +457,7 @@ func (u *UserUsecase) CheckPasswordWithEmail(passToCheck string, email string) (
 }
 
 func (u *UserUsecase) ChangeUserProperties(newUser *model.User) error {
+	filtersChanged := false
 	bufUser, err := u.Db.GetUser(newUser.Id)
 	if err != nil {
 		return err
@@ -506,38 +507,47 @@ func (u *UserUsecase) ChangeUserProperties(newUser *model.User) error {
 	}
 
 	if newUser.Height != 0 {
+		filtersChanged = true
 		bufUser.Height = newUser.Height
 	}
 
 	if newUser.PartnerHeightTop != 0 {
+		filtersChanged = true
 		bufUser.PartnerHeightTop = newUser.PartnerHeightTop
 	}
 
 	if newUser.PartnerHeightBot != 0 {
+		filtersChanged = true
 		bufUser.PartnerHeightBot = newUser.PartnerHeightBot
 	}
 
 	if newUser.Weight != 0 {
+		filtersChanged = true
 		bufUser.Weight = newUser.Weight
 	}
 
 	if newUser.PartnerWeightTop != 0 {
+		filtersChanged = true
 		bufUser.PartnerWeightTop = newUser.PartnerWeightTop
 	}
 
 	if newUser.PartnerWeightBot != 0 {
+		filtersChanged = true
 		bufUser.PartnerWeightBot = newUser.PartnerWeightBot
 	}
 
 	if newUser.PartnerAgeTop != 0 {
+		filtersChanged = true
 		bufUser.PartnerAgeTop = newUser.PartnerAgeTop
 	}
 
 	if newUser.PartnerAgeBot != 0 {
+		filtersChanged = true
 		bufUser.PartnerAgeBot = newUser.PartnerAgeBot
 	}
 
 	if len(newUser.Interests) != 0 {
+		filtersChanged = true
 		bufUser.Interests = newUser.Interests
 	}
 
@@ -555,6 +565,7 @@ func (u *UserUsecase) ChangeUserProperties(newUser *model.User) error {
 			response.Description["datePreferences"] = "Неверно введены предпочтения"
 			return response
 		}
+		filtersChanged = true
 		bufUser.DatePreference = newUser.DatePreference
 	}
 
@@ -566,6 +577,13 @@ func (u *UserUsecase) ChangeUserProperties(newUser *model.User) error {
 	err = u.Db.ChangeUser(bufUser)
 	if err != nil {
 		return err
+	}
+
+	if filtersChanged {
+		err = u.Db.CleanFeed(newUser.Id)
+		if err != nil {
+			return err
+		}
 	}
 
 	*newUser = bufUser
@@ -789,6 +807,9 @@ func (u *UserUsecase) ProtoUser2User(user *userProto.User) model.User {
 	}
 	if len(ret.Photos) == 0 {
 		ret.Photos = make([]string, 0)
+	}
+	if len(ret.Interests) == 0 {
+		ret.Interests = make(pq.Int64Array, 0)
 	}
 
 	return ret

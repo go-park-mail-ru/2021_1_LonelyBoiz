@@ -1,5 +1,11 @@
 package repository
 
+func (repo *UserRepository) CleanFeed(userId int) error {
+	_, err := repo.DB.Exec("DELETE FROM feed WHERE userid1 = $1 AND (rating = 'skip' OR rating = 'empty')", userId)
+
+	return err
+}
+
 func (repo *UserRepository) ClearFeed(userId int) error {
 	_, err := repo.DB.Exec(
 		`UPDATE feed SET rating = 'empty' WHERE userid1 = $1 AND rating = 'skip'`,
