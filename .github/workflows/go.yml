@@ -1,9 +1,7 @@
 
 name: Go
 
-on:
-  push:
-    branches: [ 'PIC-142_UserDeliveryTests' ]
+on: push
   pull_request:
     branches: [ main ]
 

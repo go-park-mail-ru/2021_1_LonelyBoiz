@@ -80,3 +80,4 @@ CREATE TABLE secretPermission(
     getterId INT,
     FOREIGN KEY (getterId) REFERENCES users (id)
 );
+
