@@ -32,6 +32,10 @@ type User struct {
 	IsActive       bool           `json:"isActive"`
 	Photos         pq.StringArray `json:"photos"`
 	CaptchaToken   string         `json:"captchaToken"`
+	Height         int            `json:"height"`
+	PartnerHeight  int            `json:"partnerHeight"`
+	Weight         int            `json:"weight"`
+	PartnerWeight  int            `json:"partnerWeight"`
 }
 
 type Label struct {
