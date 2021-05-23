@@ -531,3 +531,46 @@ func TestGetNewChatById(t *testing.T) {
 		return
 	}
 }
+
+func TestCreateChat(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("cant create mock: %s", err)
+	}
+	defer db.Close()
+
+	chat := models.Chat{
+		ChatId: 1,
+	}
+
+	userid1 := 1
+	userid2 := 2
+
+	rows := sqlmock.NewRows([]string{"id"}).AddRow(chat.ChatId)
+
+	mock.
+		ExpectQuery("INSERT INTO ").
+		WithArgs(
+			userid1,
+			userid2,
+		).
+		WillReturnRows(rows)
+
+	repo := UserRepository{
+		DB: sqlx.NewDb(db, "psx"),
+	}
+
+	res, err := repo.CreateChat(userid1, userid2)
+	if err != nil {
+		t.Errorf("unexpected err: %s", err)
+		return
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+		return
+	}
+	if !reflect.DeepEqual(res, chat.ChatId) {
+		t.Errorf("results not match, want %v, have %v", chat.ChatId, res)
+		return
+	}
+}
