@@ -7,6 +7,7 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 )
 
 func TestCheckMail(t *testing.T) {
@@ -124,19 +125,28 @@ func TestSignIn(t *testing.T) {
 	defer db.Close()
 
 	user := models.User{
-		Id:             1,
-		Email:          "exmaple@mail.ru",
-		Name:           "name",
-		Birthday:       123,
-		Description:    "desc",
-		City:           "city",
-		Sex:            "male",
-		Instagram:      "inst",
-		PasswordHash:   []byte{1, 2},
-		DatePreference: "male",
-		IsActive:       true,
-		IsDeleted:      true,
-		Photos:         []string{"1", "2"},
+		Id:               1,
+		Email:            "exmaple@mail.ru",
+		Name:             "name",
+		Birthday:         123,
+		Description:      "desc",
+		City:             "city",
+		Sex:              "male",
+		Instagram:        "inst",
+		PasswordHash:     []byte{1, 2},
+		DatePreference:   "male",
+		IsActive:         true,
+		IsDeleted:        true,
+		Photos:           []string{"1", "2"},
+		Weight:           12,
+		PartnerWeightTop: 12,
+		PartnerWeightBot: 12,
+		Height:           12,
+		PartnerHeightTop: 12,
+		PartnerHeightBot: 12,
+		PartnerAgeTop:    12,
+		PartnerAgeBot:    12,
+		Interests:        make(pq.Int64Array, 0),
 	}
 
 	rows := sqlmock.NewRows([]string{
@@ -152,7 +162,15 @@ func TestSignIn(t *testing.T) {
 		"datepreference",
 		"isactive",
 		"isdeleted",
-		"photos"}).AddRow(
+		"photos",
+		"weight",
+		"partnerWeightTop",
+		"partnerWeightBot",
+		"height",
+		"partnerHeightTop",
+		"partnerHeightBot",
+		"partnerAgeTop",
+		"partnerAgeBot"}).AddRow(
 		user.Id,
 		user.Email,
 		user.Name,
@@ -166,6 +184,14 @@ func TestSignIn(t *testing.T) {
 		user.IsActive,
 		user.IsDeleted,
 		user.Photos,
+		user.Weight,
+		user.PartnerWeightBot,
+		user.PartnerHeightTop,
+		user.Height,
+		user.PartnerHeightBot,
+		user.PartnerWeightTop,
+		user.PartnerAgeBot,
+		user.PartnerAgeTop,
 	)
 
 	mock.
@@ -323,19 +349,28 @@ func TestGetUser(t *testing.T) {
 	defer db.Close()
 
 	user := models.User{
-		Id:             1,
-		Email:          "exmaple@mail.ru",
-		Name:           "name",
-		Birthday:       123,
-		Description:    "desc",
-		City:           "city",
-		Sex:            "male",
-		Instagram:      "inst",
-		PasswordHash:   []byte{1, 2},
-		DatePreference: "male",
-		IsActive:       true,
-		IsDeleted:      true,
-		Photos:         []string{"1", "2"},
+		Id:               1,
+		Email:            "exmaple@mail.ru",
+		Name:             "name",
+		Birthday:         123,
+		Description:      "desc",
+		City:             "city",
+		Sex:              "male",
+		Instagram:        "inst",
+		PasswordHash:     []byte{1, 2},
+		DatePreference:   "male",
+		IsActive:         true,
+		IsDeleted:        true,
+		Photos:           []string{"1", "2"},
+		Weight:           12,
+		PartnerWeightTop: 12,
+		PartnerWeightBot: 12,
+		Height:           12,
+		PartnerHeightTop: 12,
+		PartnerHeightBot: 12,
+		PartnerAgeTop:    12,
+		PartnerAgeBot:    12,
+		Interests:        make(pq.Int64Array, 0),
 	}
 
 	rows := sqlmock.NewRows([]string{
@@ -351,7 +386,15 @@ func TestGetUser(t *testing.T) {
 		"datepreference",
 		"isactive",
 		"isdeleted",
-		"photos"}).AddRow(
+		"photos",
+		"weight",
+		"partnerWeightTop",
+		"partnerWeightBot",
+		"height",
+		"partnerHeightTop",
+		"partnerHeightBot",
+		"partnerAgeTop",
+		"partnerAgeBot"}).AddRow(
 		user.Id,
 		user.Email,
 		user.Name,
@@ -365,6 +408,14 @@ func TestGetUser(t *testing.T) {
 		user.IsActive,
 		user.IsDeleted,
 		user.Photos,
+		user.Weight,
+		user.PartnerWeightBot,
+		user.PartnerHeightTop,
+		user.Height,
+		user.PartnerHeightBot,
+		user.PartnerWeightTop,
+		user.PartnerAgeBot,
+		user.PartnerAgeTop,
 	)
 
 	mock.

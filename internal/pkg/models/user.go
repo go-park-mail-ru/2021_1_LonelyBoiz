@@ -33,13 +33,13 @@ type User struct {
 	Photos           pq.StringArray `json:"photos"`
 	CaptchaToken     string         `json:"captchaToken"`
 	Height           int            `json:"height"`
-	PartnerHeightTop int            `json:"partnerHeightTop"`
-	PartnerHeightBot int            `json:"partnerHeightBot"`
+	PartnerHeightTop int            `json:"partnerHeightTop" db:"partnerHeightTop"`
+	PartnerHeightBot int            `json:"partnerHeightBot" db:"partnerHeightBot"`
 	Weight           int            `json:"weight"`
-	PartnerWeightTop int            `json:"partnerWeightTop"`
-	PartnerWeightBot int            `json:"partnerWeightBot"`
-	PartnerAgeTop    int            `json:"partnerAgeTop"`
-	PartnerAgeBot    int            `json:"partnerAgeBot"`
+	PartnerWeightTop int            `json:"partnerWeightTop" db:"partnerWeightTop"`
+	PartnerWeightBot int            `json:"partnerWeightBot" db:"partnerWeightBot"`
+	PartnerAgeTop    int            `json:"partnerAgeTop" db:"partnerAgeTop"`
+	PartnerAgeBot    int            `json:"partnerAgeBot" db:"partnerAgeBot"`
 	Interests        pq.Int64Array  `json:"interests"`
 }
 
