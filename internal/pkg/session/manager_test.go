@@ -87,3 +87,133 @@ func TestGetIdFromContextError(t *testing.T) {
 
 	assert.Equal(t, false, ok)
 }
+
+func TestCheckSession(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	dbMock := mocks.NewMockSessionRepositoryInterface(mockCtrl)
+
+	SessionsManagerTest := SessionsManager{
+		DB:     dbMock,
+		Logger: &models.Logger{Logger: logrus.New().WithField("test", "test")},
+	}
+
+	userid := 1
+	tokens := []string{"123", "123"}
+
+	dbMock.EXPECT().GetCookie(gomock.Any()).Return(userid, nil)
+
+	id, ok := SessionsManagerTest.CheckSession(tokens)
+
+	assert.Equal(t, true, ok)
+	assert.Equal(t, id, userid)
+}
+
+func TestCheckSession_GetCookie_Error(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	dbMock := mocks.NewMockSessionRepositoryInterface(mockCtrl)
+
+	SessionsManagerTest := SessionsManager{
+		DB:     dbMock,
+		Logger: &models.Logger{Logger: logrus.New().WithField("test", "test")},
+	}
+
+	userid := 1
+	tokens := []string{"123", "123"}
+
+	dbMock.EXPECT().GetCookie(gomock.Any()).Return(userid, errors.New("Some error"))
+
+	id, ok := SessionsManagerTest.CheckSession(tokens)
+
+	assert.Equal(t, false, ok)
+	assert.Equal(t, -1, id)
+}
+
+func TestCheckSession_NotFound(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	dbMock := mocks.NewMockSessionRepositoryInterface(mockCtrl)
+
+	SessionsManagerTest := SessionsManager{
+		DB:     dbMock,
+		Logger: &models.Logger{Logger: logrus.New().WithField("test", "test")},
+	}
+
+	tokens := []string{"123"}
+
+	dbMock.EXPECT().GetCookie(gomock.Any()).Return(-1, nil)
+
+	id, ok := SessionsManagerTest.CheckSession(tokens)
+
+	assert.Equal(t, false, ok)
+	assert.Equal(t, id, -1)
+}
+
+func TestDeleteSessionById(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	dbMock := mocks.NewMockSessionRepositoryInterface(mockCtrl)
+
+	SessionsManagerTest := SessionsManager{
+		DB:     dbMock,
+		Logger: &models.Logger{Logger: logrus.New().WithField("test", "test")},
+	}
+
+	dbMock.EXPECT().DeleteCookie(gomock.Any(), gomock.Any()).Return(nil)
+
+	err := SessionsManagerTest.DeleteSessionById(1)
+
+	assert.Equal(t, err, nil)
+}
+
+func TestDeleteSessionById_Error(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	dbMock := mocks.NewMockSessionRepositoryInterface(mockCtrl)
+
+	SessionsManagerTest := SessionsManager{
+		DB:     dbMock,
+		Logger: &models.Logger{Logger: logrus.New().WithField("test", "test")},
+	}
+
+	dbMock.EXPECT().DeleteCookie(gomock.Any(), gomock.Any()).Return(errors.New("Some error"))
+
+	err := SessionsManagerTest.DeleteSessionById(1)
+
+	assert.NotEqual(t, err, nil)
+}
+
+func TestDeleteSessionByToken(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	dbMock := mocks.NewMockSessionRepositoryInterface(mockCtrl)
+
+	SessionsManagerTest := SessionsManager{
+		DB:     dbMock,
+		Logger: &models.Logger{Logger: logrus.New().WithField("test", "test")},
+	}
+
+	dbMock.EXPECT().DeleteCookie(gomock.Any(), gomock.Any()).Return(nil)
+
+	err := SessionsManagerTest.DeleteSessionByToken("1")
+
+	assert.Equal(t, err, nil)
+}
+
+func TestDeleteSessionByToken_Error(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	dbMock := mocks.NewMockSessionRepositoryInterface(mockCtrl)
+
+	SessionsManagerTest := SessionsManager{
+		DB:     dbMock,
+		Logger: &models.Logger{Logger: logrus.New().WithField("test", "test")},
+	}
+
+	dbMock.EXPECT().DeleteCookie(gomock.Any(), gomock.Any()).Return(errors.New("Some error"))
+
+	err := SessionsManagerTest.DeleteSessionByToken("1")
+
+	assert.NotEqual(t, err, nil)
+}

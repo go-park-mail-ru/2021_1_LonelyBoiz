@@ -26,7 +26,11 @@ type SessionsManager struct {
 func (session *SessionsManager) CheckSession(tokens []string) (int, bool) {
 	session.Logger.LogInfo("Check Session")
 	for _, token := range tokens {
-		id, _ := session.DB.GetCookie(token)
+		id, err := session.DB.GetCookie(token)
+		if err != nil {
+			session.Logger.LogError(err)
+			return -1, false
+		}
 
 		if id != -1 {
 			session.Logger.LogInfo("Find Session for id" + string(rune(id)))
