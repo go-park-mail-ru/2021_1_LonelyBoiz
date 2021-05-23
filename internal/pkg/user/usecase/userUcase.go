@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -101,7 +102,7 @@ func (u *UserUsecase) GetSecreteAlbum(ownerId int, getterId int) ([]string, int,
 			return make([]string, 0), 500, err
 		}
 		if !ok {
-			return make([]string, 0), 403, nil
+			return make([]string, 0), 403, errors.New("вам недоступен скрылый альбом этого пользователя")
 		}
 	}
 
