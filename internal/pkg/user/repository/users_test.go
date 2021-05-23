@@ -470,3 +470,64 @@ func TestReduceScrolls(t *testing.T) {
 		return
 	}
 }
+
+func TestGetNewChatById(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("cant create mock: %s", err)
+	}
+	defer db.Close()
+
+	userid := 1
+
+	chat := models.Chat{
+		ChatId:              1,
+		PartnerId:           1,
+		PartnerName:         "Name",
+		LastMessage:         "last message",
+		LastMessageTime:     123,
+		LastMessageAuthorId: 1,
+		Photos:              []string{"1", "2"},
+	}
+
+	rows := sqlmock.NewRows([]string{
+		"chatid",
+		"partnerid",
+		"partnername",
+		"lastmessage",
+		"lastmessagetime",
+		"lastmessageauthorid",
+		"photos",
+	}).AddRow(
+		chat.ChatId,
+		chat.PartnerId,
+		chat.PartnerName,
+		chat.LastMessage,
+		chat.LastMessageTime,
+		chat.LastMessageAuthorId,
+		chat.Photos,
+	)
+
+	mock.
+		ExpectQuery("SELECT chats.id AS chatId,").
+		WithArgs(chat.ChatId, userid).
+		WillReturnRows(rows)
+
+	repo := UserRepository{
+		DB: sqlx.NewDb(db, "psx"),
+	}
+
+	res, err := repo.GetNewChatById(chat.ChatId, userid)
+	if err != nil {
+		t.Errorf("unexpected err: %s", err)
+		return
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+		return
+	}
+	if !reflect.DeepEqual(res, chat) {
+		t.Errorf("results not match, want %v, have %v", chat, res)
+		return
+	}
+}
