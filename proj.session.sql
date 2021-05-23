@@ -21,7 +21,11 @@ CREATE TABLE users (
     photos varchar(50)[] DEFAULT array[]::varchar[],
     isActive BOOLEAN NOT NULL,
     isDeleted BOOLEAN NOT NULL,
-    scrolls INT DEFAULT 20
+    scrolls INT DEFAULT 20,
+    height INT DEFAULT -1,
+    partnerHeight INT DEFAULT -1,
+    weight INT DEFAULT -1,
+    partnerWeight INT DEFAULT -1,
 );
 
 
