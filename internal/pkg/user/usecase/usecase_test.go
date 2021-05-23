@@ -656,6 +656,7 @@ func TestChangeUserInfo(t *testing.T) {
 	dbMock.EXPECT().ChangePassword(newUser.Id, gomock.Any()).Return(nil)
 	dbMock.EXPECT().GetUser(newUser.Id).Return(oldUser, nil)
 	dbMock.EXPECT().ChangeUser(gomock.Any()).Return(nil)
+	dbMock.EXPECT().CleanFeed(newUser.Id).Return(nil)
 
 	_, code, err := UserUsecaseTest.ChangeUserInfo(newUser, newUser.Id)
 	assert.Equal(t, nil, err)
@@ -1185,6 +1186,7 @@ func TestChangeUserInfoIsActiveFalse(t *testing.T) {
 	dbMock.EXPECT().CheckMail(newUser.Email).Return(false, nil)
 	dbMock.EXPECT().GetPhotos(newUser.Id).Return(nil, nil)
 	dbMock.EXPECT().ChangeUser(gomock.Any()).Return(nil)
+	dbMock.EXPECT().CleanFeed(newUser.Id).Return(nil)
 
 	_, code, err := UserUsecaseTest.ChangeUserInfo(newUser, newUser.Id)
 	assert.Equal(t, nil, err)
@@ -1668,6 +1670,7 @@ func TestProtoUser2User(t *testing.T) {
 		IsDeleted:      false,
 		IsActive:       true,
 		Photos:         []string{"1", "2"},
+		Interests:      []int64{},
 	}
 
 	protoUser := user_proto.User{
@@ -1687,6 +1690,7 @@ func TestProtoUser2User(t *testing.T) {
 		IsDeleted:      false,
 		IsActive:       true,
 		Photos:         []string{"1", "2"},
+		Interests:      []int64{},
 	}
 
 	UserUsecaseTest := UserUsecase{}
@@ -1714,6 +1718,7 @@ func TestUser2ProtoUser(t *testing.T) {
 		IsDeleted:      false,
 		IsActive:       true,
 		Photos:         []string{"1", "2"},
+		Interests:      []int64{},
 	}
 
 	protoUser := user_proto.User{
@@ -1733,6 +1738,7 @@ func TestUser2ProtoUser(t *testing.T) {
 		IsDeleted:      false,
 		IsActive:       true,
 		Photos:         []string{"1", "2"},
+		Interests:      []int64{},
 	}
 
 	UserUsecaseTest := UserUsecase{}

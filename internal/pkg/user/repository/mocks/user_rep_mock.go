@@ -136,6 +136,20 @@ func (mr *MockUserRepositoryInterfaceMockRecorder) CheckReciprocity(userId1, use
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckReciprocity", reflect.TypeOf((*MockUserRepositoryInterface)(nil).CheckReciprocity), userId1, userId2)
 }
 
+// CleanFeed mocks base method.
+func (m *MockUserRepositoryInterface) CleanFeed(userId int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CleanFeed", userId)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CleanFeed indicates an expected call of CleanFeed.
+func (mr *MockUserRepositoryInterfaceMockRecorder) CleanFeed(userId interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CleanFeed", reflect.TypeOf((*MockUserRepositoryInterface)(nil).CleanFeed), userId)
+}
+
 // ClearFeed mocks base method.
 func (m *MockUserRepositoryInterface) ClearFeed(userId int) error {
 	m.ctrl.T.Helper()
