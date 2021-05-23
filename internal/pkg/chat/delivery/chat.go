@@ -32,6 +32,9 @@ func (c *ChatHandler) GetChats(w http.ResponseWriter, r *http.Request) {
 	for _, chat := range chats.GetChats() {
 		nChats = append(nChats, c.Usecase.ProtoChat2Chat(chat))
 	}
+	if len(nChats) == 0 {
+		nChats = make([]model.Chat, 0)
+	}
 
 	model.Process(model.LoggerFunc("Success Get Chat", c.Usecase.LogInfo), model.ResponseFunc(w, 200, nChats), model.MetricFunc(200, r, nil))
 }
