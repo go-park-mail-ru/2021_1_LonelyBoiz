@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"errors"
+	"gocv.io/x/gocv"
 	"server/internal/pkg/image/repository"
 	"server/internal/pkg/models"
 	"strconv"
@@ -34,14 +35,39 @@ type ImageUsecaseInterface interface {
 	GetUUID(ctx context.Context) (uuid.UUID, bool)
 	GetIdFromContext(ctx context.Context) (int, bool)
 	GetUUIDFromContext(ctx context.Context) (uuid.UUID, bool)
-
+	CheckFace(image []byte) bool
 	models.LoggerInterface
 }
 
 type ImageUsecase struct {
-	Db           repository.DbRepositoryInterface
-	ImageStorage repository.StorageRepositoryInterface
+	Db            repository.DbRepositoryInterface
+	ImageStorage  repository.StorageRepositoryInterface
+	FaceDetection gocv.CascadeClassifier
 	models.LoggerInterface
+}
+
+func (u *ImageUsecase) CheckFace(image []byte) bool {
+	img, err := gocv.IMDecode(image, gocv.IMReadGrayScale)
+	defer img.Close()
+
+	if img.Empty() {
+		if err != nil {
+			u.LogInfo("ERROR TO DECODE IMAGE - " + err.Error())
+			return false
+		}
+		u.LogInfo("ERROR TO DECODE IMAGE")
+		return false
+	}
+
+	rects := u.FaceDetection.DetectMultiScale(img)
+
+	if len(rects) == 0 {
+		u.LogInfo("Face Not Found!")
+		return false
+	}
+
+	u.LogInfo("Face Detected")
+	return true
 }
 
 func (u *ImageUsecase) GetUUID(ctx context.Context) (uuid.UUID, bool) {
@@ -107,6 +133,7 @@ func (u *ImageUsecase) AddImage(userId int, image []byte) (models.Image, error) 
 }
 
 func (u *ImageUsecase) DeleteImage(userId int, imageUuid uuid.UUID) error {
+	u.LogError(userId)
 	err := userImagesContains(u.Db, userId, imageUuid)
 	if err != nil {
 		return err

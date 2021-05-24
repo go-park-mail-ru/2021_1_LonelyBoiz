@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"math/rand"
 	"os"
@@ -20,6 +21,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
+	"gocv.io/x/gocv"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/grpclog"
 )
@@ -77,10 +79,20 @@ func main() {
 
 	authClient := session_proto2.NewAuthCheckerClient(authConn)
 
+	// load classifier to recognize faces
+	classifier := gocv.NewCascadeClassifier()
+	defer classifier.Close()
+
+	if !classifier.Load("/Users/nick_nak/programs/2_parkMail/2021_1_LonelyBoiz/cmd/image_server/haarcascade_frontalface_default.xml") {
+		fmt.Printf("Error reading cascade file:")
+		return
+	}
+
 	// init uCases & handlers
 	imageUcase := imageUsecase.ImageUsecase{
-		Db:           &imageRepository.PostgresRepository{Db: a.Db},
-		ImageStorage: &awsRep,
+		Db:            &imageRepository.PostgresRepository{Db: a.Db},
+		ImageStorage:  &awsRep,
+		FaceDetection: classifier,
 	}
 
 	imageHandler := imageDelivery.ImageHandler{
@@ -101,7 +113,6 @@ func main() {
 	csrfRouter := a.Router.NewRoute().Subrouter()
 
 	csrfRouter.Use(loggerm.Middleware)
-	//csrfRouter.Use(middleware.CSRFMiddleware)
 	csrfRouter.Use(middleware.SetContextMiddleware)
 
 	// validate cookie router
