@@ -83,7 +83,7 @@ func main() {
 	classifier := gocv.NewCascadeClassifier()
 	defer classifier.Close()
 
-	if !classifier.Load("/Users/nick_nak/programs/2_parkMail/2021_1_LonelyBoiz/cmd/image_server/haarcascade_frontalface_default.xml") {
+	if !classifier.Load("haarcascade_frontalface_default.xml") {
 		fmt.Printf("Error reading cascade file:")
 		return
 	}
