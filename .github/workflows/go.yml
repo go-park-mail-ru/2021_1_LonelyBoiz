@@ -21,7 +21,10 @@ jobs:
 
     - name: Test
       run: |
-        go get -u -d gocv.io/x/gocv
+        export GOPATH="$HOME/go"
+        export PATH="$PATH:$GOPATH/bin"
+        go get -u -f github.com/esimov/pigo/cmd/pigo
+        go install
         go test ./... -v -coverpkg=./... -coverprofile=cover.out.tmp 
         cat cover.out.tmp | grep -v "mock.go" | grep -v "pb.go" > cover.out
         go tool cover -func=cover.out
