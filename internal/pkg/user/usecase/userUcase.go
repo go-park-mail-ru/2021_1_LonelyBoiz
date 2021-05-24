@@ -428,7 +428,11 @@ func (u *UserUsecase) CheckPasswordWithId(passToCheck string, id int) (bool, err
 	}
 
 	pass := sha3.New512()
-	pass.Write([]byte(passToCheck))
+	_, err = pass.Write([]byte(passToCheck))
+	if err != nil {
+		u.LogError(err)
+		return false, err
+	}
 	err = bcrypt.CompareHashAndPassword(password, pass.Sum(nil))
 	if err != nil {
 		return false, nil
@@ -448,6 +452,10 @@ func (u *UserUsecase) CheckPasswordWithEmail(passToCheck string, email string) (
 
 	pass := sha3.New512()
 	pass.Write([]byte(passToCheck))
+	if err != nil {
+		u.LogError(err)
+		return false, err
+	}
 	err = bcrypt.CompareHashAndPassword(password, pass.Sum(nil))
 	if err != nil {
 		return false, nil
@@ -672,7 +680,12 @@ func (u *UserUsecase) IsAlreadySignedUp(newEmail string) (bool, error) {
 
 func (u *UserUsecase) HashPassword(pass string) ([]byte, error) {
 	firstHash := sha3.New512()
-	firstHash.Write([]byte(pass))
+	_, err := firstHash.Write([]byte(pass))
+	if err != nil {
+		u.LogError(err)
+		return nil, err
+	}
+
 	secondHash, err := bcrypt.GenerateFromPassword(firstHash.Sum(nil), 14)
 	if err != nil {
 		return nil, err
