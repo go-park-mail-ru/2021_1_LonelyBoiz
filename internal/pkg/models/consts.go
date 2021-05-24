@@ -15,9 +15,5 @@ func GetDomain() string {
 }
 
 func GetSecure() bool {
-	if Mode == "DEBUG" {
-		return false
-	}
-
-	return true
+	return !(Mode == "DEBUG")
 }

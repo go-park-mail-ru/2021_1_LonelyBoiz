@@ -11,7 +11,10 @@ func (a *UserHandler) Payment(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		a.UserCase.LogError(err)
 		w.WriteHeader(400)
-		w.Write([]byte(err.Error()))
+		_, err = w.Write([]byte(err.Error()))
+		if err != nil {
+			a.UserCase.LogError(err)
+		}
 		models.MetricFunc(400, r, err)
 		return
 	}
@@ -41,7 +44,10 @@ func (a *UserHandler) Payment(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		a.UserCase.LogError(err)
 		w.WriteHeader(400)
-		w.Write([]byte(err.Error()))
+		_, err = w.Write([]byte(err.Error()))
+		if err != nil {
+			a.UserCase.LogError(err)
+		}
 		models.MetricFunc(400, r, err)
 		return
 	}
@@ -50,7 +56,10 @@ func (a *UserHandler) Payment(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		a.UserCase.LogError(err)
 		w.WriteHeader(400)
-		w.Write([]byte(err.Error()))
+		_, err = w.Write([]byte(err.Error()))
+		if err != nil {
+			a.UserCase.LogError(err)
+		}
 		models.MetricFunc(400, r, err)
 		return
 	}

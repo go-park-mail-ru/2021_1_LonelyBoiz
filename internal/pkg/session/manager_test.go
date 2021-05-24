@@ -13,6 +13,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type key string
+
+const (
+	keyString key = "some key"
+)
+
 func TestSetSession(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
@@ -79,7 +85,7 @@ func TestGetIdFromContextError(t *testing.T) {
 
 	ctx := req.Context()
 	ctx = context.WithValue(ctx,
-		"some key",
+		keyString,
 		1,
 	)
 

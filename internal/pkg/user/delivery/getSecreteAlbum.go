@@ -30,7 +30,10 @@ func (a *UserHandler) GetSecreteAlbum(w http.ResponseWriter, r *http.Request) {
 	res["photos"] = photos
 
 	w.WriteHeader(200)
-	json.NewEncoder(w).Encode(res)
+	err = json.NewEncoder(w).Encode(res)
+	if err != nil {
+		a.UserCase.LogError(err)
+	}
 
 	a.UserCase.LogInfo("Success get secrete album")
 	model.MetricFunc(200, r, nil)

@@ -68,12 +68,9 @@ func init() {
 			}
 
 			tm := time.Unix(birthday, 0)
-			diff := time.Now().Sub(tm)
+			diff := time.Since(tm)
 
-			if diff/24/365 < 18 {
-				return false
-			}
-			return true
+			return diff/24/365 >= 18
 		}),
 	)
 }

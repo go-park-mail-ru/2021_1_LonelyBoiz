@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"server/internal/pkg/utils/metrics"
 )
@@ -32,10 +33,16 @@ func ResponseWithJson(w http.ResponseWriter, code int, body interface{}) {
 	w.WriteHeader(code)
 	newBody, err := ParseGrpcError(fmt.Sprintf("%v", body))
 	if err != nil {
-		json.NewEncoder(w).Encode(body)
+		err = json.NewEncoder(w).Encode(body)
+		if err != nil {
+			log.Println(err)
+		}
 		return
 	}
-	json.NewEncoder(w).Encode(newBody)
+	err = json.NewEncoder(w).Encode(newBody)
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 func ParseGrpcError(str string) (ErrorDescriptionResponse, error) {
