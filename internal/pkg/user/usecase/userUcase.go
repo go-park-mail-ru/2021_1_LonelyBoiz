@@ -451,7 +451,7 @@ func (u *UserUsecase) CheckPasswordWithEmail(passToCheck string, email string) (
 	}
 
 	pass := sha3.New512()
-	pass.Write([]byte(passToCheck))
+	_, err = pass.Write([]byte(passToCheck))
 	if err != nil {
 		u.LogError(err)
 		return false, err
