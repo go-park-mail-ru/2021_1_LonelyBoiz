@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	session_proto2 "server/internal/auth_server/delivery/session"
+	"server/internal/pickleapp/email"
 	"server/internal/pickleapp/middleware"
 	"server/internal/pickleapp/repository"
 	"server/internal/pkg/chat/delivery"
@@ -91,7 +92,7 @@ func NewConfig() Config {
 	return newConfig
 }
 
-func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
+func (a *App) InitializeRoutes(currConfig Config) ([]*grpc.ClientConn, chan email.EmailBucket) {
 	//init config
 	a.Addr = currConfig.addr
 	a.Router = currConfig.router
@@ -109,6 +110,12 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 	chatRep := chatRepository.ChatRepository{DB: a.Db}
 
 	clients := make(map[int]*websocket.Conn)
+
+	// init notification email
+	emails := make(chan email.EmailBucket)
+	emailNot := email.NotificationByEmail{
+		Buckets: &emails,
+	}
 
 	//GRPC auth
 	opts := []grpc.DialOption{
@@ -141,7 +148,13 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 	sanitizer := bluemonday.UGCPolicy()
 	userUcase := usecase.UserUsecase{Db: &userRep, Clients: &clients, Sanitizer: sanitizer}
 	chatUcase := chatUsecase.ChatUsecase{Db: &chatRep}
-	messUcase := messageUsecase.MessageUsecase{Db: &messageRep, Clients: &clients, Sanitizer: sanitizer}
+	messUcase := messageUsecase.MessageUsecase{
+		Db:                    &messageRep,
+		Clients:               &clients,
+		Sanitizer:             sanitizer,
+		NotificationInterface: &emailNot,
+	}
+
 	sessionManager := session.SessionsManager{DB: &sessionRep}
 
 	chatHandler := delivery.ChatHandler{
@@ -201,5 +214,7 @@ func (a *App) InitializeRoutes(currConfig Config) []*grpc.ClientConn {
 	chatHandler.SetChatHandlers(subRouter)
 	authHandler.SetAuthHandler(csrfRouter)
 
-	return []*grpc.ClientConn{userConn, authConn}
+	go emailNot.EmailHandler()
+
+	return []*grpc.ClientConn{userConn, authConn}, emails
 }

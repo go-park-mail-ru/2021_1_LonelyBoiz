@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"server/internal/pickleapp/email"
 	messageRepository "server/internal/pkg/message/repository"
 	model "server/internal/pkg/models"
 	userProto "server/internal/user_server/delivery/proto"
@@ -25,6 +26,8 @@ type MessageUsecaseInterface interface {
 	GetIdFromContext(ctx context.Context) (int, bool)
 	ProtoMessage2Message(message *userProto.Message) model.Message
 	Message2ProtoMessage(message model.Message) *userProto.Message
+	SendEmailNotification(chatId, id int)
+	email.NotificationInterface
 }
 
 type MessageUsecase struct {
@@ -34,6 +37,29 @@ type MessageUsecase struct {
 	model.LoggerInterface
 
 	Sanitizer *bluemonday.Policy
+	email.NotificationInterface
+}
+
+func (m *MessageUsecase) SendEmailNotification(chatId, authorId int) {
+	sendEmailId, err := m.Db.GetPartnerId(chatId, authorId)
+	if err != nil {
+		m.LogError("SendEmailNotification  - " + err.Error())
+		return
+	}
+
+	userEmail, err := m.Db.GetEmailById(sendEmailId)
+	if err != nil {
+		m.LogError("SendEmailNotification  - " + err.Error())
+		return
+	}
+
+	name, err := m.Db.GetNameById(authorId)
+	if err != nil {
+		m.LogError("SendEmailNotification  - " + err.Error())
+		return
+	}
+
+	m.AddEmailLetterToQueue(userEmail, "Вам пришло новое сообщение от "+name+"!")
 }
 
 func (m *MessageUsecase) WebsocketMessage(newMessage model.Message) {
@@ -54,12 +80,14 @@ func (m *MessageUsecase) WebsocketMessage(newMessage model.Message) {
 
 	client, ok := (*m.Clients)[partnerId]
 	if !ok {
+		m.SendEmailNotification(newMessage.ChatId, newMessage.AuthorId)
 		m.LogInfo("Пользователь не подключен")
 		return
 	}
 
 	err = client.WriteJSON(response)
 	if err != nil {
+		m.SendEmailNotification(newMessage.ChatId, newMessage.AuthorId)
 		m.LogError("Не удалось отправить сообщение")
 		return
 	}
