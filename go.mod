@@ -8,9 +8,6 @@ require (
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d
 	github.com/aws/aws-sdk-go v1.38.31
 	github.com/cockroachdb/apd v1.1.0 // indirect
-	github.com/disintegration/imaging v1.6.2 // indirect
-	github.com/esimov/pigo v1.4.3 // indirect
-	github.com/fogleman/gg v1.3.0 // indirect
 	github.com/gofrs/uuid v4.0.0+incompatible // indirect
 	github.com/golang/mock v1.5.0
 	github.com/google/uuid v1.2.0
@@ -26,11 +23,10 @@ require (
 	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.7.0
+	gocv.io/x/gocv v0.27.0
 	golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83
-	golang.org/x/image v0.0.0-20210504121937-7319ad40d33e // indirect
 	golang.org/x/net v0.0.0-20210505024714-0287a6fb4125
 	golang.org/x/sys v0.0.0-20210521090106-6ca3eb03dfc2 // indirect
-	golang.org/x/term v0.0.0-20210503060354-a79de5458b56 // indirect
 	google.golang.org/genproto v0.0.0-20210505142820-a42aa055cf76 // indirect
 	google.golang.org/grpc v1.37.0
 	google.golang.org/protobuf v1.26.0

@@ -43,6 +43,13 @@ func (h *ImageHandler) UploadImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	isFaceDetected := h.Usecase.CheckFace(body)
+	if !isFaceDetected {
+		responseBody := models.ErrorResponse{Err: "На фотографии нет лица!"}
+		models.Process(models.LoggerFunc(responseBody.Err, h.Usecase.LogInfo), models.ResponseFunc(w, 400, responseBody), models.MetricFunc(400, r, err))
+		return
+	}
+
 	model, err := h.Usecase.AddImage(userId, body)
 	status := setStatusCode(err, http.StatusBadRequest)
 	if err != nil {
