@@ -21,6 +21,7 @@ jobs:
 
     - name: Test
       run: |
+        go env
         go get -u -d gocv.io/x/gocv
         cd $GOPATH/pkg/mod/gocv.io/x/gocv
         make install
