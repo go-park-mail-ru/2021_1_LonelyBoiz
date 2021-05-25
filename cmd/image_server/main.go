@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"io/ioutil"
 	"log"
 	"math/rand"
 	"os"
@@ -19,11 +19,12 @@ import (
 	awsSession "github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	pigo "github.com/esimov/pigo/core"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
-	"gocv.io/x/gocv"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/grpclog"
+	_ "image/jpeg"
 )
 
 type Config struct {
@@ -80,12 +81,15 @@ func main() {
 	authClient := session_proto2.NewAuthCheckerClient(authConn)
 
 	// load classifier to recognize faces
-	classifier := gocv.NewCascadeClassifier()
-	defer classifier.Close()
+	cascadeFile, err := ioutil.ReadFile("cmd/image_server/facefinder")
+	if err != nil {
+		log.Fatalf("Error reading the cascade file: %v", err)
+	}
 
-	if !classifier.Load("haarcascade_frontalface_default.xml") {
-		fmt.Printf("Error reading cascade file:")
-		return
+	pigo := pigo.NewPigo()
+	classifier, err := pigo.Unpack(cascadeFile)
+	if err != nil {
+		log.Fatalf("Error reading the cascade file: %s", err)
 	}
 
 	// init uCases & handlers

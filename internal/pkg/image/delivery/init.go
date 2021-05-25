@@ -39,14 +39,14 @@ func (h *ImageHandler) UploadImage(w http.ResponseWriter, r *http.Request) {
 	userId, ok := h.Usecase.GetIdFromContext(r.Context())
 	if !ok {
 		responseBody := models.ErrorResponse{Err: models.SessionErrorDenAccess}
-		models.Process(models.LoggerFunc(responseBody.Err, h.Usecase.LogInfo), models.ResponseFunc(w, http.StatusForbidden, responseBody), models.MetricFunc(http.StatusForbidden, r, err))
+		models.Process(models.LoggerFunc(responseBody.Err, h.Usecase.LogInfo), models.ResponseFunc(w, http.StatusForbidden, responseBody), models.MetricFunc(http.StatusForbidden, r, responseBody))
 		return
 	}
 
 	isFaceDetected := h.Usecase.CheckFace(body)
 	if !isFaceDetected {
 		responseBody := models.ErrorResponse{Err: "На фотографии нет лица!"}
-		models.Process(models.LoggerFunc(responseBody.Err, h.Usecase.LogInfo), models.ResponseFunc(w, http.StatusBadRequest, responseBody), models.MetricFunc(http.StatusBadRequest, r, err))
+		models.Process(models.LoggerFunc(responseBody.Err, h.Usecase.LogInfo), models.ResponseFunc(w, http.StatusBadRequest, responseBody), models.MetricFunc(http.StatusBadRequest, r, responseBody))
 		return
 	}
 

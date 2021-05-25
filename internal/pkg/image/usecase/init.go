@@ -1,9 +1,10 @@
 package usecase
 
 import (
+	"bytes"
 	"context"
 	"errors"
-	"gocv.io/x/gocv"
+	pigo "github.com/esimov/pigo/core"
 	"server/internal/pkg/image/repository"
 	"server/internal/pkg/models"
 	"strconv"
@@ -42,26 +43,39 @@ type ImageUsecaseInterface interface {
 type ImageUsecase struct {
 	Db            repository.DbRepositoryInterface
 	ImageStorage  repository.StorageRepositoryInterface
-	FaceDetection gocv.CascadeClassifier
+	FaceDetection *pigo.Pigo
 	models.LoggerInterface
 }
 
 func (u *ImageUsecase) CheckFace(image []byte) bool {
-	img, err := gocv.IMDecode(image, gocv.IMReadGrayScale)
-	defer img.Close()
-
-	if img.Empty() {
-		if err != nil {
-			u.LogInfo("ERROR TO DECODE IMAGE - " + err.Error())
-			return false
-		}
-		u.LogInfo("ERROR TO DECODE IMAGE")
+	src, err := pigo.DecodeImage(bytes.NewReader(image))
+	if err != nil {
+		u.LogInfo("ERROR TO DECODE IMAGE - " + err.Error())
 		return false
 	}
 
-	rects := u.FaceDetection.DetectMultiScale(img)
+	pixels := pigo.RgbToGrayscale(src)
+	cols, rows := src.Bounds().Max.X, src.Bounds().Max.Y
 
-	if len(rects) == 0 {
+	cParams := pigo.CascadeParams{
+		MinSize:     20,
+		MaxSize:     1000,
+		ShiftFactor: 0.1,
+		ScaleFactor: 1.1,
+
+		ImageParams: pigo.ImageParams{
+			Pixels: pixels,
+			Rows:   rows,
+			Cols:   cols,
+			Dim:    cols,
+		},
+	}
+
+	angle := 0.0
+	dets := u.FaceDetection.RunCascade(cParams, angle)
+	dets = u.FaceDetection.ClusterDetections(dets, 0.2)
+
+	if len(dets) == 0 {
 		u.LogInfo("Face Not Found!")
 		return false
 	}
