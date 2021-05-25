@@ -3,10 +3,11 @@ package usecase
 import (
 	"context"
 	"errors"
-	"gocv.io/x/gocv"
 	"server/internal/pkg/image/repository"
 	"server/internal/pkg/models"
 	"strconv"
+
+	"gocv.io/x/gocv"
 
 	"google.golang.org/grpc/metadata"
 
@@ -133,7 +134,6 @@ func (u *ImageUsecase) AddImage(userId int, image []byte) (models.Image, error) 
 }
 
 func (u *ImageUsecase) DeleteImage(userId int, imageUuid uuid.UUID) error {
-	u.LogError(userId)
 	err := userImagesContains(u.Db, userId, imageUuid)
 	if err != nil {
 		return err

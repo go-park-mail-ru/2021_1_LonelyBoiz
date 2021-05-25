@@ -59,6 +59,7 @@ func TestAddToSecreteAlbum(t *testing.T) {
 	imageUseCaseMock.EXPECT().GetIdFromContext(ctx).Return(user.Id, true)
 	imageUseCaseMock.EXPECT().AddImage(user.Id, gomock.Any()).Return(models.Image{}, nil)
 	imageUseCaseMock.EXPECT().LogInfo(gomock.Any()).Return()
+	imageUseCaseMock.EXPECT().CheckFace(gomock.Any()).Return(true)
 
 	handlerTest.UploadImage(rw, req.WithContext(ctx))
 
@@ -194,6 +195,7 @@ func TestAddToSecreteAlbum_AddImage_Error(t *testing.T) {
 	imageUseCaseMock.EXPECT().GetIdFromContext(ctx).Return(user.Id, true)
 	imageUseCaseMock.EXPECT().AddImage(user.Id, gomock.Any()).Return(models.Image{}, errors.New("Some error"))
 	imageUseCaseMock.EXPECT().LogInfo(gomock.Any()).Return()
+	imageUseCaseMock.EXPECT().CheckFace(gomock.Any()).Return(true)
 
 	handlerTest.UploadImage(rw, req.WithContext(ctx))
 

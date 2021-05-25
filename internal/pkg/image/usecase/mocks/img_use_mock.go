@@ -51,6 +51,20 @@ func (mr *MockImageUsecaseInterfaceMockRecorder) AddImage(userId, image interfac
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddImage", reflect.TypeOf((*MockImageUsecaseInterface)(nil).AddImage), userId, image)
 }
 
+// CheckFace mocks base method.
+func (m *MockImageUsecaseInterface) CheckFace(image []byte) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CheckFace", image)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// CheckFace indicates an expected call of CheckFace.
+func (mr *MockImageUsecaseInterfaceMockRecorder) CheckFace(image interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckFace", reflect.TypeOf((*MockImageUsecaseInterface)(nil).CheckFace), image)
+}
+
 // DeleteImage mocks base method.
 func (m *MockImageUsecaseInterface) DeleteImage(userId int, imageUuid uuid.UUID) error {
 	m.ctrl.T.Helper()
