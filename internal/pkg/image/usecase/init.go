@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	_ "image/jpeg"
 	"server/internal/pkg/image/repository"
 	"server/internal/pkg/models"
 	"strconv"
