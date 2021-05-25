@@ -4,12 +4,14 @@ import (
 	"encoding/json"
 	"errors"
 	"io/ioutil"
+	"net/http"
 	"server/internal/pkg/models"
 	model "server/internal/pkg/models"
 	mocks "server/internal/pkg/user/repository/mocks"
 	user_proto "server/internal/user_server/delivery/proto"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/microcosm-cc/bluemonday"
@@ -1804,4 +1806,28 @@ func TestUser2ProtoUser(t *testing.T) {
 	res := UserUsecaseTest.User2ProtoUser(user)
 
 	assert.Equal(t, res, &protoUser)
+}
+
+func TestSetCookie(t *testing.T) {
+	token := "some string"
+	res := http.Cookie{
+		Name:     "token",
+		Value:    token,
+		Expires:  time.Now().AddDate(0, 0, 1),
+		SameSite: http.SameSiteStrictMode,
+		Domain:   model.GetDomain(),
+		Secure:   model.GetSecure(),
+		HttpOnly: true,
+		Path:     "/",
+	}
+
+	UserUsecaseTest := UserUsecase{}
+
+	ret := UserUsecaseTest.SetCookie(token)
+
+	assert.Equal(t, res.Secure, ret.Secure)
+	assert.Equal(t, res.Domain, ret.Domain)
+	assert.Equal(t, res.SameSite, ret.SameSite)
+	assert.Equal(t, res.Value, ret.Value)
+	assert.Equal(t, res.HttpOnly, ret.HttpOnly)
 }
