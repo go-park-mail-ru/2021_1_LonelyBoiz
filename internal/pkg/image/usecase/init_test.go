@@ -127,9 +127,9 @@ func TestDeleteImage(t *testing.T) {
 	uuid := uuid.New()
 	res := models.Image{Uuid: uuid}
 
-	imageRep.EXPECT().GetImages(userId).Return([]models.Image{res}, nil)
-	imageRep.EXPECT().RemoveImage(uuid).Return(nil)
-	imageStorageRep.EXPECT().DeleteImage(uuid).Return(nil)
+	imageRep.EXPECT().GetImages(gomock.Any()).Return([]models.Image{res}, nil)
+	imageRep.EXPECT().RemoveImage(gomock.Any()).Return(nil)
+	imageStorageRep.EXPECT().DeleteImage(gomock.Any()).Return(nil)
 
 	err := useCaseTest.DeleteImage(userId, uuid)
 

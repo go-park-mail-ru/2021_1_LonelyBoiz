@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	pigo "github.com/esimov/pigo/core"
 	"server/internal/pkg/image/repository"
 	"server/internal/pkg/models"
 	"strconv"
+
+	pigo "github.com/esimov/pigo/core"
 
 	"google.golang.org/grpc/metadata"
 
@@ -147,7 +148,6 @@ func (u *ImageUsecase) AddImage(userId int, image []byte) (models.Image, error) 
 }
 
 func (u *ImageUsecase) DeleteImage(userId int, imageUuid uuid.UUID) error {
-	u.LogError(userId)
 	err := userImagesContains(u.Db, userId, imageUuid)
 	if err != nil {
 		return err
