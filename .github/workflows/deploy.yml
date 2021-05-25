@@ -49,5 +49,5 @@ jobs:
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.PRIVATE_KEY }}
+          key: ${{ secrets.SSH_KEY }}
           script: sudo docker rm -vf $(sudo docker ps -a -q) || true && cd 2021_1_LonelyBoiz/ && sudo docker-compose up -d --build --no-deps
