@@ -41,16 +41,16 @@ jobs:
             docker login -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.DOCKER_PASSWORD }}
             cd 2021_1_LonelyBoiz/
 
-            sudo docker image rm $(docker images ${{ secrets.DOCKER_USER }}/image_server -q)
+            sudo docker image rm $(docker images ${{ secrets.DOCKER_USER }}/image_server)
             sudo docker pull ${{ secrets.DOCKER_USER }}/image_server:${GITHUB_SHA::8}
 
-            sudo docker image rm $(docker images ${{ secrets.DOCKER_USER }}/pickleapp -q)
+            sudo docker image rm $(docker images ${{ secrets.DOCKER_USER }}/pickleapp)
             sudo docker pull ${{ secrets.DOCKER_USER }}/pickleapp:${GITHUB_SHA::8}
 
-            sudo docker image rm $(docker images ${{ secrets.DOCKER_USER }}/auth_server -q)
+            sudo docker image rm $(docker images ${{ secrets.DOCKER_USER }}/auth_server)
             sudo docker pull ${{ secrets.DOCKER_USER }}/auth_server:${GITHUB_SHA::8}
 
-            sudo docker image rm $(docker images ${{ secrets.DOCKER_USER }}/user_server -q)
+            sudo docker image rm $(docker images ${{ secrets.DOCKER_USER }}/user_server)
             sudo docker pull ${{ secrets.DOCKER_USER }}/user_server:${GITHUB_SHA::8}
       - name: run project
         uses: appleboy/ssh-action@master
