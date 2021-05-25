@@ -12,6 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: golangci-lint
+        run: go get -u -d gocv.io/x/gocv
         uses: golangci/golangci-lint-action@v2
         with:
           # Optional: version of golangci-lint to use in form of v1.2 or v1.2.3 or `latest` to use the latest version
