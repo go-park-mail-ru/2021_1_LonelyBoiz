@@ -14,6 +14,7 @@ message Chat {
   int64 LastMessageTime = 4;
   int32 LastMessageAuthorId = 5;
   repeated string Photos = 6;
+  bool isOpened = 8;
 }
 
 message Like {

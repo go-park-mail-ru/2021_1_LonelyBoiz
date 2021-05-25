@@ -28,6 +28,7 @@ services:
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
       AWS_REGION: ${AWS_REGION}
       MODE: ${MODE}
+      DATABASE_URL: ${DATABASE_URL}
     image: pickleapp_server
     ports:
       - "8000:8000"
@@ -47,6 +48,7 @@ services:
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
       AWS_REGION: ${AWS_REGION}
+      DATABASE_URL: ${DATABASE_URL}
     image: image_server
     ports:
       - "7000:7000"
@@ -64,6 +66,7 @@ services:
     environment: 
       CAPTCHA: ${CAPTCHA}
       MODE: ${MODE}
+      DATABASE_URL: ${DATABASE_URL}
     image: user_server
     ports:
       - "5500:5500"

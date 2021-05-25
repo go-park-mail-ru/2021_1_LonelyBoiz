@@ -6,6 +6,7 @@ DROP TABLE IF EXISTS photos CASCADE;
 DROP TABLE IF EXISTS chats CASCADE;
 DROP TABLE IF EXISTS feed CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
+
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     email varchar(50) UNIQUE,
@@ -42,7 +43,8 @@ CREATE TABLE chats (
     userId1 INT,
     FOREIGN KEY (userId1) REFERENCES users (id),
     userId2 INT,
-    FOREIGN KEY (userId2) REFERENCES users (id)
+    FOREIGN KEY (userId2) REFERENCES users (id),
+    IsOpened BOOLEAN DEFAULT FDALSE
 );
 CREATE TABLE messages (
     messageId SERIAL PRIMARY KEY,

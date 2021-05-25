@@ -10,6 +10,7 @@ type Chat struct {
 	LastMessageTime     int64          `json:"lastMessageTime,omitempty" db:"lastmessagetime"`
 	LastMessageAuthorId int            `json:"lastMessageAuthor,omitempty" db:"lastmessageauthorid"`
 	Photos              pq.StringArray `json:"photos" db:"photos"`
+	IsOpened            bool           `json:"isOpened" db:"isopened"`
 }
 
 var ChatsChan = make(chan *Chat)

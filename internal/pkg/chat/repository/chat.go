@@ -31,7 +31,10 @@ func (repo *ChatRepository) GetChats(userId int, limit int, offset int) ([]model
 			users.photos AS photos,
     		COALESCE(lastMessage.text, '') AS lastMessage,
     		COALESCE(lastMessage.time, 0) AS lastMessageTime,
-    		COALESCE(lastMessage.authorid, -1) AS lastMessageAuthorid
+    		COALESCE(lastMessage.authorid, -1) AS lastMessageAuthorid,
+			CASE when secretPermission.getterId IS NULL then FALSE
+        	    ELSE TRUE
+                END as isOpened
 		FROM chats
     		JOIN users ON (users.id <> $1 AND (users.id = chats.userid2 OR users.id = chats.userid1))
     		LEFT JOIN (
@@ -47,6 +50,7 @@ func (repo *ChatRepository) GetChats(userId int, limit int, offset int) ([]model
                 		WHERE msg.chatid = messages2.chatid
             		)
     		) lastMessage ON lastMessage.chatid = chats.id
+			LEFT JOIN secretPermission on (ownerId = $1 AND users.id = getterId)
 		WHERE chats.userid1 = $1 OR chats.userid2 = $1
 		ORDER BY lastMessageTime
 		LIMIT $2 OFFSET $3`,

@@ -59,6 +59,7 @@ func (u *ChatUsecase) ProtoChat2Chat(chat *userProto.Chat) models.Chat {
 		LastMessageTime:     chat.GetLastMessageTime(),
 		LastMessageAuthorId: int(chat.GetLastMessageAuthorId()),
 		Photos:              u.ProtoPhotos2Photos(chat.GetPhotos()),
+		IsOpened:            chat.IsOpened,
 	}
 }
 
@@ -71,5 +72,6 @@ func (u *ChatUsecase) Chat2ProtoChat(chat models.Chat) *userProto.Chat {
 		LastMessageTime:     chat.LastMessageTime,
 		LastMessageAuthorId: int32(chat.LastMessageAuthorId),
 		Photos:              u.Photos2ProtoPhotos(chat.Photos),
+		IsOpened:            chat.IsOpened,
 	}
 }
