@@ -129,6 +129,8 @@ services:
       mode: global
 
   grafana:
+    environment: 
+      GF_SERVER_HTTP_PORT: ${GF_SERVER_HTTP_PORT}
     image: grafana/grafana:master
     depends_on:
       - prometheus
