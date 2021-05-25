@@ -16,10 +16,10 @@ jobs:
         run: docker login -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.DOCKER_PASSWORD }}
       - name: Build Docker image
         run: |
-          sudo docker build -t ${{ secrets.DOCKER_USER }}/image_server:${GITHUB_SHA::8} -f ./build/package/image.Dockerfile .
-          sudo docker build -t ${{ secrets.DOCKER_USER }}/pickleapp:${GITHUB_SHA::8} -f ./build/package/pickleapp.Dockerfile .
-          sudo docker build -t ${{ secrets.DOCKER_USER }}/user_server:${GITHUB_SHA::8} -f ./build/package/user.user .
-          sudo docker build -t ${{ secrets.DOCKER_USER }}/auth_server:${GITHUB_SHA::8} -f ./build/package/auth.user .
+          sudo docker build -t ${{ secrets.DOCKER_USER }}/image_server:${GITHUB_SHA::8} -f ./build/image.Dockerfile .
+          sudo docker build -t ${{ secrets.DOCKER_USER }}/pickleapp:${GITHUB_SHA::8} -f ./build/pickleapp.Dockerfile .
+          sudo docker build -t ${{ secrets.DOCKER_USER }}/user_server:${GITHUB_SHA::8} -f ./build/user.user .
+          sudo docker build -t ${{ secrets.DOCKER_USER }}/auth_server:${GITHUB_SHA::8} -f ./build/auth.user .
 
       - name: Push the image
         run: |
