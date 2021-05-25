@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: Login to Docker Registry
-        run: echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
+        run: docker login -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.DOCKER_PASSWORD }}
       - name: Build Docker image
         run: |
           sudo docker build -t ${{ secrets.DOCKER_USER }}/image_server:${GITHUB_SHA::8} -f ./build/package/image.Dockerfile .
