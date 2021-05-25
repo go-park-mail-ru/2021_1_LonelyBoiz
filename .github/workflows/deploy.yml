@@ -24,7 +24,7 @@ jobs:
       - name: Push the image
         run: |
           docker push ${{ secrets.DOCKER_USER }}/image_server --all-tags
-          docker push ${{ secrets.DOCKER_USER }}/pickleapp --all-tags
+          docker push ${{ secrets.DOCKER_USER }}/pickleapp_server --all-tags
           docker push ${{ secrets.DOCKER_USER }}/user_server --all-tags
           docker push ${{ secrets.DOCKER_USER }}/auth_server --all-tags
   deploy:
