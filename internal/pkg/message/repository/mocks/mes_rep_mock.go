@@ -121,19 +121,19 @@ func (mr *MockMessageRepositoryInterfaceMockRecorder) DeleteMessage(messageId in
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteMessage", reflect.TypeOf((*MockMessageRepositoryInterface)(nil).DeleteMessage), messageId)
 }
 
-// GetMessages mocks base method.
-func (m *MockMessageRepositoryInterface) GetMessages(chatId, limit, offset int) ([]models.Message, error) {
+// GetEmailById mocks base method.
+func (m *MockMessageRepositoryInterface) GetEmailById(id int) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetMessages", chatId, limit, offset)
-	ret0, _ := ret[0].([]models.Message)
+	ret := m.ctrl.Call(m, "GetEmailById", id)
+	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetMessages indicates an expected call of GetMessages.
-func (mr *MockMessageRepositoryInterfaceMockRecorder) GetMessages(chatId, limit, offset interface{}) *gomock.Call {
+// GetEmailById indicates an expected call of GetEmailById.
+func (mr *MockMessageRepositoryInterfaceMockRecorder) GetEmailById(id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMessages", reflect.TypeOf((*MockMessageRepositoryInterface)(nil).GetMessages), chatId, limit, offset)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEmailById", reflect.TypeOf((*MockMessageRepositoryInterface)(nil).GetEmailById), id)
 }
 
 // GetMessage mocks base method.
@@ -149,6 +149,36 @@ func (m *MockMessageRepositoryInterface) GetMessage(messageId int) (models.Messa
 func (mr *MockMessageRepositoryInterfaceMockRecorder) GetMessage(messageId interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMessage", reflect.TypeOf((*MockMessageRepositoryInterface)(nil).GetMessage), messageId)
+}
+
+// GetMessages mocks base method.
+func (m *MockMessageRepositoryInterface) GetMessages(chatId, limit, offset int) ([]models.Message, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMessages", chatId, limit, offset)
+	ret0, _ := ret[0].([]models.Message)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetMessages indicates an expected call of GetMessages.
+func (mr *MockMessageRepositoryInterfaceMockRecorder) GetMessages(chatId, limit, offset interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMessages", reflect.TypeOf((*MockMessageRepositoryInterface)(nil).GetMessages), chatId, limit, offset)
+}
+
+// GetNameById mocks base method.
+func (m *MockMessageRepositoryInterface) GetNameById(id int) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetNameById", id)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetNameById indicates an expected call of GetNameById.
+func (mr *MockMessageRepositoryInterfaceMockRecorder) GetNameById(id interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNameById", reflect.TypeOf((*MockMessageRepositoryInterface)(nil).GetNameById), id)
 }
 
 // GetPartnerId mocks base method.

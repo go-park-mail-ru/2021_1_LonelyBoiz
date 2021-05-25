@@ -37,6 +37,18 @@ func (m *MockMessageUsecaseInterface) EXPECT() *MockMessageUsecaseInterfaceMockR
 	return m.recorder
 }
 
+// AddEmailLetterToQueue mocks base method.
+func (m *MockMessageUsecaseInterface) AddEmailLetterToQueue(email, body string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "AddEmailLetterToQueue", email, body)
+}
+
+// AddEmailLetterToQueue indicates an expected call of AddEmailLetterToQueue.
+func (mr *MockMessageUsecaseInterfaceMockRecorder) AddEmailLetterToQueue(email, body interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddEmailLetterToQueue", reflect.TypeOf((*MockMessageUsecaseInterface)(nil).AddEmailLetterToQueue), email, body)
+}
+
 // ChangeMessage mocks base method.
 func (m *MockMessageUsecaseInterface) ChangeMessage(userId, messageId int, newMessage models.Message) (models.Message, int, error) {
 	m.ctrl.T.Helper()
@@ -67,6 +79,18 @@ func (m *MockMessageUsecaseInterface) CreateMessage(newMessage models.Message, c
 func (mr *MockMessageUsecaseInterfaceMockRecorder) CreateMessage(newMessage, chatId, id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateMessage", reflect.TypeOf((*MockMessageUsecaseInterface)(nil).CreateMessage), newMessage, chatId, id)
+}
+
+// EmailHandler mocks base method.
+func (m *MockMessageUsecaseInterface) EmailHandler() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "EmailHandler")
+}
+
+// EmailHandler indicates an expected call of EmailHandler.
+func (mr *MockMessageUsecaseInterfaceMockRecorder) EmailHandler() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EmailHandler", reflect.TypeOf((*MockMessageUsecaseInterface)(nil).EmailHandler))
 }
 
 // GetIdFromContext mocks base method.
@@ -165,6 +189,18 @@ func (m *MockMessageUsecaseInterface) ProtoMessage2Message(message *user_proto.M
 func (mr *MockMessageUsecaseInterfaceMockRecorder) ProtoMessage2Message(message interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProtoMessage2Message", reflect.TypeOf((*MockMessageUsecaseInterface)(nil).ProtoMessage2Message), message)
+}
+
+// SendEmailNotification mocks base method.
+func (m *MockMessageUsecaseInterface) SendEmailNotification(chatId, id int) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SendEmailNotification", chatId, id)
+}
+
+// SendEmailNotification indicates an expected call of SendEmailNotification.
+func (mr *MockMessageUsecaseInterfaceMockRecorder) SendEmailNotification(chatId, id interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendEmailNotification", reflect.TypeOf((*MockMessageUsecaseInterface)(nil).SendEmailNotification), chatId, id)
 }
 
 // WebsocketMessage mocks base method.
