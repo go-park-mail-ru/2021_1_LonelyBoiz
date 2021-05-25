@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"database/sql/driver"
 	"reflect"
 	"server/internal/pkg/models"
 	"testing"
@@ -622,6 +623,105 @@ func TestCreateChat(t *testing.T) {
 	}
 	if !reflect.DeepEqual(res, chat.ChatId) {
 		t.Errorf("results not match, want %v, have %v", chat.ChatId, res)
+		return
+	}
+}
+
+func TestUpdatePayment(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("cant create mock: %s", err)
+	}
+	defer db.Close()
+
+	amount := 10
+	userid := 1
+
+	mock.
+		ExpectExec("UPDATE users").
+		WithArgs(
+			amount,
+			userid,
+		).WillReturnResult(driver.ResultNoRows)
+
+	repo := UserRepository{
+		DB: sqlx.NewDb(db, "psx"),
+	}
+
+	err = repo.UpdatePayment(userid, amount)
+	if err != nil {
+		t.Errorf("unexpected err: %s", err)
+		return
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+		return
+	}
+}
+
+func TestAddToSecreteAlbum(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("cant create mock: %s", err)
+	}
+	defer db.Close()
+
+	photos := []string{"1", "2"}
+	userid := 1
+
+	mock.
+		ExpectExec("UPDATE secretPhotos").
+		WithArgs(
+			pq.Array(photos),
+			userid,
+		).WillReturnResult(driver.ResultNoRows)
+
+	repo := UserRepository{
+		DB: sqlx.NewDb(db, "psx"),
+	}
+
+	err = repo.AddToSecreteAlbum(userid, photos)
+	if err != nil {
+		t.Errorf("unexpected err: %s", err)
+		return
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+		return
+	}
+}
+
+func TestGetSecretePhotos(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("cant create mock: %s", err)
+	}
+	defer db.Close()
+
+	photos := []string{"1", "2"}
+	userid := 1
+
+	rows := sqlmock.NewRows([]string{"photos"}).AddRow(pq.Array(photos))
+
+	mock.
+		ExpectQuery("SELECT photos FROM secretPhotos").
+		WithArgs(userid).WillReturnRows(rows)
+
+	repo := UserRepository{
+		DB: sqlx.NewDb(db, "psx"),
+	}
+
+	res, err := repo.GetSecretePhotos(userid)
+	if err != nil {
+		t.Errorf("unexpected err: %s", err)
+		return
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+		return
+	}
+	if !reflect.DeepEqual(res, photos) {
+		t.Errorf("results not match, want %v, have %v", photos, res)
 		return
 	}
 }
