@@ -204,6 +204,52 @@ func TestAddToSecreteAlbum_AddImage_Error(t *testing.T) {
 	assert.Equal(t, 400, response.StatusCode)
 }
 
+func TestAddToSecreteAlbum_CheckFace_Error(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	imageUseCaseMock := usecaseMocks.NewMockImageUsecaseInterface(mockCtrl)
+
+	handlerTest := ImageHandler{
+		Usecase: imageUseCaseMock,
+	}
+
+	user := models.User{
+		Id:     1,
+		Photos: []string{"1", "2"},
+	}
+
+	murl, er := url.Parse("/images")
+	if er != nil {
+		t.Error(er)
+	}
+
+	body := ioutil.NopCloser(strings.NewReader("Image bytes"))
+
+	req := &http.Request{
+		Method: "POST",
+		URL:    murl,
+		Body:   body,
+	}
+
+	ctx := req.Context()
+	ctx = context.WithValue(ctx,
+		models.CtxUserId,
+		user.Id,
+	)
+
+	rw := httptest.NewRecorder()
+
+	imageUseCaseMock.EXPECT().GetIdFromContext(ctx).Return(user.Id, true)
+	imageUseCaseMock.EXPECT().LogInfo(gomock.Any()).Return()
+	imageUseCaseMock.EXPECT().CheckFace(gomock.Any()).Return(false)
+
+	handlerTest.UploadImage(rw, req.WithContext(ctx))
+
+	response := rw.Result()
+
+	assert.Equal(t, 400, response.StatusCode)
+}
+
 func TestDeleteImage(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 

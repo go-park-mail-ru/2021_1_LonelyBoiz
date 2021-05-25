@@ -725,3 +725,96 @@ func TestGetSecretePhotos(t *testing.T) {
 		return
 	}
 }
+
+func TestGetPhotos(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("cant create mock: %s", err)
+	}
+	defer db.Close()
+
+	photos := []string{"1", "2"}
+	userid := 1
+
+	rows := sqlmock.NewRows([]string{"photos"}).AddRow(pq.Array(photos))
+
+	mock.
+		ExpectQuery("SELECT photos FROM user").
+		WithArgs(userid).WillReturnRows(rows)
+
+	repo := UserRepository{
+		DB: sqlx.NewDb(db, "psx"),
+	}
+
+	_, err = repo.GetPhotos(userid)
+	if err != nil {
+		t.Errorf("unexpected err: %s", err)
+		return
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+		return
+	}
+}
+
+func TestChangePassword(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("cant create mock: %s", err)
+	}
+	defer db.Close()
+
+	pass := []byte{1, 2}
+	userid := 1
+
+	mock.
+		ExpectExec("UPDATE users SET passwor").
+		WithArgs(
+			pass,
+			userid,
+		).WillReturnResult(driver.ResultNoRows)
+
+	repo := UserRepository{
+		DB: sqlx.NewDb(db, "psx"),
+	}
+
+	err = repo.ChangePassword(userid, pass)
+	if err != nil {
+		t.Errorf("unexpected err: %s", err)
+		return
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+		return
+	}
+}
+
+func TestDeleteUser(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("cant create mock: %s", err)
+	}
+	defer db.Close()
+
+	userid := 1
+
+	mock.
+		ExpectExec("UPDATE users").
+		WithArgs(
+			userid,
+		).WillReturnResult(driver.ResultNoRows)
+
+	repo := UserRepository{
+		DB: sqlx.NewDb(db, "psx"),
+	}
+
+	err = repo.DeleteUser(userid)
+	if err != nil {
+		t.Errorf("unexpected err: %s", err)
+		return
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+		return
+	}
+}
