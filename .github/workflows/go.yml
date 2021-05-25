@@ -21,6 +21,9 @@ jobs:
 
     - name: Test
       run: |
+        go get -u -d gocv.io/x/gocv
+        cd $GOPATH/pkg/mod/gocv.io/x/gocv
+        make install
         go test ./... -v -coverpkg=./... -coverprofile=cover.out.tmp 
         cat cover.out.tmp | grep -v "mock.go" | grep -v "pb.go" > cover.out
         go tool cover -func=cover.out
