@@ -1,7 +1,9 @@
 name: CI/CD
 on:
   push:
-    branches: [ main ]
+    branches: 
+      - main
+      - PIC-146_NewFilters
 jobs:
   golangci:
     name: linter
