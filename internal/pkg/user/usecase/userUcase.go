@@ -3,13 +3,13 @@ package usecase
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"reflect"
+	"server/internal/pkg/models"
 	model "server/internal/pkg/models"
 	"server/internal/pkg/user/repository"
 	userProto "server/internal/user_server/delivery/proto"
@@ -102,7 +102,7 @@ func (u *UserUsecase) GetSecreteAlbum(ownerId int, getterId int) ([]string, int,
 			return make([]string, 0), 500, err
 		}
 		if !ok {
-			return make([]string, 0), 403, errors.New("вам недоступен скрылый альбом этого пользователя")
+			return make([]string, 0), 403, models.ErrorResponse{Err: "Вам недоступен скрылый альбом этого пользователя"}
 		}
 	}
 

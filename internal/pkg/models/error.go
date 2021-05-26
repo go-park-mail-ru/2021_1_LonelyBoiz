@@ -71,7 +71,7 @@ func ResponseFunc(w http.ResponseWriter, code int, body interface{}) responsefun
 
 func MetricFunc(code int, r *http.Request, err error) metricfunc {
 	return func() {
-		if code == 500 {
+		if code >= 400 {
 			metrics.CreateRequestErrors(r, err)
 			return
 		}
