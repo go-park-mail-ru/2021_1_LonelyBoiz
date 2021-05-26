@@ -2,7 +2,7 @@
 
 [![Go](https://github.com/go-park-mail-ru/2021_1_LonelyBoiz/actions/workflows/go.yml/badge.svg)](https://github.com/go-park-mail-ru/2021_1_LonelyBoiz/actions/workflows/go.yml)
 
-https://lepick.herokuapp.com
+https://lepick.ru
 
 Тема проекта: tinder/badoo/mamba;
 
