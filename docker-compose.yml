@@ -29,6 +29,10 @@ services:
       AWS_REGION: ${AWS_REGION}
       MODE: ${MODE}
       DATABASE_URL: ${DATABASE_URL}
+      EMAILFROM: ${EMAILFROM}
+      PASS: ${PASS}
+      SMTPHOST: ${SMTPHOST}
+      SMTPPORT: ${SMTPPORT}
     image: pickleapp_server
     ports:
       - "8000:8000"
@@ -131,6 +135,7 @@ services:
   grafana:
     environment: 
       GF_SERVER_HTTP_PORT: ${GF_SERVER_HTTP_PORT}
+      GF_SERVER_DOMAIN: ${GF_SERVER_DOMAIN}
     image: grafana/grafana:master
     depends_on:
       - prometheus
