@@ -6,7 +6,6 @@ DROP TABLE IF EXISTS photos CASCADE;
 DROP TABLE IF EXISTS chats CASCADE;
 DROP TABLE IF EXISTS feed CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
-
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     email varchar(50) UNIQUE,
@@ -30,7 +29,7 @@ CREATE TABLE users (
     partnerWeightBot INT DEFAULT -1,
     partnerAgeTop INT DEFAULT -1,
     partnerAgeBot INT DEFAULT -1,
-    interests int[] DEFAULT array []::int []
+    interests int [] DEFAULT array []::int []
 );
 CREATE TABLE photos(
     photoId SERIAL PRIMARY KEY,
@@ -44,7 +43,7 @@ CREATE TABLE chats (
     FOREIGN KEY (userId1) REFERENCES users (id),
     userId2 INT,
     FOREIGN KEY (userId2) REFERENCES users (id),
-    IsOpened BOOLEAN DEFAULT FDALSE
+    isOpened BOOLEAN DEFAULT FALSE
 );
 CREATE TABLE messages (
     messageId SERIAL PRIMARY KEY,
@@ -82,4 +81,3 @@ CREATE TABLE secretPermission(
     getterId INT,
     FOREIGN KEY (getterId) REFERENCES users (id)
 );
-

@@ -131,6 +131,9 @@ services:
   grafana:
     environment: 
       GF_SERVER_HTTP_PORT: ${GF_SERVER_HTTP_PORT}
+      GF_SERVER_SERVE_FROM_SUB_PATH: ${GF_SERVER_SERVE_FROM_SUB_PATH}
+      GF_SERVER_ROOT_URL: ${GF_SERVER_ROOT_URL}
+      GF_SERVER_DOMAIN: ${GF_SERVER_DOMAIN}
     image: grafana/grafana:master
     depends_on:
       - prometheus
