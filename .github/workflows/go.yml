@@ -2,8 +2,7 @@ name: CI/CD
 on:
   push:
     branches: 
-      - main
-      - PIC-156_DeleteChat
+      - Deploy
 jobs:
   golangci:
     name: linter
