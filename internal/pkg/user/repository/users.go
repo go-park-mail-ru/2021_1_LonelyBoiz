@@ -60,7 +60,7 @@ type UserRepository struct {
 
 func (repo *UserRepository) ReduceScrolls(userId int) (int, error) {
 	var amount int
-	err := repo.DB.QueryRowx(
+	err := repo.DB.QueryRow(
 		`UPDATE users SET scrolls = (scrolls - 1)
   			WHERE id = $1
   		RETURNING scrolls;`,
@@ -126,24 +126,24 @@ func (repo *UserRepository) CheckPermission(ownerId int, getterId int) (bool, er
 }
 
 func (repo *UserRepository) CreateSecretAlbum(id int) error {
-	err := repo.DB.QueryRowx(
+	_, err := repo.DB.Exec(
 		`INSERT INTO secretPhotos (userId) Values ($1)`,
 		id)
-	return err.Err()
+	return err
 }
 
 func (repo *UserRepository) UnblockSecreteAlbum(ownerId int, getterId int) error {
-	err := repo.DB.QueryRowx(
+	_, err := repo.DB.Exec(
 		`INSERT INTO secretPermission (ownerId, getterId) Values ($1, $2)`,
 		ownerId, getterId)
-	return err.Err()
+	return err
 }
 
 func (repo *UserRepository) AddUser(newUser model.User) (int, error) {
 	var id int
 	newUser.Photos = make([]string, 0)
 
-	err := repo.DB.QueryRowx(
+	err := repo.DB.QueryRow(
 		`INSERT INTO users (
 			email, 
 			name,
