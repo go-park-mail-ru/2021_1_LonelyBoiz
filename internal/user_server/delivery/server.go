@@ -282,7 +282,7 @@ func (u UserServer) CreateMessage(ctx context.Context, message *userProto.Messag
 	chatId, ok := u.UserUsecase.GetParamFromContext(ctx, "urlChatId")
 	if !ok {
 		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
-		response.Description["chatId"] = "Чата с таким id нет"
+		response.Description["chatId"] = "Пользователь вас заблокирвоал"
 		return &userProto.Message{}, status.Error(400, response.Error())
 	}
 
