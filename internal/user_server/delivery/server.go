@@ -360,3 +360,24 @@ func (u UserServer) GetSecreteAlbum(ctx context.Context, message *userProto.User
 
 	return &protoPhotos, nil
 }
+
+func (u UserServer) BlockSecretAlbum(ctx context.Context, message *userProto.UserNothing) (*userProto.UserNothing, error) {
+	ownerId, ok := u.UserUsecase.GetParamFromContext(ctx, "cookieId")
+	if !ok {
+		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
+		return &userProto.UserNothing{}, status.Error(403, response.Err)
+	}
+
+	getterId, ok := u.UserUsecase.GetParamFromContext(ctx, "getterId")
+	if !ok {
+		response := model.ErrorResponse{Err: "Пользователь не найден"}
+		return &userProto.UserNothing{}, status.Error(400, response.Error())
+	}
+
+	code, err := u.UserUsecase.BlockSecreteAlbum(ownerId, getterId)
+	if err != nil {
+		return &userProto.UserNothing{}, status.Error(codes.Code(code), err.Error())
+	}
+
+	return &userProto.UserNothing{}, nil
+}

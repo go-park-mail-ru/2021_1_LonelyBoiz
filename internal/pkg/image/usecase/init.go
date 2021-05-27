@@ -50,7 +50,7 @@ type ImageUsecase struct {
 func (u *ImageUsecase) CheckFace(image []byte) bool {
 	src, err := pigo.DecodeImage(bytes.NewReader(image))
 	if err != nil {
-		u.LogInfo("ERROR TO DECODE IMAGE - " + err.Error())
+		u.LogError("ERROR TO DECODE IMAGE - " + err.Error())
 		return false
 	}
 

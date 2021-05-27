@@ -54,6 +54,7 @@ type UserUseCaseInterface interface {
 	SetChat(ws *websocket.Conn, id int)
 	SetCookie(token string) http.Cookie
 	UnblockSecreteAlbum(ownerId int, getterId int) (int, error)
+	BlockSecreteAlbum(ownerId int, getterId int) (int, error)
 	GetSecreteAlbum(ownerId int, getterId int) ([]string, int, error)
 	AddToSecreteAlbum(ownerId int, photos []string) (int, error)
 	UpdatePayment(userid int, amount int) error
@@ -119,6 +120,20 @@ func (u *UserUsecase) UnblockSecreteAlbum(ownerId int, getterId int) (int, error
 	if err != nil {
 		u.LogError("Не удалось разблокировать альбом : " + err.Error())
 		return 500, err
+	}
+
+	return 204, nil
+}
+
+func (u *UserUsecase) BlockSecreteAlbum(ownerId int, getterId int) (int, error) {
+	ok, err := u.Db.BlockSecreteAlbum(ownerId, getterId)
+	if err != nil {
+		u.LogError("Не удалось заблокировать альбом : " + err.Error())
+		return 500, err
+	}
+
+	if !ok {
+		return 400, model.ErrorResponse{Err: "Такого секретного альбома нет!"}
 	}
 
 	return 204, nil

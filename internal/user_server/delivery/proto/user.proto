@@ -120,6 +120,7 @@ service UserService {
 
   // secret album
   rpc AddToSecreteAlbum(User) returns (UserNothing) {}
-  rpc UnlockSecretAlbum(UserNothing) returns (UserNothing) {}
   rpc GetSecreteAlbum(UserNothing) returns(Photos) {}
+  rpc UnlockSecretAlbum(UserNothing) returns (UserNothing) {}
+  rpc BlockSecretAlbum(UserNothing) returns (UserNothing) {}
 }

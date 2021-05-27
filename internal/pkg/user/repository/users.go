@@ -48,6 +48,7 @@ type UserRepositoryInterface interface {
 
 	// секретный альбом
 	UnblockSecreteAlbum(ownerId int, getterId int) error
+	BlockSecreteAlbum(ownerId int, getterId int) (bool, error)
 	CheckPermission(ownerId int, getterId int) (bool, error)
 	GetSecretePhotos(ownerId int) ([]string, error)
 	AddToSecreteAlbum(ownerId int, photos []string) error
@@ -137,6 +138,27 @@ func (repo *UserRepository) UnblockSecreteAlbum(ownerId int, getterId int) error
 		`INSERT INTO secretPermission (ownerId, getterId) Values ($1, $2)`,
 		ownerId, getterId)
 	return err.Err()
+}
+
+func (repo *UserRepository) BlockSecreteAlbum(ownerId int, getterId int) (bool, error) {
+	res, err := repo.DB.Exec(
+		`DELETE FROM secretpermission WHERE (ownerid = $1 AND getterid = $2)`,
+		ownerId, getterId)
+
+	if err != nil {
+		return false, err
+	}
+
+	count, err := res.RowsAffected()
+	if err != nil {
+		return false, nil
+	}
+
+	if count == 0 {
+		return false, nil
+	}
+
+	return true, nil
 }
 
 func (repo *UserRepository) AddUser(newUser model.User) (int, error) {
