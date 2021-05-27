@@ -1,11 +1,12 @@
 package delivery
 
 import (
-	"github.com/gorilla/mux"
 	"net/http"
 	sessionProto "server/internal/auth_server/delivery/session"
 	"server/internal/pkg/user/usecase"
 	userProto "server/internal/user_server/delivery/proto"
+
+	"github.com/gorilla/mux"
 )
 
 type UserHandler struct {
@@ -57,6 +58,9 @@ func (a *UserHandler) SetHandlersWithCheckCookie(subRouter *mux.Router) {
 	subRouter.HandleFunc("/secretAlbum/{ownerId:[0-9]+}", a.GetSecreteAlbum).Methods("Get")
 	// открытие вэбсокетного соединения
 	subRouter.HandleFunc("/ws", a.WsHandler).Methods("GET")
+
+	// посмотреть секретный альбом
+	subRouter.HandleFunc("/chats/{chatId:[0-9]+}", a.DeleteChat).Methods("DELETE")
 }
 
 func (a *UserHandler) SetHandlersWithoutCheckCookie(subRouter *mux.Router) {

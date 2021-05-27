@@ -22,6 +22,22 @@ type UserServer struct {
 	Sessions       session_proto2.AuthCheckerClient
 }
 
+func (u UserServer) DeleteChat(ctx context.Context, user *userProto.UserNothing) (*userProto.UserNothing, error) {
+	chatId, ok := u.UserUsecase.GetParamFromContext(ctx, "urlChatId")
+	if !ok {
+		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
+		response.Description["chatId"] = "Чата с таким id нет"
+		return &userProto.UserNothing{}, status.Error(400, response.Err)
+	}
+
+	err := u.UserUsecase.DeleteChat(chatId)
+	if err != nil {
+		return &userProto.UserNothing{}, status.Error(500, "")
+	}
+
+	return &userProto.UserNothing{}, nil
+}
+
 func (u UserServer) CreateUser(ctx context.Context, user *userProto.User) (*userProto.UserResponse, error) {
 	newUser, code, responseError := u.UserUsecase.CreateNewUser(u.UserUsecase.ProtoUser2User(user))
 	if code != 200 {
@@ -266,7 +282,7 @@ func (u UserServer) CreateMessage(ctx context.Context, message *userProto.Messag
 	chatId, ok := u.UserUsecase.GetParamFromContext(ctx, "urlChatId")
 	if !ok {
 		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
-		response.Description["messageId"] = "Сообщения с таким id нет"
+		response.Description["chatId"] = "Чата с таким id нет"
 		return &userProto.Message{}, status.Error(400, response.Error())
 	}
 

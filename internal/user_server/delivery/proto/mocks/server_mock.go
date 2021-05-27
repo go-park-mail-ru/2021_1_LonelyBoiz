@@ -196,6 +196,26 @@ func (mr *MockUserServiceClientMockRecorder) CreateUser(ctx, in interface{}, opt
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockUserServiceClient)(nil).CreateUser), varargs...)
 }
 
+// DeleteChat mocks base method.
+func (m *MockUserServiceClient) DeleteChat(ctx context.Context, in *proto.UserNothing, opts ...grpc.CallOption) (*proto.UserNothing, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "DeleteChat", varargs...)
+	ret0, _ := ret[0].(*proto.UserNothing)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteChat indicates an expected call of DeleteChat.
+func (mr *MockUserServiceClientMockRecorder) DeleteChat(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteChat", reflect.TypeOf((*MockUserServiceClient)(nil).DeleteChat), varargs...)
+}
+
 // DeleteUser mocks base method.
 func (m *MockUserServiceClient) DeleteUser(ctx context.Context, in *proto.UserNothing, opts ...grpc.CallOption) (*proto.UserNothing, error) {
 	m.ctrl.T.Helper()
@@ -457,6 +477,21 @@ func (m *MockUserServiceServer) CreateUser(arg0 context.Context, arg1 *proto.Use
 func (mr *MockUserServiceServerMockRecorder) CreateUser(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockUserServiceServer)(nil).CreateUser), arg0, arg1)
+}
+
+// DeleteChat mocks base method.
+func (m *MockUserServiceServer) DeleteChat(arg0 context.Context, arg1 *proto.UserNothing) (*proto.UserNothing, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteChat", arg0, arg1)
+	ret0, _ := ret[0].(*proto.UserNothing)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteChat indicates an expected call of DeleteChat.
+func (mr *MockUserServiceServerMockRecorder) DeleteChat(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteChat", reflect.TypeOf((*MockUserServiceServer)(nil).DeleteChat), arg0, arg1)
 }
 
 // DeleteUser mocks base method.

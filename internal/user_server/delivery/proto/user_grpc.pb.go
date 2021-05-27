@@ -21,6 +21,7 @@ type UserServiceClient interface {
 	CreateUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*UserResponse, error)
 	ChangeUser(ctx context.Context, in *User, opts ...grpc.CallOption) (*User, error)
 	CheckUser(ctx context.Context, in *UserLogin, opts ...grpc.CallOption) (*UserResponse, error)
+	DeleteChat(ctx context.Context, in *UserNothing, opts ...grpc.CallOption) (*UserNothing, error)
 	DeleteUser(ctx context.Context, in *UserNothing, opts ...grpc.CallOption) (*UserNothing, error)
 	GetUserById(ctx context.Context, in *UserNothing, opts ...grpc.CallOption) (*User, error)
 	CreateFeed(ctx context.Context, in *UserNothing, opts ...grpc.CallOption) (*Feed, error)
@@ -66,6 +67,15 @@ func (c *userServiceClient) ChangeUser(ctx context.Context, in *User, opts ...gr
 func (c *userServiceClient) CheckUser(ctx context.Context, in *UserLogin, opts ...grpc.CallOption) (*UserResponse, error) {
 	out := new(UserResponse)
 	err := c.cc.Invoke(ctx, "/session.UserService/CheckUser", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) DeleteChat(ctx context.Context, in *UserNothing, opts ...grpc.CallOption) (*UserNothing, error) {
+	out := new(UserNothing)
+	err := c.cc.Invoke(ctx, "/session.UserService/DeleteChat", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -178,6 +188,7 @@ type UserServiceServer interface {
 	CreateUser(context.Context, *User) (*UserResponse, error)
 	ChangeUser(context.Context, *User) (*User, error)
 	CheckUser(context.Context, *UserLogin) (*UserResponse, error)
+	DeleteChat(context.Context, *UserNothing) (*UserNothing, error)
 	DeleteUser(context.Context, *UserNothing) (*UserNothing, error)
 	GetUserById(context.Context, *UserNothing) (*User, error)
 	CreateFeed(context.Context, *UserNothing) (*Feed, error)
@@ -207,6 +218,9 @@ func (UnimplementedUserServiceServer) ChangeUser(context.Context, *User) (*User,
 }
 func (UnimplementedUserServiceServer) CheckUser(context.Context, *UserLogin) (*UserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CheckUser not implemented")
+}
+func (UnimplementedUserServiceServer) DeleteChat(context.Context, *UserNothing) (*UserNothing, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteChat not implemented")
 }
 func (UnimplementedUserServiceServer) DeleteUser(context.Context, *UserNothing) (*UserNothing, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteUser not implemented")
@@ -304,6 +318,24 @@ func _UserService_CheckUser_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(UserServiceServer).CheckUser(ctx, req.(*UserLogin))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_DeleteChat_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UserNothing)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).DeleteChat(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/session.UserService/DeleteChat",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).DeleteChat(ctx, req.(*UserNothing))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -524,6 +556,10 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CheckUser",
 			Handler:    _UserService_CheckUser_Handler,
+		},
+		{
+			MethodName: "DeleteChat",
+			Handler:    _UserService_DeleteChat_Handler,
 		},
 		{
 			MethodName: "DeleteUser",

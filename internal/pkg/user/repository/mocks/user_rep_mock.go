@@ -207,6 +207,20 @@ func (mr *MockUserRepositoryInterfaceMockRecorder) CreateSecretAlbum(id interfac
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSecretAlbum", reflect.TypeOf((*MockUserRepositoryInterface)(nil).CreateSecretAlbum), id)
 }
 
+// DeleteChat mocks base method.
+func (m *MockUserRepositoryInterface) DeleteChat(id int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteChat", id)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteChat indicates an expected call of DeleteChat.
+func (mr *MockUserRepositoryInterfaceMockRecorder) DeleteChat(id interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteChat", reflect.TypeOf((*MockUserRepositoryInterface)(nil).DeleteChat), id)
+}
+
 // DeleteUser mocks base method.
 func (m *MockUserRepositoryInterface) DeleteUser(id int) error {
 	m.ctrl.T.Helper()

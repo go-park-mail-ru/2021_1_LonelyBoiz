@@ -222,6 +222,20 @@ func (mr *MockUserUseCaseInterfaceMockRecorder) CreateNewUser(newUser interface{
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateNewUser", reflect.TypeOf((*MockUserUseCaseInterface)(nil).CreateNewUser), newUser)
 }
 
+// DeleteChat mocks base method.
+func (m *MockUserUseCaseInterface) DeleteChat(id int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteChat", id)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteChat indicates an expected call of DeleteChat.
+func (mr *MockUserUseCaseInterfaceMockRecorder) DeleteChat(id interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteChat", reflect.TypeOf((*MockUserUseCaseInterface)(nil).DeleteChat), id)
+}
+
 // DeleteSession mocks base method.
 func (m *MockUserUseCaseInterface) DeleteSession(cookie *http.Cookie) {
 	m.ctrl.T.Helper()

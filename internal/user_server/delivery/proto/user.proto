@@ -105,6 +105,7 @@ service UserService {
   rpc CreateUser (User) returns (UserResponse) {}
   rpc ChangeUser (User) returns (User) {}
   rpc CheckUser (UserLogin) returns (UserResponse) {}
+  rpc DeleteChat (UserNothing) returns (UserNothing) {}
   rpc DeleteUser (UserNothing) returns (UserNothing) {}
   rpc GetUserById (UserNothing) returns (User) {}
   rpc CreateFeed (UserNothing) returns (Feed) {}

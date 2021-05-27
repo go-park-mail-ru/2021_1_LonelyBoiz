@@ -41,6 +41,7 @@ type UserUseCaseInterface interface {
 	IsActive(newUser *model.User) error
 	AddNewUser(newUser *model.User) error
 	ParseJsonToUser(body io.ReadCloser) (model.User, error)
+	DeleteChat(id int) error
 
 	SignIn(user model.User) (newUser model.User, code int, err error)
 	GetUserInfoById(id int) (user model.User, err error)
@@ -765,6 +766,10 @@ func (u *UserUsecase) ParseJsonToUser(body io.ReadCloser) (model.User, error) {
 	newUser.Description = u.Sanitizer.Sanitize(newUser.Description)
 
 	return newUser, err
+}
+
+func (u *UserUsecase) DeleteChat(id int) error {
+	return u.Db.DeleteChat(id)
 }
 
 func (u *UserUsecase) GetIdFromContext(ctx context.Context) (int, bool) {

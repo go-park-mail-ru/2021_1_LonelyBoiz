@@ -30,6 +30,7 @@ type UserRepositoryInterface interface {
 	CreateChat(userId1 int, userId2 int) (int, error)
 	GetNewChatById(chatId int, userId int) (model.Chat, error)
 	GetChatById(chatId int, userId int) (model.Chat, error)
+	DeleteChat(id int) error
 
 	//лента
 	ClearFeed(userId int) error
@@ -232,6 +233,15 @@ func (repo *UserRepository) GetUser(id int) (model.User, error) {
 	}
 
 	return user[0], nil
+}
+
+func (repo *UserRepository) DeleteChat(id int) error {
+	_, err := repo.DB.Exec(
+		`DELETE FROM chats where id = $1`,
+		id,
+	)
+
+	return err
 }
 
 func (repo *UserRepository) DeleteUser(id int) error {
