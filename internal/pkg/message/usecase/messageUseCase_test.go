@@ -151,7 +151,7 @@ func TestCreateMessageCheckChatNotOk(t *testing.T) {
 
 	_, code, err := UserUsecaseTest.CreateMessage(message, chatId, id)
 
-	assert.Equal(t, 403, code)
+	assert.Equal(t, 400, code)
 	assert.NotEqual(t, nil, err)
 }
 
