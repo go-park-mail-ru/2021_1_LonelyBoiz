@@ -3,7 +3,7 @@ on:
   push:
     branches: 
       - main
-      - PIC-146_NewFilters
+      - PIC-156_DeleteChat
 jobs:
   golangci:
     name: linter
