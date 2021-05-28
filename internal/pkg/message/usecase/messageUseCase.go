@@ -174,8 +174,7 @@ func (m *MessageUsecase) CreateMessage(newMessage model.Message, chatId, id int)
 	}
 
 	if !ok {
-		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
-		response.Description["chatId"] = "Пользователь вас заблокировал"
+		response := model.ErrorResponse{Err: "Вы не можете отправлять сообщения этому ползователю"}
 		return model.Message{}, 400, response
 	}
 
