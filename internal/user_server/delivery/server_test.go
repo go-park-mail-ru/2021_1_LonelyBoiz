@@ -20,6 +20,99 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+func TestBlockSecretAlbum(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+
+	server := UserServer{
+		UserUsecase: userUseCaseMock,
+		Sessions:    sessionManagerMock,
+	}
+
+	req := &http.Request{}
+
+	ctx := req.Context()
+
+	userUseCaseMock.EXPECT().GetParamFromContext(gomock.Any(), gomock.Any()).Return(1, true)
+	userUseCaseMock.EXPECT().GetParamFromContext(gomock.Any(), gomock.Any()).Return(1, true)
+	userUseCaseMock.EXPECT().BlockSecreteAlbum(1, 1).Return(200, nil)
+
+	_, err := server.BlockSecretAlbum(ctx, &user_proto.UserNothing{})
+
+	assert.Equal(t, err, nil)
+}
+
+func TestBlockSecretAlbum_cookieId_NotOk(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+
+	server := UserServer{
+		UserUsecase: userUseCaseMock,
+		Sessions:    sessionManagerMock,
+	}
+
+	req := &http.Request{}
+
+	ctx := req.Context()
+
+	userUseCaseMock.EXPECT().GetParamFromContext(gomock.Any(), gomock.Any()).Return(1, false)
+
+	_, err := server.BlockSecretAlbum(ctx, &user_proto.UserNothing{})
+
+	assert.NotEqual(t, err, nil)
+}
+
+func TestBlockSecretAlbum_getterId_NotOk(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+
+	server := UserServer{
+		UserUsecase: userUseCaseMock,
+		Sessions:    sessionManagerMock,
+	}
+
+	req := &http.Request{}
+
+	ctx := req.Context()
+
+	userUseCaseMock.EXPECT().GetParamFromContext(gomock.Any(), gomock.Any()).Return(1, true)
+	userUseCaseMock.EXPECT().GetParamFromContext(gomock.Any(), gomock.Any()).Return(1, false)
+
+	_, err := server.BlockSecretAlbum(ctx, &user_proto.UserNothing{})
+
+	assert.NotEqual(t, err, nil)
+}
+
+func TestBlockSecretAlbum_Error(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+
+	server := UserServer{
+		UserUsecase: userUseCaseMock,
+		Sessions:    sessionManagerMock,
+	}
+
+	req := &http.Request{}
+
+	ctx := req.Context()
+
+	userUseCaseMock.EXPECT().GetParamFromContext(gomock.Any(), gomock.Any()).Return(1, true)
+	userUseCaseMock.EXPECT().GetParamFromContext(gomock.Any(), gomock.Any()).Return(1, true)
+	userUseCaseMock.EXPECT().BlockSecreteAlbum(1, 1).Return(500, errors.New("Some error"))
+
+	_, err := server.BlockSecretAlbum(ctx, &user_proto.UserNothing{})
+
+	assert.NotEqual(t, err, nil)
+}
+
 func TestDeleteChat(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 
