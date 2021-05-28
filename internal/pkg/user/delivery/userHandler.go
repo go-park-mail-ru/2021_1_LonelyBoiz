@@ -28,6 +28,7 @@ type UserHandlerInterface interface {
 	// TODO:: не добавлены в proto
 	AddToSecreteAlbum(w http.ResponseWriter, r *http.Request)
 	UnblockSecreteAlbum(w http.ResponseWriter, r *http.Request)
+	BlockSecreteAlbum(w http.ResponseWriter, r *http.Request)
 	GetSecreteAlbum(w http.ResponseWriter, r *http.Request)
 
 	WsHandler(w http.ResponseWriter, r *http.Request)
@@ -54,12 +55,14 @@ func (a *UserHandler) SetHandlersWithCheckCookie(subRouter *mux.Router) {
 	subRouter.HandleFunc("/secretAlbum", a.AddToSecreteAlbum).Methods("POST")
 	// разблокировать секретный альбом
 	subRouter.HandleFunc("/unlockSecretAlbum/{getterId:[0-9]+}", a.UnblockSecreteAlbum).Methods("POST")
+	// заблокировать секретный альбом
+	subRouter.HandleFunc("/unlockSecretAlbum/{getterId:[0-9]+}", a.BlockSecreteAlbum).Methods("DELETE")
 	// посмотреть секретный альбом
 	subRouter.HandleFunc("/secretAlbum/{ownerId:[0-9]+}", a.GetSecreteAlbum).Methods("Get")
 	// открытие вэбсокетного соединения
 	subRouter.HandleFunc("/ws", a.WsHandler).Methods("GET")
 
-	// посмотреть секретный альбом
+	// удалить чат
 	subRouter.HandleFunc("/chats/{chatId:[0-9]+}", a.DeleteChat).Methods("DELETE")
 }
 

@@ -4,7 +4,7 @@ package session;
 
 
 //protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative user.proto
-option go_package= "/home/sniki/golang/proj/2021_1_LonelyBoiz/internal/user_server/delivery/proto/user.proto";
+option go_package= "/Users/nick_nak/programs/2_parkMail/2021_1_LonelyBoiz/internal/user_server/delivery/proto/user.proto";
 
 message Chat {
   int32 ChatId = 1;
@@ -123,5 +123,6 @@ service UserService {
   // secret album
   rpc AddToSecreteAlbum(User) returns (UserNothing) {}
   rpc UnlockSecretAlbum(UserNothing) returns (UserNothing) {}
+  rpc BlockSecretAlbum(UserNothing) returns (UserNothing) {}
   rpc GetSecreteAlbum(UserNothing) returns(Photos) {}
 }
