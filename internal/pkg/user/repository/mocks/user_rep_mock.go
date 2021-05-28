@@ -63,6 +63,21 @@ func (mr *MockUserRepositoryInterfaceMockRecorder) AddUser(newUser interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddUser", reflect.TypeOf((*MockUserRepositoryInterface)(nil).AddUser), newUser)
 }
 
+// BlockSecreteAlbum mocks base method.
+func (m *MockUserRepositoryInterface) BlockSecreteAlbum(ownerId, getterId int) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "BlockSecreteAlbum", ownerId, getterId)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// BlockSecreteAlbum indicates an expected call of BlockSecreteAlbum.
+func (mr *MockUserRepositoryInterfaceMockRecorder) BlockSecreteAlbum(ownerId, getterId interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BlockSecreteAlbum", reflect.TypeOf((*MockUserRepositoryInterface)(nil).BlockSecreteAlbum), ownerId, getterId)
+}
+
 // ChangePassword mocks base method.
 func (m *MockUserRepositoryInterface) ChangePassword(userId int, hash []byte) error {
 	m.ctrl.T.Helper()

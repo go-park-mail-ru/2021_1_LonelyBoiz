@@ -118,7 +118,7 @@ func (u *UserUsecase) GetSecreteAlbum(ownerId int, getterId int) ([]string, int,
 			return make([]string, 0), 500, err
 		}
 		if !ok {
-			return make([]string, 0), 403, models.ErrorResponse{Err: "Вам недоступен скрылый альбом этого пользователя"}
+			return make([]string, 0), 403, models.ErrorResponse{Err: "Вам недоступен скрытый альбом этого пользователя"}
 		}
 	}
 

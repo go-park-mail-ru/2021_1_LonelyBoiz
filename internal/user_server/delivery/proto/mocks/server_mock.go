@@ -7,7 +7,7 @@ package mock_user_proto
 import (
 	context "context"
 	reflect "reflect"
-	proto "server/internal/user_server/delivery/proto"
+	user_proto "server/internal/user_server/delivery/proto"
 
 	gomock "github.com/golang/mock/gomock"
 	grpc "google.golang.org/grpc"
@@ -37,14 +37,14 @@ func (m *MockUserServiceClient) EXPECT() *MockUserServiceClientMockRecorder {
 }
 
 // AddToSecreteAlbum mocks base method.
-func (m *MockUserServiceClient) AddToSecreteAlbum(ctx context.Context, in *proto.User, opts ...grpc.CallOption) (*proto.UserNothing, error) {
+func (m *MockUserServiceClient) AddToSecreteAlbum(ctx context.Context, in *user_proto.User, opts ...grpc.CallOption) (*user_proto.UserNothing, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "AddToSecreteAlbum", varargs...)
-	ret0, _ := ret[0].(*proto.UserNothing)
+	ret0, _ := ret[0].(*user_proto.UserNothing)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -56,15 +56,35 @@ func (mr *MockUserServiceClientMockRecorder) AddToSecreteAlbum(ctx, in interface
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddToSecreteAlbum", reflect.TypeOf((*MockUserServiceClient)(nil).AddToSecreteAlbum), varargs...)
 }
 
+// BlockSecretAlbum mocks base method.
+func (m *MockUserServiceClient) BlockSecretAlbum(ctx context.Context, in *user_proto.UserNothing, opts ...grpc.CallOption) (*user_proto.UserNothing, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{ctx, in}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "BlockSecretAlbum", varargs...)
+	ret0, _ := ret[0].(*user_proto.UserNothing)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// BlockSecretAlbum indicates an expected call of BlockSecretAlbum.
+func (mr *MockUserServiceClientMockRecorder) BlockSecretAlbum(ctx, in interface{}, opts ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{ctx, in}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BlockSecretAlbum", reflect.TypeOf((*MockUserServiceClient)(nil).BlockSecretAlbum), varargs...)
+}
+
 // ChangeMessage mocks base method.
-func (m *MockUserServiceClient) ChangeMessage(ctx context.Context, in *proto.Message, opts ...grpc.CallOption) (*proto.Message, error) {
+func (m *MockUserServiceClient) ChangeMessage(ctx context.Context, in *user_proto.Message, opts ...grpc.CallOption) (*user_proto.Message, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "ChangeMessage", varargs...)
-	ret0, _ := ret[0].(*proto.Message)
+	ret0, _ := ret[0].(*user_proto.Message)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -77,14 +97,14 @@ func (mr *MockUserServiceClientMockRecorder) ChangeMessage(ctx, in interface{}, 
 }
 
 // ChangeUser mocks base method.
-func (m *MockUserServiceClient) ChangeUser(ctx context.Context, in *proto.User, opts ...grpc.CallOption) (*proto.User, error) {
+func (m *MockUserServiceClient) ChangeUser(ctx context.Context, in *user_proto.User, opts ...grpc.CallOption) (*user_proto.User, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "ChangeUser", varargs...)
-	ret0, _ := ret[0].(*proto.User)
+	ret0, _ := ret[0].(*user_proto.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -97,14 +117,14 @@ func (mr *MockUserServiceClientMockRecorder) ChangeUser(ctx, in interface{}, opt
 }
 
 // CheckUser mocks base method.
-func (m *MockUserServiceClient) CheckUser(ctx context.Context, in *proto.UserLogin, opts ...grpc.CallOption) (*proto.UserResponse, error) {
+func (m *MockUserServiceClient) CheckUser(ctx context.Context, in *user_proto.UserLogin, opts ...grpc.CallOption) (*user_proto.UserResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "CheckUser", varargs...)
-	ret0, _ := ret[0].(*proto.UserResponse)
+	ret0, _ := ret[0].(*user_proto.UserResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -117,14 +137,14 @@ func (mr *MockUserServiceClientMockRecorder) CheckUser(ctx, in interface{}, opts
 }
 
 // CreateChat mocks base method.
-func (m *MockUserServiceClient) CreateChat(ctx context.Context, in *proto.Like, opts ...grpc.CallOption) (*proto.Chat, error) {
+func (m *MockUserServiceClient) CreateChat(ctx context.Context, in *user_proto.Like, opts ...grpc.CallOption) (*user_proto.Chat, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "CreateChat", varargs...)
-	ret0, _ := ret[0].(*proto.Chat)
+	ret0, _ := ret[0].(*user_proto.Chat)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -137,14 +157,14 @@ func (mr *MockUserServiceClientMockRecorder) CreateChat(ctx, in interface{}, opt
 }
 
 // CreateFeed mocks base method.
-func (m *MockUserServiceClient) CreateFeed(ctx context.Context, in *proto.UserNothing, opts ...grpc.CallOption) (*proto.Feed, error) {
+func (m *MockUserServiceClient) CreateFeed(ctx context.Context, in *user_proto.UserNothing, opts ...grpc.CallOption) (*user_proto.Feed, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "CreateFeed", varargs...)
-	ret0, _ := ret[0].(*proto.Feed)
+	ret0, _ := ret[0].(*user_proto.Feed)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -157,14 +177,14 @@ func (mr *MockUserServiceClientMockRecorder) CreateFeed(ctx, in interface{}, opt
 }
 
 // CreateMessage mocks base method.
-func (m *MockUserServiceClient) CreateMessage(ctx context.Context, in *proto.Message, opts ...grpc.CallOption) (*proto.Message, error) {
+func (m *MockUserServiceClient) CreateMessage(ctx context.Context, in *user_proto.Message, opts ...grpc.CallOption) (*user_proto.Message, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "CreateMessage", varargs...)
-	ret0, _ := ret[0].(*proto.Message)
+	ret0, _ := ret[0].(*user_proto.Message)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -177,14 +197,14 @@ func (mr *MockUserServiceClientMockRecorder) CreateMessage(ctx, in interface{}, 
 }
 
 // CreateUser mocks base method.
-func (m *MockUserServiceClient) CreateUser(ctx context.Context, in *proto.User, opts ...grpc.CallOption) (*proto.UserResponse, error) {
+func (m *MockUserServiceClient) CreateUser(ctx context.Context, in *user_proto.User, opts ...grpc.CallOption) (*user_proto.UserResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "CreateUser", varargs...)
-	ret0, _ := ret[0].(*proto.UserResponse)
+	ret0, _ := ret[0].(*user_proto.UserResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -197,14 +217,14 @@ func (mr *MockUserServiceClientMockRecorder) CreateUser(ctx, in interface{}, opt
 }
 
 // DeleteChat mocks base method.
-func (m *MockUserServiceClient) DeleteChat(ctx context.Context, in *proto.UserNothing, opts ...grpc.CallOption) (*proto.UserNothing, error) {
+func (m *MockUserServiceClient) DeleteChat(ctx context.Context, in *user_proto.UserNothing, opts ...grpc.CallOption) (*user_proto.UserNothing, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "DeleteChat", varargs...)
-	ret0, _ := ret[0].(*proto.UserNothing)
+	ret0, _ := ret[0].(*user_proto.UserNothing)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -217,14 +237,14 @@ func (mr *MockUserServiceClientMockRecorder) DeleteChat(ctx, in interface{}, opt
 }
 
 // DeleteUser mocks base method.
-func (m *MockUserServiceClient) DeleteUser(ctx context.Context, in *proto.UserNothing, opts ...grpc.CallOption) (*proto.UserNothing, error) {
+func (m *MockUserServiceClient) DeleteUser(ctx context.Context, in *user_proto.UserNothing, opts ...grpc.CallOption) (*user_proto.UserNothing, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "DeleteUser", varargs...)
-	ret0, _ := ret[0].(*proto.UserNothing)
+	ret0, _ := ret[0].(*user_proto.UserNothing)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -237,14 +257,14 @@ func (mr *MockUserServiceClientMockRecorder) DeleteUser(ctx, in interface{}, opt
 }
 
 // GetChats mocks base method.
-func (m *MockUserServiceClient) GetChats(ctx context.Context, in *proto.UserNothing, opts ...grpc.CallOption) (*proto.ChatsResponse, error) {
+func (m *MockUserServiceClient) GetChats(ctx context.Context, in *user_proto.UserNothing, opts ...grpc.CallOption) (*user_proto.ChatsResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "GetChats", varargs...)
-	ret0, _ := ret[0].(*proto.ChatsResponse)
+	ret0, _ := ret[0].(*user_proto.ChatsResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -257,14 +277,14 @@ func (mr *MockUserServiceClientMockRecorder) GetChats(ctx, in interface{}, opts 
 }
 
 // GetMessages mocks base method.
-func (m *MockUserServiceClient) GetMessages(ctx context.Context, in *proto.UserNothing, opts ...grpc.CallOption) (*proto.MessagesResponse, error) {
+func (m *MockUserServiceClient) GetMessages(ctx context.Context, in *user_proto.UserNothing, opts ...grpc.CallOption) (*user_proto.MessagesResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "GetMessages", varargs...)
-	ret0, _ := ret[0].(*proto.MessagesResponse)
+	ret0, _ := ret[0].(*user_proto.MessagesResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -277,14 +297,14 @@ func (mr *MockUserServiceClientMockRecorder) GetMessages(ctx, in interface{}, op
 }
 
 // GetSecreteAlbum mocks base method.
-func (m *MockUserServiceClient) GetSecreteAlbum(ctx context.Context, in *proto.UserNothing, opts ...grpc.CallOption) (*proto.Photos, error) {
+func (m *MockUserServiceClient) GetSecreteAlbum(ctx context.Context, in *user_proto.UserNothing, opts ...grpc.CallOption) (*user_proto.Photos, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "GetSecreteAlbum", varargs...)
-	ret0, _ := ret[0].(*proto.Photos)
+	ret0, _ := ret[0].(*user_proto.Photos)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -297,14 +317,14 @@ func (mr *MockUserServiceClientMockRecorder) GetSecreteAlbum(ctx, in interface{}
 }
 
 // GetUserById mocks base method.
-func (m *MockUserServiceClient) GetUserById(ctx context.Context, in *proto.UserNothing, opts ...grpc.CallOption) (*proto.User, error) {
+func (m *MockUserServiceClient) GetUserById(ctx context.Context, in *user_proto.UserNothing, opts ...grpc.CallOption) (*user_proto.User, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "GetUserById", varargs...)
-	ret0, _ := ret[0].(*proto.User)
+	ret0, _ := ret[0].(*user_proto.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -317,14 +337,14 @@ func (mr *MockUserServiceClientMockRecorder) GetUserById(ctx, in interface{}, op
 }
 
 // UnlockSecretAlbum mocks base method.
-func (m *MockUserServiceClient) UnlockSecretAlbum(ctx context.Context, in *proto.UserNothing, opts ...grpc.CallOption) (*proto.UserNothing, error) {
+func (m *MockUserServiceClient) UnlockSecretAlbum(ctx context.Context, in *user_proto.UserNothing, opts ...grpc.CallOption) (*user_proto.UserNothing, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "UnlockSecretAlbum", varargs...)
-	ret0, _ := ret[0].(*proto.UserNothing)
+	ret0, _ := ret[0].(*user_proto.UserNothing)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -360,10 +380,10 @@ func (m *MockUserServiceServer) EXPECT() *MockUserServiceServerMockRecorder {
 }
 
 // AddToSecreteAlbum mocks base method.
-func (m *MockUserServiceServer) AddToSecreteAlbum(arg0 context.Context, arg1 *proto.User) (*proto.UserNothing, error) {
+func (m *MockUserServiceServer) AddToSecreteAlbum(arg0 context.Context, arg1 *user_proto.User) (*user_proto.UserNothing, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddToSecreteAlbum", arg0, arg1)
-	ret0, _ := ret[0].(*proto.UserNothing)
+	ret0, _ := ret[0].(*user_proto.UserNothing)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -374,11 +394,26 @@ func (mr *MockUserServiceServerMockRecorder) AddToSecreteAlbum(arg0, arg1 interf
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddToSecreteAlbum", reflect.TypeOf((*MockUserServiceServer)(nil).AddToSecreteAlbum), arg0, arg1)
 }
 
+// BlockSecretAlbum mocks base method.
+func (m *MockUserServiceServer) BlockSecretAlbum(arg0 context.Context, arg1 *user_proto.UserNothing) (*user_proto.UserNothing, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "BlockSecretAlbum", arg0, arg1)
+	ret0, _ := ret[0].(*user_proto.UserNothing)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// BlockSecretAlbum indicates an expected call of BlockSecretAlbum.
+func (mr *MockUserServiceServerMockRecorder) BlockSecretAlbum(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BlockSecretAlbum", reflect.TypeOf((*MockUserServiceServer)(nil).BlockSecretAlbum), arg0, arg1)
+}
+
 // ChangeMessage mocks base method.
-func (m *MockUserServiceServer) ChangeMessage(arg0 context.Context, arg1 *proto.Message) (*proto.Message, error) {
+func (m *MockUserServiceServer) ChangeMessage(arg0 context.Context, arg1 *user_proto.Message) (*user_proto.Message, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ChangeMessage", arg0, arg1)
-	ret0, _ := ret[0].(*proto.Message)
+	ret0, _ := ret[0].(*user_proto.Message)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -390,10 +425,10 @@ func (mr *MockUserServiceServerMockRecorder) ChangeMessage(arg0, arg1 interface{
 }
 
 // ChangeUser mocks base method.
-func (m *MockUserServiceServer) ChangeUser(arg0 context.Context, arg1 *proto.User) (*proto.User, error) {
+func (m *MockUserServiceServer) ChangeUser(arg0 context.Context, arg1 *user_proto.User) (*user_proto.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ChangeUser", arg0, arg1)
-	ret0, _ := ret[0].(*proto.User)
+	ret0, _ := ret[0].(*user_proto.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -405,10 +440,10 @@ func (mr *MockUserServiceServerMockRecorder) ChangeUser(arg0, arg1 interface{}) 
 }
 
 // CheckUser mocks base method.
-func (m *MockUserServiceServer) CheckUser(arg0 context.Context, arg1 *proto.UserLogin) (*proto.UserResponse, error) {
+func (m *MockUserServiceServer) CheckUser(arg0 context.Context, arg1 *user_proto.UserLogin) (*user_proto.UserResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CheckUser", arg0, arg1)
-	ret0, _ := ret[0].(*proto.UserResponse)
+	ret0, _ := ret[0].(*user_proto.UserResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -420,10 +455,10 @@ func (mr *MockUserServiceServerMockRecorder) CheckUser(arg0, arg1 interface{}) *
 }
 
 // CreateChat mocks base method.
-func (m *MockUserServiceServer) CreateChat(arg0 context.Context, arg1 *proto.Like) (*proto.Chat, error) {
+func (m *MockUserServiceServer) CreateChat(arg0 context.Context, arg1 *user_proto.Like) (*user_proto.Chat, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateChat", arg0, arg1)
-	ret0, _ := ret[0].(*proto.Chat)
+	ret0, _ := ret[0].(*user_proto.Chat)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -435,10 +470,10 @@ func (mr *MockUserServiceServerMockRecorder) CreateChat(arg0, arg1 interface{}) 
 }
 
 // CreateFeed mocks base method.
-func (m *MockUserServiceServer) CreateFeed(arg0 context.Context, arg1 *proto.UserNothing) (*proto.Feed, error) {
+func (m *MockUserServiceServer) CreateFeed(arg0 context.Context, arg1 *user_proto.UserNothing) (*user_proto.Feed, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateFeed", arg0, arg1)
-	ret0, _ := ret[0].(*proto.Feed)
+	ret0, _ := ret[0].(*user_proto.Feed)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -450,10 +485,10 @@ func (mr *MockUserServiceServerMockRecorder) CreateFeed(arg0, arg1 interface{}) 
 }
 
 // CreateMessage mocks base method.
-func (m *MockUserServiceServer) CreateMessage(arg0 context.Context, arg1 *proto.Message) (*proto.Message, error) {
+func (m *MockUserServiceServer) CreateMessage(arg0 context.Context, arg1 *user_proto.Message) (*user_proto.Message, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateMessage", arg0, arg1)
-	ret0, _ := ret[0].(*proto.Message)
+	ret0, _ := ret[0].(*user_proto.Message)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -465,10 +500,10 @@ func (mr *MockUserServiceServerMockRecorder) CreateMessage(arg0, arg1 interface{
 }
 
 // CreateUser mocks base method.
-func (m *MockUserServiceServer) CreateUser(arg0 context.Context, arg1 *proto.User) (*proto.UserResponse, error) {
+func (m *MockUserServiceServer) CreateUser(arg0 context.Context, arg1 *user_proto.User) (*user_proto.UserResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateUser", arg0, arg1)
-	ret0, _ := ret[0].(*proto.UserResponse)
+	ret0, _ := ret[0].(*user_proto.UserResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -480,10 +515,10 @@ func (mr *MockUserServiceServerMockRecorder) CreateUser(arg0, arg1 interface{}) 
 }
 
 // DeleteChat mocks base method.
-func (m *MockUserServiceServer) DeleteChat(arg0 context.Context, arg1 *proto.UserNothing) (*proto.UserNothing, error) {
+func (m *MockUserServiceServer) DeleteChat(arg0 context.Context, arg1 *user_proto.UserNothing) (*user_proto.UserNothing, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteChat", arg0, arg1)
-	ret0, _ := ret[0].(*proto.UserNothing)
+	ret0, _ := ret[0].(*user_proto.UserNothing)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -495,10 +530,10 @@ func (mr *MockUserServiceServerMockRecorder) DeleteChat(arg0, arg1 interface{}) 
 }
 
 // DeleteUser mocks base method.
-func (m *MockUserServiceServer) DeleteUser(arg0 context.Context, arg1 *proto.UserNothing) (*proto.UserNothing, error) {
+func (m *MockUserServiceServer) DeleteUser(arg0 context.Context, arg1 *user_proto.UserNothing) (*user_proto.UserNothing, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteUser", arg0, arg1)
-	ret0, _ := ret[0].(*proto.UserNothing)
+	ret0, _ := ret[0].(*user_proto.UserNothing)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -510,10 +545,10 @@ func (mr *MockUserServiceServerMockRecorder) DeleteUser(arg0, arg1 interface{}) 
 }
 
 // GetChats mocks base method.
-func (m *MockUserServiceServer) GetChats(arg0 context.Context, arg1 *proto.UserNothing) (*proto.ChatsResponse, error) {
+func (m *MockUserServiceServer) GetChats(arg0 context.Context, arg1 *user_proto.UserNothing) (*user_proto.ChatsResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetChats", arg0, arg1)
-	ret0, _ := ret[0].(*proto.ChatsResponse)
+	ret0, _ := ret[0].(*user_proto.ChatsResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -525,10 +560,10 @@ func (mr *MockUserServiceServerMockRecorder) GetChats(arg0, arg1 interface{}) *g
 }
 
 // GetMessages mocks base method.
-func (m *MockUserServiceServer) GetMessages(arg0 context.Context, arg1 *proto.UserNothing) (*proto.MessagesResponse, error) {
+func (m *MockUserServiceServer) GetMessages(arg0 context.Context, arg1 *user_proto.UserNothing) (*user_proto.MessagesResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetMessages", arg0, arg1)
-	ret0, _ := ret[0].(*proto.MessagesResponse)
+	ret0, _ := ret[0].(*user_proto.MessagesResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -540,10 +575,10 @@ func (mr *MockUserServiceServerMockRecorder) GetMessages(arg0, arg1 interface{})
 }
 
 // GetSecreteAlbum mocks base method.
-func (m *MockUserServiceServer) GetSecreteAlbum(arg0 context.Context, arg1 *proto.UserNothing) (*proto.Photos, error) {
+func (m *MockUserServiceServer) GetSecreteAlbum(arg0 context.Context, arg1 *user_proto.UserNothing) (*user_proto.Photos, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetSecreteAlbum", arg0, arg1)
-	ret0, _ := ret[0].(*proto.Photos)
+	ret0, _ := ret[0].(*user_proto.Photos)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -555,10 +590,10 @@ func (mr *MockUserServiceServerMockRecorder) GetSecreteAlbum(arg0, arg1 interfac
 }
 
 // GetUserById mocks base method.
-func (m *MockUserServiceServer) GetUserById(arg0 context.Context, arg1 *proto.UserNothing) (*proto.User, error) {
+func (m *MockUserServiceServer) GetUserById(arg0 context.Context, arg1 *user_proto.UserNothing) (*user_proto.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetUserById", arg0, arg1)
-	ret0, _ := ret[0].(*proto.User)
+	ret0, _ := ret[0].(*user_proto.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -570,10 +605,10 @@ func (mr *MockUserServiceServerMockRecorder) GetUserById(arg0, arg1 interface{})
 }
 
 // UnlockSecretAlbum mocks base method.
-func (m *MockUserServiceServer) UnlockSecretAlbum(arg0 context.Context, arg1 *proto.UserNothing) (*proto.UserNothing, error) {
+func (m *MockUserServiceServer) UnlockSecretAlbum(arg0 context.Context, arg1 *user_proto.UserNothing) (*user_proto.UserNothing, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UnlockSecretAlbum", arg0, arg1)
-	ret0, _ := ret[0].(*proto.UserNothing)
+	ret0, _ := ret[0].(*user_proto.UserNothing)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

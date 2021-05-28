@@ -69,6 +69,21 @@ func (mr *MockUserUseCaseInterfaceMockRecorder) AddToSecreteAlbum(ownerId, photo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddToSecreteAlbum", reflect.TypeOf((*MockUserUseCaseInterface)(nil).AddToSecreteAlbum), ownerId, photos)
 }
 
+// BlockSecreteAlbum mocks base method.
+func (m *MockUserUseCaseInterface) BlockSecreteAlbum(ownerId, getterId int) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "BlockSecreteAlbum", ownerId, getterId)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// BlockSecreteAlbum indicates an expected call of BlockSecreteAlbum.
+func (mr *MockUserUseCaseInterfaceMockRecorder) BlockSecreteAlbum(ownerId, getterId interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BlockSecreteAlbum", reflect.TypeOf((*MockUserUseCaseInterface)(nil).BlockSecreteAlbum), ownerId, getterId)
+}
+
 // ChangeUserInfo mocks base method.
 func (m *MockUserUseCaseInterface) ChangeUserInfo(newUser models.User, id int) (models.User, int, error) {
 	m.ctrl.T.Helper()
