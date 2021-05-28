@@ -35,22 +35,22 @@ CREATE TABLE photos(
     photoId SERIAL PRIMARY KEY,
     photoUuid UUID UNIQUE NOT NULL,
     userId INT,
-    FOREIGN KEY (userId) REFERENCES users (id)
+    FOREIGN KEY (userId) REFERENCES users (id) ON DELETE CASCADE
 );
 CREATE TABLE chats (
     Id SERIAL PRIMARY KEY,
     userId1 INT,
-    FOREIGN KEY (userId1) REFERENCES users (id),
+    FOREIGN KEY (userId1) REFERENCES users (id) ON DELETE CASCADE,
     userId2 INT,
-    FOREIGN KEY (userId2) REFERENCES users (id),
+    FOREIGN KEY (userId2) REFERENCES users (id) ON DELETE CASCADE,
     isOpened BOOLEAN DEFAULT FALSE
 );
 CREATE TABLE messages (
     messageId SERIAL PRIMARY KEY,
     chatId INT,
-    FOREIGN KEY (chatId) REFERENCES chats (id),
+    FOREIGN KEY (chatId) REFERENCES chats (id) ON DELETE CASCADE,
     authorId INT,
-    FOREIGN KEY (authorId) REFERENCES users (id),
+    FOREIGN KEY (authorId) REFERENCES users (id) ON DELETE CASCADE,
     text varchar(200) DEFAULT 'empty',
     time INT,
     reaction int DEFAULT -1,
@@ -58,14 +58,14 @@ CREATE TABLE messages (
 );
 CREATE TABLE feed (
     userId1 INT,
-    FOREIGN KEY (userId1) REFERENCES users (id),
+    FOREIGN KEY (userId1) REFERENCES users (id) ON DELETE CASCADE,
     userId2 INT,
-    FOREIGN KEY (userId2) REFERENCES users (id),
+    FOREIGN KEY (userId2) REFERENCES users (id) ON DELETE CASCADE,
     rating varchar(10) DEFAULT 'empty'
 );
 CREATE TABLE sessions (
     userId INT,
-    FOREIGN KEY (userId) REFERENCES users (id),
+    FOREIGN KEY (userId) REFERENCES users (id) ON DELETE CASCADE,
     token varchar(40) NOT NULL UNIQUE,
     expiration INT
 );
@@ -73,11 +73,11 @@ CREATE TABLE secretPhotos(
     photoId SERIAL PRIMARY KEY,
     photos varchar(50) [] DEFAULT array []::varchar [],
     userId INT,
-    FOREIGN KEY (userId) REFERENCES users (id)
+    FOREIGN KEY (userId) REFERENCES users (id) ON DELETE CASCADE
 );
 CREATE TABLE secretPermission(
     ownerId INT,
-    FOREIGN KEY (ownerId) REFERENCES users (id),
+    FOREIGN KEY (ownerId) REFERENCES users (id) ON DELETE CASCADE,
     getterId INT,
-    FOREIGN KEY (getterId) REFERENCES users (id)
+    FOREIGN KEY (getterId) REFERENCES users (id) ON DELETE CASCADE
 );
