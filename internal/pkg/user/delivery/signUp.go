@@ -1,113 +1,34 @@
 package delivery
 
 import (
-	"encoding/json"
-	"github.com/google/uuid"
-	"io/ioutil"
-	"os"
+	"google.golang.org/grpc/status"
 
 	"net/http"
-	"reflect"
 	"server/internal/pkg/models"
-	model "server/internal/pkg/models"
 )
-
-func (a *UserHandler) captchCheck(response string) (bool, error) {
-	url := "https://www.google.com/recaptcha/api/siteverify"
-
-	client := &http.Client{}
-	req, err := http.NewRequest("POST", url, nil)
-	if err != nil {
-		return false, err
-	}
-
-	q := req.URL.Query()
-	q.Add("secret", os.Getenv("CAPTCHA"))
-	q.Add("response", response)
-	req.URL.RawQuery = q.Encode()
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return false, err
-	}
-	defer resp.Body.Close()
-
-	var googleResponse models.GoogleCaptcha
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return false, err
-	}
-	err = json.Unmarshal(body, &googleResponse)
-	if err != nil {
-		return false, err
-	}
-
-	if googleResponse.ErrorCodes != nil {
-		a.UserCase.Logger.Error(googleResponse.ErrorCodes)
-	}
-
-	return googleResponse.Success, nil
-}
 
 func (a *UserHandler) SignUp(w http.ResponseWriter, r *http.Request) {
 	newUser, err := a.UserCase.ParseJsonToUser(r.Body)
 	if err != nil {
-		a.UserCase.Logger.Logger.Error(err)
-		response := model.ErrorResponse{Err: "Не удалось прочитать тело запроса"}
-		model.ResponseWithJson(w, 400, response)
+		response := models.ErrorResponse{Err: "Не удалось прочитать тело запроса"}
+		models.Process(models.LoggerFunc(response.Err, a.UserCase.LogInfo), models.ResponseFunc(w, 400, response), models.MetricFunc(401, r, response))
 		return
 	}
 
-	ok, err := a.captchCheck(newUser.CaptchaToken)
+	a.UserCase.LogInfo("Передано на сервер USER")
+	userResponse, err := a.Server.CreateUser(r.Context(), a.UserCase.User2ProtoUser(newUser))
 	if err != nil {
-		a.UserCase.Logger.Logger.Error(err)
-		model.ResponseWithJson(w, 500, nil)
-		return
+		st, _ := status.FromError(err)
+		if st.Code() != 200 {
+			models.Process(models.LoggerFunc(st.Message(), a.UserCase.LogError), models.ResponseFunc(w, int(st.Code()), st.Message()), models.MetricFunc(int(st.Code()), r, st.Err()))
+			return
+		}
 	}
-	if !ok {
-		response := model.ErrorResponse{Err: "Не удалось пройти капчу"}
-		model.ResponseWithJson(w, 400, response)
-		return
-	}
+	a.UserCase.LogInfo("Получен результат из сервера USER")
+	println(userResponse.GetToken())
 
-	if response := a.UserCase.ValidateSignUpData(newUser); response != nil {
-		model.ResponseWithJson(w, 400, response)
-		a.UserCase.Logger.Info(model.UserErrorInvalidData)
-		return
-	}
+	cookie := a.UserCase.SetCookie(userResponse.GetToken())
+	http.SetCookie(w, &cookie)
 
-	isSignedUp, response := a.UserCase.IsAlreadySignedUp(newUser.Email)
-	if response != nil && reflect.TypeOf(response) != reflect.TypeOf(model.ErrorDescriptionResponse{}) {
-		a.UserCase.Logger.Logger.Error(err)
-		model.ResponseWithJson(w, 500, nil)
-		return
-	}
-	if isSignedUp {
-		a.UserCase.Logger.Info("Already Signed Up")
-		model.ResponseWithJson(w, 400, response)
-		return
-	}
-
-	err = a.UserCase.AddNewUser(&newUser)
-	if err != nil {
-		a.UserCase.Logger.Logger.Error(err)
-		model.ResponseWithJson(w, 500, nil)
-		return
-	}
-
-	err = a.Sessions.SetSession(w, newUser.Id)
-	if err != nil {
-		a.UserCase.Logger.Error(err)
-		model.ResponseWithJson(w, 500, nil)
-		return
-	}
-
-	newUser.Password = ""
-	newUser.SecondPassword = ""
-	newUser.PasswordHash = nil
-	if len(newUser.Photos) == 0 {
-		newUser.Photos = make([]uuid.UUID, 0)
-	}
-	model.ResponseWithJson(w, 200, newUser)
-	a.UserCase.Logger.Info("Success SignUp")
+	models.Process(models.LoggerFunc("Success SignUp", a.UserCase.LogInfo), models.ResponseFunc(w, 200, a.UserCase.ProtoUser2User(userResponse.GetUser())), models.MetricFunc(200, r, nil))
 }

@@ -4,13 +4,16 @@ import (
 	"bytes"
 	"database/sql"
 	"errors"
+	"fmt"
+	"server/internal/pkg/models"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/google/uuid"
+	_ "github.com/jackc/pgx/stdlib"
 	"github.com/jmoiron/sqlx"
-	"server/internal/pkg/models"
 )
 
 var (
@@ -42,6 +45,7 @@ type AwsImageRepository struct {
 
 func (r *PostgresRepository) AddImage(userId int, uuid uuid.UUID) (models.Image, error) {
 	_, err := r.Db.Exec("INSERT INTO photos (photoUuid, userId) VALUES ($1, $2)", uuid, userId)
+	fmt.Println(err)
 	if err == sql.ErrConnDone {
 		return models.Image{}, ErrRepositoryConnection
 	} else if err != nil {

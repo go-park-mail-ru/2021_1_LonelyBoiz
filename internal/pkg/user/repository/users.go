@@ -3,23 +3,170 @@ package repository
 import (
 	"database/sql"
 	"errors"
-	"fmt"
-	"github.com/google/uuid"
 	model "server/internal/pkg/models"
+
+	"github.com/lib/pq"
 
 	"github.com/jmoiron/sqlx"
 
 	_ "github.com/jackc/pgx/stdlib"
 )
 
+type UserRepositoryInterface interface {
+	AddUser(newUser model.User) (int, error)
+	GetUser(id int) (model.User, error)
+	DeleteUser(id int) error
+	ChangeUser(newUser model.User) error
+	CheckMail(email string) (bool, error)
+	GetPassWithEmail(email string) ([]byte, error)
+	GetPassWithId(id int) ([]byte, error)
+	SignIn(email string) (model.User, error)
+	ChangePassword(userId int, hash []byte) error
+
+	//фотки
+	GetPhotos(userId int) ([]string, error)
+
+	//чат
+	CreateChat(userId1 int, userId2 int) (int, error)
+	GetNewChatById(chatId int, userId int) (model.Chat, error)
+	GetChatById(chatId int, userId int) (model.Chat, error)
+	DeleteChat(id int) error
+
+	//лента
+	ClearFeed(userId int) error
+	CleanFeed(userId int) error
+	CreateFeed(userId int) error
+	GetFeed(userId int, limit int) ([]int, error)
+
+	//уеньшить количесвто скроллов
+	ReduceScrolls(userId int) (int, error)
+
+	//реакция
+	Rating(userIdFrom int, userIdTo int, reaction string) (int64, error)
+	CheckReciprocity(userId1 int, userId2 int) (bool, error)
+	//добавить скролов в ленту
+	UpdatePayment(userId int, amount int) error
+
+	// секретный альбом
+	UnblockSecreteAlbum(ownerId int, getterId int) error
+	BlockSecreteAlbum(ownerId int, getterId int) (bool, error)
+	CheckPermission(ownerId int, getterId int) (bool, error)
+	GetSecretePhotos(ownerId int) ([]string, error)
+	AddToSecreteAlbum(ownerId int, photos []string) error
+	CreateSecretAlbum(id int) error
+}
+
 type UserRepository struct {
 	DB *sqlx.DB
 }
 
+func (repo *UserRepository) BlockSecreteAlbum(ownerId int, getterId int) (bool, error) {
+	res, err := repo.DB.Exec(
+		`DELETE FROM secretpermission WHERE (ownerid = $1 AND getterid = $2)`,
+		ownerId, getterId)
+
+	if err != nil {
+		return false, err
+	}
+
+	count, err := res.RowsAffected()
+	if err != nil {
+		return false, nil
+	}
+
+	if count == 0 {
+		return false, nil
+	}
+
+	return true, nil
+}
+
+func (repo *UserRepository) ReduceScrolls(userId int) (int, error) {
+	var amount int
+	err := repo.DB.QueryRow(
+		`UPDATE users SET scrolls = (scrolls - 1)
+  			WHERE id = $1
+  		RETURNING scrolls;`,
+		userId,
+	).Scan(&amount)
+	if err != nil {
+		return -1, err
+	}
+
+	return amount, nil
+}
+
+func (repo *UserRepository) UpdatePayment(userId int, amount int) error {
+	_, err := repo.DB.Exec(
+		`UPDATE users
+			SET scrolls = case
+        		when scrolls < 1 then $1
+        		when scrolls > 0 then scrolls + $1
+    		end
+		WHERE id = $2;`,
+		amount, userId,
+	)
+
+	return err
+}
+
+func (repo *UserRepository) AddToSecreteAlbum(ownerId int, photos []string) error {
+	_, err := repo.DB.Exec(
+		`UPDATE secretPhotos set photos=$1 WHERE userId = $2`,
+		pq.Array(photos), ownerId)
+
+	return err
+}
+
+func (repo *UserRepository) GetSecretePhotos(ownerId int) ([]string, error) {
+	var photos []pq.StringArray
+	err := repo.DB.Select(&photos,
+		`SELECT photos FROM secretPhotos WHERE userId = $1`,
+		ownerId)
+	if err != nil {
+		return nil, err
+	}
+	if len(photos) == 0 {
+		return make([]string, 0), nil
+	}
+
+	return photos[0], nil
+}
+
+func (repo *UserRepository) CheckPermission(ownerId int, getterId int) (bool, error) {
+	var ids []int
+	err := repo.DB.Select(&ids,
+		`SELECT ownerId FROM secretPermission WHERE ownerId = $1 AND getterId = $2`,
+		ownerId, getterId)
+	if err != nil {
+		return false, err
+	}
+	if len(ids) == 0 {
+		return false, nil
+	}
+
+	return true, nil
+}
+
+func (repo *UserRepository) CreateSecretAlbum(id int) error {
+	_, err := repo.DB.Exec(
+		`INSERT INTO secretPhotos (userId) Values ($1)`,
+		id)
+	return err
+}
+
+func (repo *UserRepository) UnblockSecreteAlbum(ownerId int, getterId int) error {
+	_, err := repo.DB.Exec(
+		`INSERT INTO secretPermission (ownerId, getterId) Values ($1, $2)`,
+		ownerId, getterId)
+	return err
+}
+
 func (repo *UserRepository) AddUser(newUser model.User) (int, error) {
 	var id int
+	newUser.Photos = make([]string, 0)
 
-	err := repo.DB.QueryRowx(
+	err := repo.DB.QueryRow(
 		`INSERT INTO users (
 			email, 
 			name,
@@ -31,7 +178,8 @@ func (repo *UserRepository) AddUser(newUser model.User) (int, error) {
 			datePreference,
 			isActive,
 			isDeleted,
-			instagram
+			instagram,
+			photos
 		) VALUES (
 			$1, 
 			$2,
@@ -43,7 +191,8 @@ func (repo *UserRepository) AddUser(newUser model.User) (int, error) {
 			$8,
 			$9,
 			$10,
-			$11
+			$11,
+			$12
 		) RETURNING id`,
 		newUser.Email,
 		newUser.Name,
@@ -56,6 +205,7 @@ func (repo *UserRepository) AddUser(newUser model.User) (int, error) {
 		newUser.IsActive,
 		newUser.IsDeleted,
 		newUser.Instagram,
+		pq.Array(newUser.Photos),
 	).Scan(&id)
 	if err != nil {
 		return -1, err
@@ -77,7 +227,17 @@ func (repo *UserRepository) GetUser(id int) (model.User, error) {
     		sex,
     		datepreference,
     		isactive,
-    		isdeleted
+    		isdeleted,
+			COALESCE(photos, '{}') AS photos,
+			height,
+			partnerHeightTop,
+			partnerHeightBot,
+			weight,
+			partnerWeightTop,
+			partnerWeightBot,
+			partnerAgeTop,
+			partnerAgeBot,
+			COALESCE(interests, '{}') AS interests
 		FROM users WHERE id = $1`,
 		id)
 	if err != nil {
@@ -87,16 +247,23 @@ func (repo *UserRepository) GetUser(id int) (model.User, error) {
 		return model.User{}, sql.ErrNoRows
 	}
 
-	err = repo.DB.Select(&user[0].Photos, `SELECT photoUuid FROM photos WHERE userid = $1`, id)
-	if err != nil {
-		fmt.Println(err)
-		return model.User{}, err
-	}
 	if len(user[0].Photos) == 0 {
-		user[0].Photos = make([]uuid.UUID, 0)
+		user[0].Photos = make([]string, 0)
+	}
+	if len(user[0].Interests) == 0 {
+		user[0].Interests = make(pq.Int64Array, 0)
 	}
 
 	return user[0], nil
+}
+
+func (repo *UserRepository) DeleteChat(id int) error {
+	_, err := repo.DB.Exec(
+		`DELETE FROM chats where id = $1`,
+		id,
+	)
+
+	return err
 }
 
 func (repo *UserRepository) DeleteUser(id int) error {
@@ -115,11 +282,19 @@ func (repo *UserRepository) ChangeUser(newUser model.User) error {
 		`UPDATE users 
 			SET email = $1, name = $2, birthday = $3, 
 			description = $4, city = $5, sex = $6, 
-			datePreference = $7, isActive = $8, instagram = $9
-		WHERE id = $10`,
+			datePreference = $7, isActive = $8, instagram = $9, 
+			photos = $10, height = $11, partnerHeightTop = $12, 
+			partnerHeightBot = $13, weight = $14, partnerWeightTop = $15, 
+			partnerWeightBot = $16, partnerAgeTop = $17, partnerAgeBot = $18,
+			interests = $19
+		WHERE id = $20`,
 		newUser.Email, newUser.Name, newUser.Birthday,
 		newUser.Description, newUser.City, newUser.Sex,
 		newUser.DatePreference, newUser.IsActive, newUser.Instagram,
+		newUser.Photos, newUser.Height, newUser.PartnerHeightTop,
+		newUser.PartnerHeightBot, newUser.Weight, newUser.PartnerWeightTop,
+		newUser.PartnerWeightBot, newUser.PartnerAgeTop, newUser.PartnerAgeBot,
+		newUser.Interests,
 		newUser.Id,
 	)
 
@@ -129,7 +304,6 @@ func (repo *UserRepository) ChangeUser(newUser model.User) error {
 func (repo *UserRepository) CheckMail(email string) (bool, error) {
 	var emails []string
 	err := repo.DB.Select(&emails, `SELECT email FROM users WHERE email = $1`, email)
-	fmt.Println(err, emails)
 	if err != nil {
 		return true, err
 	}
@@ -186,7 +360,17 @@ func (repo *UserRepository) SignIn(email string) (model.User, error) {
 			passwordhash,
     		datepreference,
     		isactive,
-    		isdeleted
+    		isdeleted,
+			photos,
+			height,
+			partnerHeightTop,
+			partnerHeightBot,
+			weight,
+			partnerWeightTop,
+			partnerWeightBot,
+			partnerAgeTop,
+			partnerAgeBot,
+			COALESCE(interests, '{}') AS interests
 		FROM users WHERE email = $1`, email)
 	if err != nil {
 		return model.User{}, err
@@ -194,68 +378,24 @@ func (repo *UserRepository) SignIn(email string) (model.User, error) {
 	if len(user) == 0 {
 		return model.User{}, errors.New("пользователь не найден")
 	}
-	err = repo.DB.Select(&user[0].Photos, `SELECT photoUuid FROM photos WHERE userid = $1`, user[0].Id)
-	if err != nil {
-		return model.User{}, err
+	if len(user[0].Interests) == 0 {
+		user[0].Interests = make(pq.Int64Array, 0)
 	}
 
 	return user[0], nil
 }
 
-func (repo *UserRepository) AddPhoto(userId int, image string) (int, error) {
-	var photoId int
-
-	err := repo.DB.QueryRowx(
-		`INSERT INTO photos (userid, value) VALUES ($1, $2) RETURNING photoId;`,
-		userId, image,
-	).Scan(&photoId)
-	if err != nil {
-		return -1, err
-	}
-
-	return photoId, nil
-}
-
-func (repo *UserRepository) GetPhoto(photoId int) (string, error) {
-	var image []string
-	err := repo.DB.Select(&image,
-		`SELECT value FROM photos WHERE photoId = $1`,
-		photoId,
-	)
-	if err != nil {
-		return "", err
-	}
-	if len(image) == 0 {
-		return "", nil
-	}
-
-	return image[0], nil
-}
-
-func (repo *UserRepository) GetPhotos(userId int) ([]uuid.UUID, error) {
-	var photos []uuid.UUID
-	err := repo.DB.Select(&photos, `SELECT photoUuid FROM photos WHERE userId = $1`, userId)
+func (repo *UserRepository) GetPhotos(userId int) ([]string, error) {
+	var photos pq.StringArray
+	err := repo.DB.Select(&photos, `SELECT photos FROM users WHERE Id = $1`, userId)
 	if err != nil {
 		return nil, err
 	}
 	if len(photos) == 0 {
-		return make([]uuid.UUID, 0), nil
+		return make([]string, 0), nil
 	}
 
 	return photos, nil
-}
-
-func (repo *UserRepository) CheckPhoto(photoUuid uuid.UUID, userId int) (bool, error) {
-	var idFromDB []int
-	err := repo.DB.Select(&idFromDB, `SELECT userId FROM photos WHERE photoUuid = $1`, photoUuid)
-	if err != nil {
-		return false, err
-	}
-	if len(idFromDB) == 0 || idFromDB[0] != userId {
-		return false, nil
-	}
-
-	return true, nil
 }
 
 func (repo *UserRepository) ChangePassword(userId int, hash []byte) error {
@@ -289,23 +429,18 @@ func (repo *UserRepository) GetNewChatById(chatId int, userId int) (model.Chat, 
 	err := repo.DB.Select(&chats,
 		`SELECT chats.id AS chatId,
     		users.id AS partnerId,
-    		users.name AS partnerName
+    		users.name AS partnerName,
+			users.photos AS photos
 		FROM chats
     		JOIN users ON (users.id <> $1 AND (users.id = chats.userid2 OR users.id = chats.userid1))
-		WHERE chats.userid1 = $1 OR chats.userid2 = $1
-		ORDER BY lastMessageTime`,
-		chatId, userId,
+		WHERE (chats.userid1 = $1 OR chats.userid2 = $1) AND chats.id = $2`,
+		userId, chatId,
 	)
 	if err != nil {
 		return model.Chat{}, err
 	}
 	if len(chats) == 0 {
 		return model.Chat{}, nil
-	}
-
-	err = repo.DB.Select(&chats[0].Photos, `SELECT photoUuid FROM photos WHERE userid = $1`, chats[0].PartnerId)
-	if err != nil {
-		return model.Chat{}, err
 	}
 
 	return chats[0], nil
@@ -315,12 +450,13 @@ func (repo *UserRepository) GetNewChatById(chatId int, userId int) (model.Chat, 
 func (repo *UserRepository) GetChatById(chatId int, userId int) (model.Chat, error) {
 	var chats []model.Chat
 	err := repo.DB.Select(&chats,
-		`SELECT chats.id AS chatId,
-    		users.id AS partnerId,
-    		users.name AS partnerName,
-    		lastMessage.text AS lastMessage,
-    		lastMessage.time AS lastMessageTime,
-    		lastMessage.authorid AS lastMessageAuthorid
+		`SELECT chats.id AS chatid,
+    		users.id AS partnerid,
+    		users.name AS partnername,
+			users.photos AS photos,
+    		lastMessage.text AS lastmessage,
+    		lastMessage.time AS lastmessagetime,
+    		lastMessage.authorid AS lastmessageauthorid
 		FROM chats
     		JOIN users ON (users.id <> $1 AND (users.id = chats.userid2 OR users.id = chats.userid1))
     		LEFT JOIN (
@@ -345,11 +481,6 @@ func (repo *UserRepository) GetChatById(chatId int, userId int) (model.Chat, err
 	}
 	if len(chats) == 0 {
 		return model.Chat{}, nil
-	}
-
-	err = repo.DB.Select(&chats[0].Photos, `SELECT photoUuid FROM photos WHERE userid = $1`, chats[0].PartnerId)
-	if err != nil {
-		return model.Chat{}, err
 	}
 
 	return chats[0], nil

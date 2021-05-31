@@ -1,5 +1,11 @@
 package repository
 
+func (repo *UserRepository) CleanFeed(userId int) error {
+	_, err := repo.DB.Exec("DELETE FROM feed WHERE userid1 = $1 AND (rating = 'skip' OR rating = 'empty')", userId)
+
+	return err
+}
+
 func (repo *UserRepository) ClearFeed(userId int) error {
 	_, err := repo.DB.Exec(
 		`UPDATE feed SET rating = 'empty' WHERE userid1 = $1 AND rating = 'skip'`,
@@ -24,6 +30,34 @@ func (repo *UserRepository) CreateFeed(userId int) error {
                     user2.datepreference = user1.sex
                     OR user2.datepreference = 'both'
                 )
+				AND (
+					user1.partnerHeightTop = -1
+					OR (user1.partnerHeightTop >= user2.height AND user1.partnerHeightBot <= user2.height)
+				)
+				AND (
+					user2.partnerHeightTop = -1
+					OR (user2.partnerHeightTop >= user1.height AND user2.partnerHeightBot <= user1.height)
+				)
+				AND (
+					user1.partnerWeightTop = -1
+					OR (user1.partnerWeightTop >= user2.weight AND user1.partnerWeightBot <= user2.weight)
+				)
+				AND (
+					user2.partnerWeightTop = -1
+					OR (user2.partnerWeightTop >= user1.weight AND user2.partnerWeightBot <= user1.weight)
+				)
+				AND (
+					user1.partnerAgeTop = -1
+					OR (user1.partnerAgeTop >= (user2.birthday/60/60/24/365-2003+1970) AND user1.partnerAgeBot <= (user2.birthday/60/60/24/365-2003+1970))
+				)
+				AND (
+					user2.partnerAgeTop = -1
+					OR (user2.partnerAgeTop >= (user1.birthday/60/60/24/365-2003+1970) AND user2.partnerAgeBot <= (user1.birthday/60/60/24/365-2003+1970))
+				)
+				AND (
+					(array_length(user1.interests, 1) = 0) IS NULL
+					OR (user1.interests && user2.interests)
+				)
                 AND user1.id <> user2.id
                 AND user2.isDeleted = false
                 AND user2.isActive = true

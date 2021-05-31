@@ -1,235 +1,190 @@
 package delivery
 
 import (
-	"github.com/stretchr/testify/assert"
-	"server/api"
+	"bytes"
+	"context"
+	"encoding/json"
+	"errors"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	sessionMocks "server/internal/auth_server/delivery/session/mocks"
+	"server/internal/pkg/models"
+
+	mock_usecase "server/internal/pkg/user/usecase/mocks"
+	user_proto "server/internal/user_server/delivery/proto"
+	serverMocks "server/internal/user_server/delivery/proto/mocks"
 	"testing"
+
+	"github.com/golang/mock/gomock"
+	"github.com/gorilla/mux"
+	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
-func TestApp_ValidatePass(t *testing.T) {
-	testCases := []struct {
-		name string
-		in   string
-		out  error
-	}{
-		{
-			name: "Correct",
-			in:   "Ak12345678",
-			out:  nil,
-		},
-		{
-			name: "Invalid pass < 8",
-			in:   "1",
-			out: errorDescriptionResponse{
-				Description: map[string]string{
-					"password": "Пароль должен содержать 8 символов",
-				},
-				Err: "Неверный формат входных данных",
-			},
-		},
-		{
-			name: "Invalid case",
-			in:   "aaaaaaaaaaa",
-			out: errorDescriptionResponse{
-				Description: map[string]string{
-					"password": "Пароль должен состоять из символов разного регистра",
-				},
-				Err: "Неверный формат входных данных",
-			},
-		},
-		{
-			name: "Missing nums",
-			in:   "Abcdfefrrf",
-			out: errorDescriptionResponse{
-				Description: map[string]string{
-					"password": "Пароль должен содержать цифру",
-				},
-				Err: "Неверный формат входных данных",
-			},
-		},
+func TestSignUpParseJsonToUserError(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+
+	handlerTest := UserHandler{
+		UserCase: userUseCaseMock,
+		Sessions: sessionManagerMock,
 	}
 
-	for _, testCase := range testCases {
-		t.Run(testCase.name, func(t *testing.T) {
-			assert.Equal(t, testCase.out, validatePass(testCase.in))
-		})
+	user := models.User{
+		Id:             1,
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
 	}
+
+	murl, er := url.Parse("/auth")
+	if er != nil {
+		t.Error(er)
+	}
+
+	req := &http.Request{
+		Method: "GET",
+		URL:    murl,
+	}
+
+	rw := httptest.NewRecorder()
+
+	userUseCaseMock.EXPECT().ParseJsonToUser(req.Body).Return(user, errors.New("Some error"))
+	userUseCaseMock.EXPECT().LogInfo(gomock.Any()).Return()
+
+	handlerTest.SignUp(rw, req)
+
+	response := rw.Result()
+
+	assert.Equal(t, 400, response.StatusCode)
 }
 
-func TestApp_ValidateEmail(t *testing.T) {
-	testCases := []struct {
-		name string
-		in   string
-		out  bool
-	}{
-		{
-			name: "Correct",
-			in:   "yfrfpyjq@yandex.ru",
-			out:  true,
-		},
-		{
-			name: "Email < 3",
-			in:   "a",
-			out:  false,
-		},
-		{
-			name: "Email > 255",
-			in:   "ertyuioplertyuioplkjhgfdcvbnmkjertyuioplkjhgfdcvbnmkjertyuioplkjhgfdcvbnmkjertyuioplkjhgfdcvbnmkjertyuioplkjhgfdcvbnmkjertyuioplkjhgfdcvbnmkjertyuioplkjhgfdcvbnmkjertyuioplkjhgfdcvbnmkjertyuioplkjhgfdcvbnmkjertyuioplkjhgfdcvbnmkjkjhgfdcvbnmkj",
-			out:  false,
-		},
-		{
-			name: "Email don't match regexp",
-			in:   "sfdsfsdf@",
-			out:  false,
-		},
-		{
-			name: "Email don't match regexp",
-			in:   "sfdsfsdf.sdfsdfsdfd",
-			out:  false,
-		},
-		{
-			name: "Email don't match regexp",
-			in:   "sfdsfsdf sdfsdfsdfd",
-			out:  false,
-		},
+func TestSignUp(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+	serverMock := serverMocks.NewMockUserServiceClient(mockCtrl)
+
+	handlerTest := UserHandler{
+		UserCase: userUseCaseMock,
+		Sessions: sessionManagerMock,
+		Server:   serverMock,
 	}
 
-	for _, testCase := range testCases {
-		t.Run(testCase.name, func(t *testing.T) {
-			if testCase.out != validateEmail(testCase.in) {
-				t.Error(testCase.name)
-			}
-		})
-	}
-}
-
-func TestApp_ValidateSignUpData(t *testing.T) {
-	testCases := []struct {
-		name string
-		in   User
-		out  error
-	}{
-		{
-			name: "correct",
-			in: User{
-				Name:           "Nick",
-				Email:          "yfrfpyjq@yandex.ru",
-				Password:       "Sk08820342",
-				SecondPassword: "Sk08820342",
-				Birthday:       123,
-			},
-			out: nil,
-		},
-		{
-			name: "incorrect name",
-			in: User{
-				Name:           "",
-				Email:          "yfrfpyjq@yandex.ru",
-				Password:       "Sk08820342",
-				SecondPassword: "Sk08820342",
-				Birthday:       123,
-			},
-			out: errorDescriptionResponse{
-				Description: map[string]string{
-					"name": "Введите имя",
-				},
-				Err: "Не удалось зарегестрироваться",
-			},
-		},
-		{
-			name: "password1 != password2",
-			in: User{
-				Name:           "Nick",
-				Email:          "yfrfpyjq@yandex.ru",
-				Password:       "Sk088203422",
-				SecondPassword: "Sk08820342",
-				Birthday:       123,
-			},
-			out: errorDescriptionResponse{
-				Description: map[string]string{
-					"password": "Пароли не совпадают",
-				},
-				Err: "Не удалось зарегестрироваться",
-			},
-		},
-		{
-			name: "password1 != password2",
-			in: User{
-				Name:           "Nick",
-				Email:          "yfrfpyjq@yandex.ru",
-				Password:       "Sk088203422",
-				SecondPassword: "Sk08820342",
-				Birthday:       123,
-			},
-			out: errorDescriptionResponse{
-				Description: map[string]string{
-					"password": "Пароли не совпадают",
-				},
-				Err: "Не удалось зарегестрироваться",
-			},
-		},
-		{
-			name: "Age < 18",
-			in: User{
-				Name:           "Nick",
-				Email:          "yfrfpyjq@yandex.ru",
-				Password:       "Sk08820342",
-				SecondPassword: "Sk08820342",
-				Birthday:       99999999999999999,
-			},
-
-			out: errorDescriptionResponse{
-				Description: map[string]string{
-					"Birthday": "Вам должно быть 18",
-				},
-				Err: "Не удалось зарегестрироваться",
-			},
-		},
+	murl, er := url.Parse("/likes")
+	if er != nil {
+		t.Error(er)
 	}
 
-	for _, testCase := range testCases {
-		t.Run(testCase.name, func(t *testing.T) {
-			assert.Equal(t, testCase.out, validateSignUpData(testCase.in))
-		})
-	}
-}
-
-func TestApp_IsAlreadySignedUpSuccess(t *testing.T) {
-	app := api.App{Users: map[int]User{
-		0: {
-			Email: "test@t.ru",
-		},
-	}}
-
-	if st, err := app.isAlreadySignedUp("test@t.ru"); !(st == true && err != nil) {
-		t.Error("Mail is already add!")
-	}
-}
-
-func TestApp_IsAlreadySignedUpFailed(t *testing.T) {
-	app := api.App{Users: map[int]User{
-		0: {
-			Email: "test@t.ru",
-		},
-	}}
-
-	if st, err := app.isAlreadySignedUp("tesst@t.ru"); !(st == false && err == nil) {
-		t.Error("This was new mail!")
-	}
-}
-
-func TestApp_AddNewUserSuccess(t *testing.T) {
-	app := api.App{Users: map[int]User{}}
-	newUser := User{
-		Email: "us@y.ru",
+	user := models.User{
+		Id:             1,
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
 	}
 
-	err := app.addNewUser(&newUser)
+	json, err := json.Marshal(user)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if app.Users[0].Email != newUser.Email {
-		t.Error("Added User != User")
+	req := &http.Request{
+		Method: "POST",
+		URL:    murl,
+		Body:   ioutil.NopCloser(bytes.NewBuffer(json)),
 	}
+	vars := map[string]string{
+		"id": "1",
+	}
+	req = mux.SetURLVars(req, vars)
+
+	ctx := req.Context()
+	ctx = context.WithValue(ctx,
+		models.CtxUserId,
+		1,
+	)
+
+	rw := httptest.NewRecorder()
+
+	userUseCaseMock.EXPECT().ParseJsonToUser(req.Body).Return(user, nil)
+	userUseCaseMock.EXPECT().LogInfo(gomock.Any()).Return()
+	userUseCaseMock.EXPECT().User2ProtoUser(user).Return(&user_proto.User{})
+	serverMock.EXPECT().CreateUser(ctx, gomock.Any()).Return(&user_proto.UserResponse{}, nil)
+	userUseCaseMock.EXPECT().LogInfo(gomock.Any()).Return()
+	userUseCaseMock.EXPECT().SetCookie(gomock.Any()).Return(http.Cookie{})
+	userUseCaseMock.EXPECT().ProtoUser2User(gomock.Any()).Return(user)
+	userUseCaseMock.EXPECT().LogInfo(gomock.Any()).Return()
+
+	handlerTest.SignUp(rw, req.WithContext(ctx))
+
+	response := rw.Result()
+
+	assert.Equal(t, 200, response.StatusCode)
+}
+
+func TestSignUp_CreateUser_Error(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := mock_usecase.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+	serverMock := serverMocks.NewMockUserServiceClient(mockCtrl)
+
+	handlerTest := UserHandler{
+		UserCase: userUseCaseMock,
+		Sessions: sessionManagerMock,
+		Server:   serverMock,
+	}
+
+	murl, er := url.Parse("/likes")
+	if er != nil {
+		t.Error(er)
+	}
+
+	user := models.User{
+		Id:             1,
+		Email:          "windes",
+		Password:       "12345678",
+		SecondPassword: "12345678",
+	}
+
+	json, err := json.Marshal(user)
+	if err != nil {
+		t.Error(err)
+	}
+
+	req := &http.Request{
+		Method: "POST",
+		URL:    murl,
+		Body:   ioutil.NopCloser(bytes.NewBuffer(json)),
+	}
+	vars := map[string]string{
+		"id": "1",
+	}
+	req = mux.SetURLVars(req, vars)
+
+	ctx := req.Context()
+	ctx = context.WithValue(ctx,
+		models.CtxUserId,
+		1,
+	)
+
+	rw := httptest.NewRecorder()
+
+	userUseCaseMock.EXPECT().ParseJsonToUser(req.Body).Return(user, nil)
+	userUseCaseMock.EXPECT().LogInfo(gomock.Any()).Return()
+	userUseCaseMock.EXPECT().User2ProtoUser(user).Return(&user_proto.User{})
+	serverMock.EXPECT().CreateUser(ctx, gomock.Any()).Return(&user_proto.UserResponse{}, status.Error(codes.Code(500), "Some error"))
+	userUseCaseMock.EXPECT().LogError(gomock.Any()).Return()
+
+	handlerTest.SignUp(rw, req.WithContext(ctx))
+
+	response := rw.Result()
+
+	assert.Equal(t, 500, response.StatusCode)
 }

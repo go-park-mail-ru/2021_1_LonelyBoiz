@@ -1,0 +1,128 @@
+syntax = "proto3";
+
+package session;
+
+
+//protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative user.proto
+option go_package= "/Users/nick_nak/programs/2_parkMail/2021_1_LonelyBoiz/internal/user_server/delivery/proto/user.proto";
+
+message Chat {
+  int32 ChatId = 1;
+  int32 PartnerId = 7;
+  string PartnerName = 2;
+  string LastMessage = 3;
+  int64 LastMessageTime = 4;
+  int32 LastMessageAuthorId = 5;
+  repeated string Photos = 6;
+  bool isOpened = 8;
+}
+
+message Like {
+  int32 UserId = 1;
+  string Reaction = 2;
+}
+
+message User {
+  int32 Id = 1;
+  string Email = 2;
+  string Password = 3;
+  string SecondPassword = 4;
+  bytes PasswordHash = 5;
+  string OldPassword = 6;
+  string Name = 7;
+  int64 Birthday = 8;
+  string Description = 9;
+  string City = 10;
+  string Instagram = 11;
+  string Sex = 12;
+  string DatePreference = 13;
+  bool IsDeleted = 14;
+  bool IsActive = 15;
+  repeated string Photos = 16;
+  string CaptchaToken = 17;
+  int32 Height = 18;
+	int32	PartnerHeightTop = 19;
+  int32	PartnerHeightBot = 20;
+	int32	Weight = 21;
+	int32	PartnerWeightTop = 22;
+  int32	PartnerWeightBot = 23;
+	int32	PartnerAgeTop = 24;
+  int32	PartnerAgeBot = 25;
+  repeated int64 Interests = 26;
+}
+
+message UserResponse {
+  User user = 2;
+  string token = 3;
+}
+
+message UserLogin {
+  string Email = 1;
+  string Password = 2;
+  string SecondPassword = 3;
+}
+
+message UserId {
+  int32 Id = 1;
+}
+
+message UserNothing {
+  bool dummy = 1;
+}
+
+message Feed {
+  repeated UserId users = 1;
+}
+
+message ChatsResponse {
+  repeated Chat Chats = 1;
+}
+
+message SecretAlbum{
+  repeated string Photos = 1;
+}
+
+message Message {
+  int32 MessageId = 1;
+  int32 AuthorId = 2;
+  int32 ChatId = 3;
+  string Text = 4;
+  int32 Reaction = 5;
+  int64 Time = 6;
+  int32 MessageOrder = 7;
+}
+
+message MessagesResponse {
+  repeated Message Messages = 1;
+}
+
+message Photos{
+  repeated string Photos = 1;
+}
+
+// grpc-сервис работы с юзером
+service UserService {
+  rpc CreateUser (User) returns (UserResponse) {}
+  rpc ChangeUser (User) returns (User) {}
+  rpc CheckUser (UserLogin) returns (UserResponse) {}
+  rpc DeleteChat (UserNothing) returns (UserNothing) {}
+  rpc DeleteUser (UserNothing) returns (UserNothing) {}
+  rpc GetUserById (UserNothing) returns (User) {}
+  rpc CreateFeed (UserNothing) returns (Feed) {}
+
+  rpc CreateChat (Like) returns (Chat) {}
+
+  //chat
+  rpc GetChats (UserNothing) returns (ChatsResponse) {}
+
+  //message
+  rpc GetMessages (UserNothing) returns (MessagesResponse) {}
+  rpc CreateMessage (Message) returns (Message) {}
+  rpc ChangeMessage (Message) returns (Message) {}
+
+  // secret album
+  rpc AddToSecreteAlbum(User) returns (UserNothing) {}
+  rpc UnlockSecretAlbum(UserNothing) returns (UserNothing) {}
+  rpc BlockSecretAlbum(UserNothing) returns (UserNothing) {}
+  rpc GetSecreteAlbum(UserNothing) returns(Photos) {}
+}

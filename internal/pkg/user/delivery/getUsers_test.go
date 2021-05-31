@@ -1,35 +1,129 @@
 package delivery
 
 import (
-	"server/api"
+	"context"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	sessionMocks "server/internal/auth_server/delivery/session/mocks"
+	"server/internal/pkg/models"
+	usecaseMocks "server/internal/pkg/user/usecase/mocks"
+	user_proto "server/internal/user_server/delivery/proto"
+	serverMocks "server/internal/user_server/delivery/proto/mocks"
 	"testing"
+
+	"github.com/golang/mock/gomock"
+	"github.com/gorilla/mux"
+	"github.com/stretchr/testify/assert"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
-var TestCaseListUsers = []struct {
-	users  map[int]User
-	finder User
-	res    int
-}{
-	{users: map[int]User{0: {Sex: "male", DatePreference: "male"}}, finder: User{Id: 1, Sex: "male", DatePreference: "male"}, res: 1},
-	{users: map[int]User{0: {Sex: "male", DatePreference: "male"}}, finder: User{Id: 0, Sex: "male", DatePreference: "male"}, res: 0},
-	{users: map[int]User{
-		0: {Sex: "male", DatePreference: "male"},
-		1: {Sex: "male", DatePreference: "male"},
-		2: {Sex: "male", DatePreference: "male"},
-		3: {Sex: "male", DatePreference: "male"},
-		4: {Sex: "male", DatePreference: "male"},
-		5: {Sex: "male", DatePreference: "male"}},
-		finder: User{Id: 6, Sex: "male", DatePreference: "male"},
-		res:    5},
+func TestGetUsers(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := usecaseMocks.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+	serverMock := serverMocks.NewMockUserServiceClient(mockCtrl)
+
+	handlerTest := UserHandler{
+		UserCase: userUseCaseMock,
+		Sessions: sessionManagerMock,
+		Server:   serverMock,
+	}
+
+	murl, er := url.Parse("/secretAlbum")
+	if er != nil {
+		t.Error(er)
+	}
+
+	req := &http.Request{
+		Method: "POST",
+		URL:    murl,
+	}
+	vars := map[string]string{
+		"id": "1",
+	}
+	req = mux.SetURLVars(req, vars)
+
+	protoFeed := user_proto.Feed{
+		Users: []*user_proto.UserId{{Id: 1}, {Id: 2}},
+	}
+	user := models.User{
+		Id:    1,
+		Email: "email",
+	}
+
+	ctx := req.Context()
+	ctx = context.WithValue(ctx,
+		models.CtxUserId,
+		user.Id,
+	)
+
+	rw := httptest.NewRecorder()
+
+	userUseCaseMock.EXPECT().LogInfo(gomock.Any()).Return()
+	serverMock.EXPECT().CreateFeed(ctx, &user_proto.UserNothing{}).Return(&protoFeed, nil)
+	userUseCaseMock.EXPECT().LogInfo(gomock.Any()).Return()
+	userUseCaseMock.EXPECT().LogInfo(gomock.Any()).Return()
+
+	handlerTest.GetUsers(rw, req.WithContext(ctx))
+
+	response := rw.Result()
+
+	assert.Equal(t, 200, response.StatusCode)
 }
 
-func TestListUsers(t *testing.T) {
-	var a api.App
-	for _, v := range TestCaseListUsers {
-		a.Users = v.users
-		res := a.listUsers(v.finder)
-		if len(res) != v.res {
-			t.Error("List users error", "\nExpeted:", v.res, "\nGot:", len(res))
-		}
+func TestGetUsers_CreateFeed_Error(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+
+	userUseCaseMock := usecaseMocks.NewMockUserUseCaseInterface(mockCtrl)
+	sessionManagerMock := sessionMocks.NewMockAuthCheckerClient(mockCtrl)
+	serverMock := serverMocks.NewMockUserServiceClient(mockCtrl)
+
+	handlerTest := UserHandler{
+		UserCase: userUseCaseMock,
+		Sessions: sessionManagerMock,
+		Server:   serverMock,
 	}
+
+	murl, er := url.Parse("/secretAlbum")
+	if er != nil {
+		t.Error(er)
+	}
+
+	req := &http.Request{
+		Method: "POST",
+		URL:    murl,
+	}
+	vars := map[string]string{
+		"id": "1",
+	}
+	req = mux.SetURLVars(req, vars)
+
+	protoFeed := user_proto.Feed{
+		Users: []*user_proto.UserId{},
+	}
+	user := models.User{
+		Id:    1,
+		Email: "email",
+	}
+
+	ctx := req.Context()
+	ctx = context.WithValue(ctx,
+		models.CtxUserId,
+		user.Id,
+	)
+
+	rw := httptest.NewRecorder()
+
+	userUseCaseMock.EXPECT().LogInfo(gomock.Any()).Return()
+	serverMock.EXPECT().CreateFeed(ctx, &user_proto.UserNothing{}).Return(&protoFeed, status.Error(codes.Code(500), "Some error"))
+	userUseCaseMock.EXPECT().LogError(gomock.Any()).Return()
+
+	handlerTest.GetUsers(rw, req.WithContext(ctx))
+
+	response := rw.Result()
+
+	assert.Equal(t, 500, response.StatusCode)
 }

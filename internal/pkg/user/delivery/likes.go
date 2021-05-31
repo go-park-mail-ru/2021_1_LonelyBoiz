@@ -2,116 +2,52 @@ package delivery
 
 import (
 	"encoding/json"
-	"github.com/google/uuid"
 	"net/http"
-	model "server/internal/pkg/models"
+	"server/internal/pkg/models"
+	userproto "server/internal/user_server/delivery/proto"
+
+	"google.golang.org/grpc/status"
 )
 
 func (a *UserHandler) LikesHandler(w http.ResponseWriter, r *http.Request) {
-	userId, ok := a.Sessions.GetIdFromContext(r.Context())
-	if !ok {
-		response := model.ErrorResponse{Err: model.SessionErrorDenAccess}
-		model.ResponseWithJson(w, 403, response)
-		a.UserCase.Logger.Info(response.Err)
-		return
-	}
-
-	var like model.Like
+	var like models.Like
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&like)
 	defer r.Body.Close()
 	if err != nil {
-		response := model.ErrorResponse{Err: "Не удалось прочитать тело запроса"}
-		model.ResponseWithJson(w, 400, response)
-		a.UserCase.Logger.Error(err)
+		response := models.ErrorResponse{Err: "Не удалось прочитать тело запроса"}
+		models.Process(models.LoggerFunc(response.Err, a.UserCase.LogError), models.ResponseFunc(w, 400, response), models.MetricFunc(400, r, response))
 		return
 	}
 
-	if like.Reaction != "like" && like.Reaction != "skip" {
-		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Неверный формат входных данных"}
-		response.Description["like"] = "неправильный формат реацкции, ожидается skip или like"
-		model.ResponseWithJson(w, 400, response)
-		return
-	}
+	a.UserCase.LogInfo("Передано на сервер USER")
+	chat, err := a.Server.CreateChat(r.Context(), &userproto.Like{
+		UserId:   int32(like.UserId),
+		Reaction: like.Reaction,
+	})
+	a.UserCase.LogInfo("Получен результат из сервера USER")
 
-	rowsAffected, err := a.UserCase.Db.Rating(userId, like.UserId, like.Reaction)
 	if err != nil {
-		a.UserCase.Logger.Error(err)
-		model.ResponseWithJson(w, 500, nil)
-		return
-	}
-	if rowsAffected != 1 {
-		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Отказано в доступе"}
-		response.Description["userID"] = "Пытаешься поставить лайк человеку не со своей ленты"
-		model.ResponseWithJson(w, 403, response)
-		return
-	}
-
-	reciprocity, err := a.UserCase.Db.CheckReciprocity(like.UserId, userId)
-	if err != nil {
-		a.UserCase.Logger.Error(err)
-		model.ResponseWithJson(w, 500, nil)
-		return
-	}
-	if reciprocity == false || like.Reaction == "skip" {
-		w.WriteHeader(204)
-		return
-	}
-
-	var newChat model.Chat
-	newChat.ChatId, err = a.UserCase.Db.CreateChat(userId, like.UserId)
-	if err != nil {
-		a.UserCase.Logger.Error(err)
-		model.ResponseWithJson(w, 500, nil)
-		return
-	}
-
-	newChat.PartnerId = like.UserId
-	newChat.Photos, err = a.UserCase.Db.GetPhotos(newChat.PartnerId)
-	if err != nil {
-		a.UserCase.Logger.Error(err)
-		model.ResponseWithJson(w, 500, nil)
-		return
-	}
-
-	go chatsWriter(&newChat)
-
-	model.ResponseWithJson(w, 200, newChat)
-}
-
-func chatsWriter(newChat *model.Chat) {
-	model.ChatsChan <- newChat
-}
-
-func (a *UserHandler) WebSocketChatResponse() {
-	for {
-		newChat := <-model.ChatsChan
-
-		client, ok := (*a.UserCase.Clients)[newChat.PartnerId]
-		if !ok {
-			a.UserCase.Logger.Info("Пользователь с id = ", newChat.PartnerId, " не в сети")
-			continue
+		st, _ := status.FromError(err)
+		if st.Code() == 204 {
+			w.WriteHeader(204)
+			return
 		}
-
-		newChatToSend, err := a.UserCase.Db.GetNewChatById(newChat.ChatId, newChat.PartnerId)
-
-		if err != nil {
-			a.UserCase.Logger.Error("Не удалось составить чат", err)
-			continue
-		}
-
-		if len(newChatToSend.Photos) == 0 {
-			newChatToSend.Photos = make([]uuid.UUID, 0)
-		}
-
-		response := model.WebsocketReesponse{ResponseType: "chat", Object: newChatToSend}
-
-		err = client.WriteJSON(response)
-		if err != nil {
-			a.UserCase.Logger.Error("Не удалось отправить сообщение")
-			client.Close()
-			delete(*a.UserCase.Clients, newChat.PartnerId)
-			continue
-		}
+		models.Process(models.LoggerFunc(st.Message(), a.UserCase.LogError), models.ResponseFunc(w, int(st.Code()), st.Message()), models.MetricFunc(int(st.Code()), r, st.Err()))
+		return
 	}
+
+	nChat := models.Chat{
+		ChatId:              int(chat.GetChatId()),
+		PartnerId:           int(chat.GetPartnerId()),
+		PartnerName:         chat.GetPartnerName(),
+		LastMessage:         chat.GetLastMessage(),
+		LastMessageTime:     chat.GetLastMessageTime(),
+		LastMessageAuthorId: int(chat.GetLastMessageAuthorId()),
+		Photos:              a.UserCase.ProtoPhotos2Photos(chat.GetPhotos()),
+	}
+
+	models.Process(models.LoggerFunc("Create Feed", a.UserCase.LogInfo), models.ResponseFunc(w, 200, nChat), models.MetricFunc(200, r, nil))
+
+	a.UserCase.WebsocketChat(&nChat)
 }

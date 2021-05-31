@@ -1,14 +1,57 @@
 package repository
 
 import (
+	"errors"
 	model "server/internal/pkg/models"
 	"time"
 
 	"github.com/jmoiron/sqlx"
 )
 
+type MessageRepositoryInterface interface {
+	CheckMessageForReacting(userId int, messageId int) (int, error)
+	CheckChat(userId int, chatId int) (bool, error)
+	AddMessage(authorId int, chatId int, text string) (model.Message, error)
+	GetPartnerId(chatId int, userId int) (int, error)
+	ChangeMessageText(messageId int, text string) error
+	ChangeMessageReaction(messageId int, reaction int) error
+	DeleteMessage(messageId int) error
+	GetMessages(chatId int, limit int, offset int) ([]model.Message, error)
+	GetMessage(messageId int) (model.Message, error)
+	GetEmailById(id int) (email string, err error)
+	GetNameById(id int) (name string, err error)
+}
+
 type MessageRepository struct {
 	DB *sqlx.DB
+}
+
+func (repo *MessageRepository) GetNameById(id int) (name string, err error) {
+	var names []string
+	err = repo.DB.Select(&names, `SELECT name FROM users WHERE users.id = $1;`, id)
+	if err != nil {
+		return "", err
+	}
+
+	if len(names) == 0 {
+		return "", errors.New("name Not Found")
+	}
+
+	return names[0], nil
+}
+
+func (repo *MessageRepository) GetEmailById(id int) (email string, err error) {
+	var emails []string
+	err = repo.DB.Select(&emails, `SELECT email FROM users WHERE users.id = $1;`, id)
+	if err != nil {
+		return "", err
+	}
+
+	if len(emails) == 0 {
+		return "", errors.New("email Not Found")
+	}
+
+	return emails[0], nil
 }
 
 func (repo *MessageRepository) CheckMessageForReacting(userId int, messageId int) (int, error) {
@@ -159,4 +202,21 @@ func (repo *MessageRepository) GetMessages(chatId int, limit int, offset int) ([
 	}
 
 	return reverseMessages(messages), nil
+}
+
+func (repo *MessageRepository) GetMessage(messageId int) (model.Message, error) {
+	var messages []model.Message
+	err := repo.DB.Select(&messages,
+		`SELECT * FROM messages
+			WHERE messages.messageid = $1`,
+		messageId,
+	)
+	if err != nil {
+		return model.Message{}, err
+	}
+	if len(messages) == 0 {
+		return model.Message{}, nil
+	}
+
+	return messages[0], nil
 }

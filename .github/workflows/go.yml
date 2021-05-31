@@ -1,23 +1,84 @@
-
-name: Go
-
+name: CI/CD
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-
+    branches: 
+      - Deploy
 jobs:
+  golangci:
+    name: linter
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: v1.29
 
-  build:
+  tests:
+    needs: golangci
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-
     - name: Set up Go
       uses: actions/setup-go@v2
       with:
         go-version: 1.15
 
-    - name: Test
-      run: go test ./... -cover
+    - name: tests
+      run: |
+        go test ./... -v -coverpkg=./... -coverprofile=cover.out.tmp 
+        cat cover.out.tmp | grep -v "mock.go" | grep -v "pb.go" > cover.out
+        go tool cover -func=cover.out
+
+  build:
+    needs: tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Login to Docker Registry
+        run: docker login -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.DOCKER_PASSWORD }}
+      - name: Build Docker image
+        run: |
+          sudo docker build -t ${{ secrets.DOCKER_USER }}/image_server:latest -f ./build/image.Dockerfile .
+          sudo docker build -t ${{ secrets.DOCKER_USER }}/pickleapp_server:latest -f ./build/pickleapp.Dockerfile .
+          sudo docker build -t ${{ secrets.DOCKER_USER }}/user_server:latest -f ./build/user.Dockerfile .
+          sudo docker build -t ${{ secrets.DOCKER_USER }}/auth_server:latest -f ./build/auth.Dockerfile .
+
+      - name: Push the image
+        run: |
+          docker push ${{ secrets.DOCKER_USER }}/image_server --all-tags
+          docker push ${{ secrets.DOCKER_USER }}/pickleapp_server --all-tags
+          docker push ${{ secrets.DOCKER_USER }}/user_server --all-tags
+          docker push ${{ secrets.DOCKER_USER }}/auth_server --all-tags
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: pull project
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            sudo docker rm -vf $(sudo docker ps -a -q)
+
+            docker login -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.DOCKER_PASSWORD }}
+            cd 2021_1_LonelyBoiz/
+
+            sudo docker pull ${{ secrets.DOCKER_USER }}/image_server
+
+            sudo docker pull ${{ secrets.DOCKER_USER }}/pickleapp_server
+
+            sudo docker pull ${{ secrets.DOCKER_USER }}/auth_server
+
+            sudo docker pull ${{ secrets.DOCKER_USER }}/user_server
+      - name: run project
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd 2021_1_LonelyBoiz/
+            sudo docker-compose up -d --build --no-deps

@@ -1,9 +1,17 @@
 package usecase
 
 import (
+	"bytes"
+	"context"
 	"errors"
+	_ "image/jpeg"
 	"server/internal/pkg/image/repository"
 	"server/internal/pkg/models"
+	"strconv"
+
+	pigo "github.com/esimov/pigo/core"
+
+	"google.golang.org/grpc/metadata"
 
 	"github.com/google/uuid"
 )
@@ -26,11 +34,94 @@ var (
 type ImageUsecaseInterface interface {
 	AddImage(userId int, image []byte) (models.Image, error)
 	DeleteImage(userId int, imageUuid uuid.UUID) error
+	GetParamFromContext(ctx context.Context, param string) (int, bool)
+	GetUUID(ctx context.Context) (uuid.UUID, bool)
+	GetIdFromContext(ctx context.Context) (int, bool)
+	GetUUIDFromContext(ctx context.Context) (uuid.UUID, bool)
+	CheckFace(image []byte) bool
+	models.LoggerInterface
 }
 
 type ImageUsecase struct {
-	Db           repository.DbRepositoryInterface
-	ImageStorage repository.StorageRepositoryInterface
+	Db            repository.DbRepositoryInterface
+	ImageStorage  repository.StorageRepositoryInterface
+	FaceDetection *pigo.Pigo
+	models.LoggerInterface
+}
+
+func (u *ImageUsecase) CheckFace(image []byte) bool {
+	src, err := pigo.DecodeImage(bytes.NewReader(image))
+	if err != nil {
+		u.LogInfo("ERROR TO DECODE IMAGE - " + err.Error())
+		return false
+	}
+
+	pixels := pigo.RgbToGrayscale(src)
+	cols, rows := src.Bounds().Max.X, src.Bounds().Max.Y
+
+	cParams := pigo.CascadeParams{
+		MinSize:     20,
+		MaxSize:     1000,
+		ShiftFactor: 0.1,
+		ScaleFactor: 1.1,
+
+		ImageParams: pigo.ImageParams{
+			Pixels: pixels,
+			Rows:   rows,
+			Cols:   cols,
+			Dim:    cols,
+		},
+	}
+
+	angle := 0.0
+	dets := u.FaceDetection.RunCascade(cParams, angle)
+	dets = u.FaceDetection.ClusterDetections(dets, 0.2)
+
+	if len(dets) == 0 {
+		u.LogInfo("Face Not Found!")
+		return false
+	}
+
+	u.LogInfo("Face Detected")
+	return true
+}
+
+func (u *ImageUsecase) GetUUID(ctx context.Context) (uuid.UUID, bool) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return uuid.New(), false
+	}
+
+	sUUID := md.Get("urlUUID")
+	if len(sUUID) == 0 {
+		return uuid.New(), false
+	}
+
+	uid, err := uuid.Parse(sUUID[0])
+	if err != nil {
+		return uuid.New(), false
+	}
+
+	return uid, true
+}
+
+func (u *ImageUsecase) GetParamFromContext(ctx context.Context, param string) (int, bool) {
+	data, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return -1, false
+	}
+
+	dataByParam := data.Get(param)
+	if len(dataByParam) == 0 {
+		return -1, false
+	}
+
+	value, err := strconv.Atoi(dataByParam[0])
+	if err != nil {
+		return -1, false
+	}
+
+	return value, true
 }
 
 func (u *ImageUsecase) AddImage(userId int, image []byte) (models.Image, error) {
@@ -39,16 +130,18 @@ func (u *ImageUsecase) AddImage(userId int, image []byte) (models.Image, error) 
 	}
 
 	newUuid := uuid.New()
-
 	err := u.ImageStorage.AddImage(newUuid, image)
 	if err != nil {
+		u.LogError(err)
 		return models.Image{}, ErrUsecaseFailedToUpload
 	}
 
 	model, err := u.Db.AddImage(userId, newUuid)
 	if err == repository.ErrRepositoryConnection {
+		u.LogError(err)
 		return models.Image{}, ErrUsecaseFatal
 	} else if err != nil {
+		u.LogError(err)
 		return models.Image{}, ErrUsecaseFailedToUpload
 	}
 
@@ -99,4 +192,23 @@ func userImagesContains(db repository.DbRepositoryInterface, userId int, uuid uu
 
 func b2mb(bytes int) int {
 	return bytes / MB
+}
+
+func (u *ImageUsecase) GetIdFromContext(ctx context.Context) (int, bool) {
+	id, ok := ctx.Value(models.CtxUserId).(int)
+	if !ok {
+		return 0, false
+	}
+	return id, true
+}
+
+func (u *ImageUsecase) GetUUIDFromContext(ctx context.Context) (uuid.UUID, bool) {
+	uuidString, ok := ctx.Value(models.CtxImageId).(string)
+	if !ok {
+		return uuid.New(), false
+	}
+
+	id := uuid.MustParse(uuidString)
+
+	return id, true
 }

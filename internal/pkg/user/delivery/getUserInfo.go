@@ -3,30 +3,22 @@ package delivery
 import (
 	"net/http"
 	model "server/internal/pkg/models"
-	"strconv"
+	user_proto "server/internal/user_server/delivery/proto"
 
-	"github.com/gorilla/mux"
+	"google.golang.org/grpc/status"
 )
 
 func (a *UserHandler) GetUserInfo(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	userId, err := strconv.Atoi(vars["id"])
+	a.UserCase.LogInfo("Передано на сервер USER")
+	user, err := a.Server.GetUserById(r.Context(), &user_proto.UserNothing{Dummy: true})
 	if err != nil {
-		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Неправильные входные данные"}
-		response.Description["id"] = "Пользователя с таким id нет"
-		model.ResponseWithJson(w, 400, response)
+		st, _ := status.FromError(err)
+		model.Process(model.LoggerFunc(st.Message(), a.UserCase.LogError), model.ResponseFunc(w, int(st.Code()), st.Message()), model.MetricFunc(int(st.Code()), r, st.Err()))
 		return
 	}
+	a.UserCase.LogInfo("Получен результат из сервера USER")
 
-	userInfo, err := a.UserCase.Db.GetUser(userId)
-	if err != nil {
-		a.UserCase.Logger.Error(err)
-		response := model.ErrorDescriptionResponse{Description: map[string]string{}, Err: "Неправильные входные данные"}
-		response.Description["id"] = "Пользователя с таким id нет"
-		model.ResponseWithJson(w, 401, response)
-		return
-	}
+	ret := a.UserCase.ProtoUser2User(user)
 
-	userInfo.PasswordHash = nil
-	model.ResponseWithJson(w, 200, userInfo)
+	model.Process(model.LoggerFunc("Get User Info", a.UserCase.LogInfo), model.ResponseFunc(w, 200, ret), model.MetricFunc(200, r, nil))
 }

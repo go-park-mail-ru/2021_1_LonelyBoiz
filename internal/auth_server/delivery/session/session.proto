@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package session;
+
+option go_package= "/Users/nick_nak/programs/2_parkMail/2021_1_LonelyBoiz/internal/auth_server/session/session.proto";
+
+message SessionToken {
+  string Token = 1;
+}
+
+message SessionId {
+  int32 Id = 1;
+}
+
+message Nothing {
+  bool dummy = 1;
+}
+
+// grpc-сервис проверки авторизации
+service AuthChecker {
+  rpc Create (SessionId) returns (SessionToken) {}
+  rpc Check (SessionToken) returns (SessionId) {}
+  rpc Delete (SessionId) returns (Nothing) {}
+}

@@ -1,14 +1,14 @@
 package delivery
 
 import (
-	"github.com/google/uuid"
-	"github.com/gorilla/mux"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"server/internal/pkg/image/usecase"
 	"server/internal/pkg/models"
-	"server/internal/pkg/session"
+
+	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 )
 
 type ImageDeliveryInterface interface {
@@ -17,23 +17,36 @@ type ImageDeliveryInterface interface {
 }
 
 type ImageHandler struct {
-	Usecase  usecase.ImageUsecaseInterface
-	Sessions *session.SessionsManager
+	Usecase usecase.ImageUsecaseInterface
+}
+
+func (h *ImageHandler) SetHandlers(subRouter *mux.Router) {
+	// добавить фотку
+	subRouter.HandleFunc("/images", h.UploadImage).Methods("POST")
+	// удалить фотку
+	subRouter.HandleFunc("/images/{uuid}", h.DeleteImage).Methods("DELETE")
 }
 
 func (h *ImageHandler) UploadImage(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	userId, ok := h.Sessions.GetIdFromContext(r.Context())
-	if !ok {
-		responseBody := models.ErrorResponse{Err: models.SessionErrorDenAccess}
-		models.ResponseWithJson(w, http.StatusForbidden, responseBody)
+	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1<<20))
+	if err != nil || len(body) == 0 {
+		responseBody := models.ErrorResponse{Err: "Не удалось прочитать файл"}
+		models.Process(models.LoggerFunc(responseBody.Err, h.Usecase.LogInfo), models.ResponseFunc(w, http.StatusBadRequest, responseBody), models.MetricFunc(http.StatusBadRequest, r, err))
 		return
 	}
 
-	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1 << 20))
-	if err != nil {
-		responseBody := models.ErrorResponse{Err: "Не удалось прочитать файл"}
-		models.ResponseWithJson(w, http.StatusBadRequest, responseBody)
+	userId, ok := h.Usecase.GetIdFromContext(r.Context())
+	if !ok {
+		responseBody := models.ErrorResponse{Err: models.SessionErrorDenAccess}
+		models.Process(models.LoggerFunc(responseBody.Err, h.Usecase.LogInfo), models.ResponseFunc(w, http.StatusForbidden, responseBody), models.MetricFunc(http.StatusForbidden, r, responseBody))
+		return
+	}
+
+	isFaceDetected := h.Usecase.CheckFace(body)
+	if !isFaceDetected {
+		responseBody := models.ErrorResponse{Err: "На фотографии нет лица!"}
+		models.Process(models.LoggerFunc(responseBody.Err, h.Usecase.LogInfo), models.ResponseFunc(w, http.StatusBadRequest, responseBody), models.MetricFunc(http.StatusBadRequest, r, responseBody))
 		return
 	}
 
@@ -41,60 +54,60 @@ func (h *ImageHandler) UploadImage(w http.ResponseWriter, r *http.Request) {
 	status := setStatusCode(err, http.StatusBadRequest)
 	if err != nil {
 		responseBody := models.ErrorResponse{Err: err.Error()}
-		models.ResponseWithJson(w, status, responseBody)
+		models.Process(models.LoggerFunc(responseBody.Err, h.Usecase.LogInfo), models.ResponseFunc(w, status, responseBody), models.MetricFunc(status, r, err))
 		return
 	}
 
-	models.ResponseWithJson(w, http.StatusOK, model)
+	models.Process(models.LoggerFunc("Success Upload Image", h.Usecase.LogInfo), models.ResponseFunc(w, http.StatusOK, model), models.MetricFunc(status, r, err))
+
 }
 
 func (h *ImageHandler) DeleteImage(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	userId, ok := h.Sessions.GetIdFromContext(r.Context())
-	if !ok {
-		responseBody := models.ErrorResponse{Err: models.SessionErrorDenAccess}
-		models.ResponseWithJson(w, http.StatusForbidden, responseBody)
-		return
-	}
 
 	vars := mux.Vars(r)
-	sUuid := vars["uuid"]
-	uid, err := uuid.Parse(sUuid)
-	if err != nil {
+	uid, ok := vars["uuid"]
+	if !ok {
 		responseBody := models.ErrorResponse{Err: "invalid uuid"}
-		models.ResponseWithJson(w, http.StatusBadRequest, responseBody)
+		models.Process(models.LoggerFunc(responseBody, h.Usecase.LogInfo), models.ResponseFunc(w, http.StatusBadRequest, responseBody), models.MetricFunc(http.StatusBadRequest, r, responseBody))
 		return
 	}
 
-	err = h.Usecase.DeleteImage(userId, uid)
+	userId, ok := h.Usecase.GetIdFromContext(r.Context())
+	if !ok {
+		responseBody := models.ErrorResponse{Err: models.SessionErrorDenAccess}
+		models.Process(models.LoggerFunc(responseBody, h.Usecase.LogInfo), models.ResponseFunc(w, http.StatusForbidden, responseBody), models.MetricFunc(http.StatusForbidden, r, responseBody))
+		return
+	}
+
+	err := h.Usecase.DeleteImage(userId, uuid.MustParse(uid))
 	status := setStatusCode(err, http.StatusBadRequest)
 	if err != nil {
 		responseBody := models.ErrorResponse{Err: err.Error()}
-		models.ResponseWithJson(w, status, responseBody)
+		models.Process(models.LoggerFunc(responseBody, h.Usecase.LogInfo), models.ResponseFunc(w, status, responseBody), models.MetricFunc(status, r, err))
 		return
 	}
 
-	models.ResponseWithJson(w, http.StatusNoContent, nil)
+	models.Process(models.LoggerFunc("Success Delete Image", h.Usecase.LogInfo), models.ResponseFunc(w, http.StatusNoContent, nil), models.MetricFunc(http.StatusNoContent, r, nil))
 }
 
 func setStatusCode(err error, initStatus int) int {
-	status := initStatus
+	s := initStatus
 	switch err {
 	case usecase.ErrUsecaseImageTooThick:
-		status = http.StatusBadRequest
+		s = http.StatusBadRequest
 	case usecase.ErrUsecaseFailedToUpload:
-		status = http.StatusUnprocessableEntity
+		s = http.StatusUnprocessableEntity
 	case usecase.ErrUsecaseImageNotBelongToUser:
-		status = http.StatusBadRequest
+		s = http.StatusBadRequest
 	case usecase.ErrUsecaseImageNotFound:
-		status = http.StatusBadRequest
+		s = http.StatusBadRequest
 	case usecase.ErrUsecaseUserHaveNoImages:
-		status = http.StatusUnprocessableEntity
+		s = http.StatusUnprocessableEntity
 	case usecase.ErrUsecaseFailedToDelete:
-		status = http.StatusUnprocessableEntity
+		s = http.StatusUnprocessableEntity
 	case usecase.ErrUsecaseFatal:
-		status = http.StatusInternalServerError
+		s = http.StatusInternalServerError
 	}
-
-	return status
+	return s
 }
